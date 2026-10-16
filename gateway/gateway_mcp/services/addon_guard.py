@@ -1,0 +1,201 @@
+"""Extra project boundaries for the training addon, before tool dispatch.
+
+The private, read-only mounted profile is authoritative. Existing OAuth scopes,
+tool allowlists, knowledge ACLs and backend resource policies still apply.
+"""
+import asyncio
+import json
+import os
+import time
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from gateway_mcp.services.security_guard import authorize
+
+READ_TOOLS = {
+    "gateway_access_profile", "gateway_search_tools", "gateway_call_tool",
+    "gateway_knowledge_space_list", "gateway_knowledge_space_get",
+    "gateway_knowledge_document_get", "gateway_knowledge_search",
+    "gateway_memory_search", "gateway_usage_dashboard",
+}
+WRITE_TOOLS = {
+    "gateway_knowledge_space_create", "gateway_knowledge_document_put",
+    "gateway_memory_write", "gateway_usage_import",
+    "gateway_telemetry_skill_started", "gateway_telemetry_skill_completed",
+    "gateway_telemetry_skill_failed",
+}
+ROUTES = {
+    "platforma.context.get", "platforma.services.list", "platforma.services.get",
+    "platforma.requests.list", "platforma.requests.get",
+}
+
+
+def profile_for(actor):
+    configured = os.getenv("GATEWAY_ADDON_PROFILES_FILE", "")
+    if not configured:
+        return None
+    # No default profile, owner fallback or cache after revocation.
+    try:
+        data = json.loads(Path(configured).read_text(encoding="utf-8"))
+        profile = data["profiles"][actor.subject]
+        if data.get("schema") != 1 or profile.get("project") != "APP11":
+            raise ValueError("Invalid addon profile")
+        return profile
+    except (OSError, ValueError, KeyError, TypeError):
+        raise PermissionError("addon_profile_unavailable") from None
+
+
+def _check(profile, actor, resource, kind, operation):
+    decision = authorize(profile, subject=actor.subject, project="APP11",
+                         resource=resource, resource_kind=kind, operation=operation)
+    if not decision.allowed:
+        raise PermissionError("addon_" + decision.reason)
+
+
+def _space(profile, actor, space):
+    from gateway_mcp.services.knowledge import _personal_slug
+    own = "personal:" + _personal_slug(actor)
+    canonical = "personal" if space == own else space
+    if canonical not in profile.get("spaces", []):
+        raise PermissionError("addon_space_denied")
+    return canonical
+
+
+def _document(profile, space, document):
+    allowed = profile.get("documents", {}).get(space, {})
+    if document not in allowed:
+        raise PermissionError("addon_document_denied")
+    return allowed[document]
+
+
+def check_call(actor, name, arguments):
+    profile = profile_for(actor)
+    if profile is None:
+        return None
+    operation = "read" if name in READ_TOOLS else "write"
+    if name not in READ_TOOLS | WRITE_TOOLS:
+        raise PermissionError("addon_tool_denied")
+    _check(profile, actor, "mcp:" + name, "tool", operation)
+    if name == "gateway_call_tool":
+        from gateway_mcp.config import read_json, tools_file
+        route = next((r for r in read_json(tools_file(), {"tools":[]})["tools"]
+                      if r.get("name") == arguments.get("tool_name")), None)
+        if not route or route["name"] not in ROUTES or route.get("http_method") != "GET" or route.get("scope") != "platforma:read":
+            raise PermissionError("addon_backend_route_denied")
+        _check(profile, actor, route["name"], "backend_route", "read")
+    elif name == "gateway_knowledge_space_create":
+        if arguments.get("slug") != "organizational-awareness" or json.loads(arguments.get("members_json", "[]")) != []:
+            raise PermissionError("addon_space_creation_denied")
+        _check(profile, actor, "space:organizational-awareness", "container", "create")
+    elif name in {"gateway_knowledge_space_get", "gateway_knowledge_document_get",
+                  "gateway_knowledge_document_put", "gateway_knowledge_search"}:
+        space = _space(profile, actor, arguments.get("space", ""))
+        if name == "gateway_knowledge_document_get":
+            _document(profile, space, arguments.get("document", ""))
+        elif name == "gateway_knowledge_document_put":
+            path = arguments.get("path", "")
+            spec = _document(profile, space, path)
+            if arguments.get("document_id") != spec["document_id"] or arguments.get("kind", "note") != spec["kind"]:
+                raise PermissionError("addon_document_identity_denied")
+            if path.startswith("skills/"):
+                from gateway_mcp.services.knowledge import _resolve_space, _safe_child
+                resolved = _resolve_space(actor, arguments["space"], required_role="writer")
+                if _safe_child(resolved["path"], path).exists():
+                    raise PermissionError("addon_existing_skill_protected")
+    elif name in {"gateway_memory_write", "gateway_memory_search"}:
+        if arguments.get("scope", "user" if name.endswith("write") else "") != "user":
+            raise PermissionError("addon_user_memory_only")
+        if arguments.get("subject", "") not in ("", actor.subject):
+            raise PermissionError("addon_foreign_memory_denied")
+        if name.endswith("search") and (arguments.get("include_sources", True) or arguments.get("include_yonote", True)):
+            raise PermissionError("addon_external_memory_search_denied")
+        if name.endswith("write") and (arguments.get("tier", "short") != "short" or
+                arguments.get("source_type", "") != "knowledge" or
+                arguments.get("ttl_days", 0) not in range(1, 8)):
+            raise PermissionError("addon_installation_memory_only")
+    elif name == "gateway_usage_import":
+        if arguments.get("project") not in profile.get("usage_projects", []):
+            raise PermissionError("addon_usage_project_denied")
+    return profile
+
+
+def filter_result(actor, name, result, profile):
+    if not profile or name not in {"gateway_knowledge_space_list", "gateway_knowledge_search"}:
+        return result
+    from gateway_mcp.services.knowledge import _personal_slug
+    allowed = set(profile.get("spaces", [])) | {"personal:" + _personal_slug(actor)}
+    root = getattr(result, "root", result)
+    for item in getattr(root, "content", []):
+        if getattr(item, "type", "") != "text":
+            continue
+        payload = json.loads(item.text)
+        if payload.get("ok"):
+            if name == "gateway_knowledge_space_list":
+                payload["spaces"] = [s for s in payload.get("spaces", [])
+                                     if s.get("space") in allowed]
+                payload["count"] = len(payload["spaces"])
+            else:
+                def permitted(document):
+                    canonical = document.get("space", "")
+                    if canonical == "personal:" + _personal_slug(actor):
+                        canonical = "personal"
+                    return document.get("path") in profile.get("documents", {}).get(canonical, {})
+                payload["documents"] = [d for d in payload.get("documents", []) if permitted(d)]
+                payload["count"] = len(payload["documents"])
+            item.text = json.dumps(payload, ensure_ascii=False)
+    # Knowledge tools return text, not structuredContent; never pass an unfiltered copy.
+    if getattr(root, "structuredContent", None) is not None:
+        root.structuredContent = None
+    return result
+
+
+@asynccontextmanager
+async def write_lock(enabled):
+    if not enabled:
+        yield
+        return
+    import fcntl
+    from gateway_mcp.services.knowledge import vault_root
+    directory = vault_root() / ".addon-security"
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (directory / "writes.lock").open("a") as handle:
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise PermissionError("addon_write_busy")
+                await asyncio.sleep(0.05)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def register(server):
+    from mcp.types import CallToolRequest, ServerResult, CallToolResult, TextContent
+    from gateway_mcp.services.auth import current_actor
+    from gateway_mcp.services.observability import audit_event
+    handler = server._mcp_server.request_handlers[CallToolRequest]
+
+    async def guarded(request):
+        actor = current_actor()
+        name = request.params.name
+        args = request.params.arguments or {}
+        try:
+            async with write_lock(bool(os.getenv("GATEWAY_ADDON_PROFILES_FILE")) and name in WRITE_TOOLS):
+                profile = check_call(actor, name, args)
+                result = await handler(request)
+                return filter_result(actor, name, result, profile)
+        except PermissionError as exc:
+            audit_event(event="addon_policy", actor=actor, tool=name,
+                        system="addon-security", decision="deny",
+                        scope="", status="denied",
+                        arguments={}, error=str(exc))
+            return ServerResult(CallToolResult(
+                content=[TextContent(type="text", text=json.dumps({"ok":False,"error":str(exc)}))],
+                isError=True))
+    server._mcp_server.request_handlers[CallToolRequest] = guarded
+

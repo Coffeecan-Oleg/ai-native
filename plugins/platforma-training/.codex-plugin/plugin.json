@@ -1,7 +1,7 @@
 {
   "name": "platforma-training",
-  "version": "0.1.0",
-  "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+  "version": "0.2.0",
+  "description": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
   "author": {
     "name": "Coffeecan-Oleg",
     "url": "https://github.com/Coffeecan-Oleg"
@@ -18,8 +18,8 @@
   },
   "interface": {
     "displayName": "Платформа — учебный помощник",
-    "shortDescription": "Сервисы и заявки: чтение",
-    "longDescription": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+    "shortDescription": "Сервисы, знания и учёт расхода",
+    "longDescription": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
     "developerName": "Coffeecan-Oleg",
     "category": "Productivity",
     "capabilities": [

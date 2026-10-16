@@ -1,0 +1,232 @@
+{
+  "schema": 1,
+  "profiles": {
+    "test:owner": {
+      "version": "1.0.0",
+      "status": "active",
+      "subject": "test:owner",
+      "project": "APP11",
+      "expires_at": "2026-11-15T13:35:00Z",
+      "protect_existing_skills": true,
+      "forbidden_operations": [
+        "admin",
+        "grant",
+        "delete",
+        "export"
+      ],
+      "resources": [
+        {
+          "id": "mcp:gateway_access_profile",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_call_tool",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_knowledge_document_get",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_knowledge_document_put",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "mcp:gateway_knowledge_search",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_knowledge_space_create",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "mcp:gateway_knowledge_space_get",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_knowledge_space_list",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_memory_search",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_memory_write",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "mcp:gateway_search_tools",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_telemetry_skill_completed",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "mcp:gateway_telemetry_skill_failed",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "mcp:gateway_telemetry_skill_started",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "mcp:gateway_usage_dashboard",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_usage_import",
+          "kind": "tool",
+          "operations": [
+            "write"
+          ]
+        },
+        {
+          "id": "platforma.context.get",
+          "kind": "backend_route",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "platforma.services.list",
+          "kind": "backend_route",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "platforma.services.get",
+          "kind": "backend_route",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "platforma.requests.list",
+          "kind": "backend_route",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "platforma.requests.get",
+          "kind": "backend_route",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "space:organizational-awareness",
+          "kind": "container",
+          "operations": [
+            "create"
+          ]
+        }
+      ],
+      "spaces": [
+        "space:organizational-awareness",
+        "personal"
+      ],
+      "usage_projects": [
+        "platforma-training"
+      ],
+      "documents": {
+        "space:organizational-awareness": {
+          "awareness/start.md": {
+            "document_id": "app11-2d97b0364fa97b9d",
+            "kind": "navigation"
+          },
+          "awareness/projects.md": {
+            "document_id": "app11-b65a67e4cd66b2a5",
+            "kind": "registry"
+          },
+          "awareness/resources.md": {
+            "document_id": "app11-61383e54acdb8941",
+            "kind": "registry"
+          },
+          "awareness/refresh.md": {
+            "document_id": "app11-ff40e20f60aa0886",
+            "kind": "procedure"
+          },
+          "skills/organizational-awareness/SKILL.md": {
+            "document_id": "app11-09264afc0bcdaa7d",
+            "kind": "skill"
+          },
+          "skills/organizational-awareness/references/repository-examples.md": {
+            "document_id": "app11-4074df46a5087aed",
+            "kind": "reference"
+          },
+          "awareness/project-profile.md": {
+            "document_id": "app11-a64060bf90ba6a39",
+            "kind": "profile"
+          },
+          "awareness/capabilities.md": {
+            "document_id": "app11-196d97e91ba2605b",
+            "kind": "registry"
+          },
+          "awareness/install.md": {
+            "document_id": "app11-bf51f822fbc69f32",
+            "kind": "record"
+          },
+          "decisions/awareness-installed.md": {
+            "document_id": "app11-fadf8fdaa4ef9e99",
+            "kind": "decision"
+          }
+        },
+        "personal": {
+          "usage/client-setup.md": {
+            "document_id": "app11-5afc5567d79268a9",
+            "kind": "procedure"
+          }
+        }
+      }
+    }
+  }
+}

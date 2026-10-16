@@ -72,6 +72,10 @@ def create_mcp():
     register_access_request_tools(server)
     register_approval_tools(server)
     register_router_tools(server)
+    from gateway_mcp.services.usage_meter import register as register_meter
+    from gateway_mcp.services.addon_guard import register as register_addon_guard
+    register_addon_guard(server)
+    register_meter(server)
     return server
 
 
