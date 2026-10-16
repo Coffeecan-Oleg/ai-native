@@ -26,7 +26,10 @@ def web_actor(request: Request) -> GatewayActor | None:
     if not token:
         return None
     try:
-        return actor_from_claims(verify_gateway_token_claims(token))
+        actor = actor_from_claims(verify_gateway_token_claims(token))
+        # A constrained MCP credential is never a browser/admin session, even
+        # when its identity is the same as the human owner.
+        return None if actor.tool_allowlist is not None else actor
     except Exception:
         return None
 
