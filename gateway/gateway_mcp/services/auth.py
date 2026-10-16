@@ -987,6 +987,8 @@ async def login_with_yandex_code(code: str) -> tuple[GatewayActor, str]:
         raise PermissionError("Yandex user is not allowed by Gateway policy")
 
     actor = actor_from_user_info(user_info)
+    from gateway_mcp.services.platforma_onboarding import web_login_actor
+    actor = web_login_actor(actor)
     _save_yandex_actor_token(
         actor_subject=actor.subject,
         actor=actor,

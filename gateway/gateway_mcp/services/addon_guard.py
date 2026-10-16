@@ -37,8 +37,20 @@ def profile_for(actor):
     # No default profile, owner fallback or cache after revocation.
     try:
         data = json.loads(Path(configured).read_text(encoding="utf-8"))
-        profile = data["profiles"][actor.subject]
-        if data.get("schema") != 1 or profile.get("project") != "APP11":
+        if data.get("schema") != 1:
+            raise ValueError("Invalid addon profile")
+        profile = data["profiles"].get(actor.subject)
+        if profile is None:
+            from gateway_mcp.services.platforma_onboarding import enabled, reader_profile
+            if not enabled():
+                raise PermissionError("addon_profile_unavailable")
+            try:
+                profile = reader_profile(actor)
+            except PermissionError:
+                raise
+            except Exception:
+                raise PermissionError("addon_reader_status_unavailable") from None
+        if profile.get("project") != "APP11":
             raise ValueError("Invalid addon profile")
         return profile
     except (OSError, ValueError, KeyError, TypeError):
@@ -123,7 +135,9 @@ def filter_result(actor, name, result, profile):
     if not profile or name not in {"gateway_knowledge_space_list", "gateway_knowledge_search"}:
         return result
     from gateway_mcp.services.knowledge import _personal_slug
-    allowed = set(profile.get("spaces", [])) | {"personal:" + _personal_slug(actor)}
+    allowed = set(profile.get("spaces", []))
+    if not profile.get("reader_only"):
+        allowed.add("personal:" + _personal_slug(actor))
     root = getattr(result, "root", result)
     for item in getattr(root, "content", []):
         if getattr(item, "type", "") != "text":
@@ -175,10 +189,33 @@ async def write_lock(enabled):
 
 
 def register(server):
-    from mcp.types import CallToolRequest, ServerResult, CallToolResult, TextContent
+    from mcp.types import CallToolRequest, ServerResult, CallToolResult, TextContent, ListToolsRequest, ListToolsResult
     from gateway_mcp.services.auth import current_actor
     from gateway_mcp.services.observability import audit_event
     handler = server._mcp_server.request_handlers[CallToolRequest]
+    list_handler = server._mcp_server.request_handlers.get(ListToolsRequest)
+
+    async def reader_tools(request):
+        from gateway_mcp.services.platforma_onboarding import enabled, is_owner, TOOLS
+        actor = current_actor()
+        if not enabled() or is_owner(actor):
+            return await list_handler(request)
+        try:
+            profile = profile_for(actor)
+            if not profile or not profile.get("reader_only"):
+                raise PermissionError("Reader profile required")
+        except Exception:
+            return ServerResult(ListToolsResult(tools=[]))
+        result = await list_handler(request)
+        root = getattr(result, "root", result)
+        allowed = set(TOOLS)
+        if actor.tool_allowlist is not None:
+            allowed.intersection_update(actor.tool_allowlist)
+        root.tools = [t for t in root.tools if t.name in allowed]
+        return result
+
+    if list_handler is not None:
+        server._mcp_server.request_handlers[ListToolsRequest] = reader_tools
 
     async def guarded(request):
         actor = current_actor()
@@ -187,6 +224,8 @@ def register(server):
         try:
             async with write_lock(bool(os.getenv("GATEWAY_ADDON_PROFILES_FILE")) and name in WRITE_TOOLS):
                 profile = check_call(actor, name, args)
+                if profile and profile.get("reader_only") and name == "gateway_knowledge_space_list":
+                    request.params.arguments = {**args, "include_personal": False}
                 result = await handler(request)
                 return filter_result(actor, name, result, profile)
         except PermissionError as exc:

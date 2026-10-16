@@ -1,4 +1,5 @@
 from html import escape
+import os
 from typing import Any
 
 from gateway_mcp.services.policy import GatewayActor, has_scope
@@ -278,6 +279,8 @@ def _navigation(*, active: str, is_admin: bool) -> str:
                 "Управление",
                 (
                     ("access-requests", "Заявки на доступ", "/admin/access-requests"),
+                    *([("platforma-readers", "Доступ коллег", "/admin/platforma-readers")]
+                      if os.getenv('GATEWAY_PLATFORMA_ONBOARDING_ENABLED', '').casefold() == 'true' else []),
                     ("users", "Доступ пользователей", "/admin/users"),
                     ("metrics", "Состояние шлюза", "/admin/metrics"),
                     ("integrations", "Интеграции", "/admin/integrations"),

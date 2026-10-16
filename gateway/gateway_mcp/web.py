@@ -29,9 +29,15 @@ def web_actor(request: Request) -> GatewayActor | None:
         actor = actor_from_claims(verify_gateway_token_claims(token))
         # A constrained MCP credential is never a browser/admin session, even
         # when its identity is the same as the human owner.
-        return None if actor.tool_allowlist is not None else actor
+        if actor.tool_allowlist is not None:
+            return None
     except Exception:
         return None
+    from gateway_mcp.services.platforma_onboarding import check_web_path, enabled
+    if enabled() and not check_web_path(actor, request.url.path):
+        from starlette.exceptions import HTTPException
+        raise HTTPException(403, "Доступен только личный вход и статус заявки: /join")
+    return actor
 
 
 def with_gateway_cookie(response: Response, token: str) -> Response:

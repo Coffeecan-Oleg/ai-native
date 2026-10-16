@@ -15,6 +15,8 @@ def _configured_list(name: str) -> set[str]:
 def limit_oauth_actor(
     actor: GatewayActor, requested_scopes: list[str] | None = None
 ) -> GatewayActor:
+    from gateway_mcp.services.platforma_onboarding import oauth_reader_actor
+    actor = oauth_reader_actor(actor)
     scopes = _configured_list("GATEWAY_MCP_OAUTH_SCOPES")
     tools = _configured_list("GATEWAY_MCP_OAUTH_TOOLS")
     if bool(scopes) != bool(tools):
