@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "tools": [
+    {
+      "name": "platforma.context.get",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:read",
+      "http_method": "GET",
+      "description": "Fictional Platforma snapshot context, units and available periods.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "platforma.services.list",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:read",
+      "http_method": "GET",
+      "description": "Read/search fictional services with bounded pagination.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000,
+            "default": 0
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "platforma.services.get",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:read",
+      "http_method": "GET",
+      "description": "Read one fictional service by its exact id.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "service_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "platforma.requests.list",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:read",
+      "http_method": "GET",
+      "description": "Read fictional requests; filters and overdue status use the snapshot date.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "unit_id": {
+            "type": "string"
+          },
+          "service_id": {
+            "type": "string"
+          },
+          "customer_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "completed",
+              "early",
+              "exact",
+              "late"
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "Обычный",
+              "Высокий",
+              "Критичный"
+            ]
+          },
+          "query": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "period": {
+            "type": "string",
+            "description": "YYYY-MM from context.periods or all; default snapshot month"
+          },
+          "due_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "due_to": {
+            "type": "string",
+            "format": "date"
+          },
+          "overdue_only": {
+            "type": "boolean",
+            "default": false
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000,
+            "default": 0
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "due_asc",
+              "due_desc",
+              "created_desc",
+              "id"
+            ]
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "platforma.requests.get",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:read",
+      "http_method": "GET",
+      "description": "Read one fictional request by its exact id.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

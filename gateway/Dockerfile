@@ -16,6 +16,7 @@ COPY pyproject.toml README.md MANIFEST.in ./
 COPY gateway*.py ./
 COPY gateway_mcp ./gateway_mcp
 COPY gateway-tools.json gateway-policy.json gateway-company-indexes.json gateway-factory-projects.json ./
+COPY gateway-platforma-tools.json ./
 COPY migrations ./migrations
 
 RUN pip install --no-cache-dir .

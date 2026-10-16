@@ -27,9 +27,12 @@ py-modules = ["gateway", "gateway_access", "gateway_auth", "gateway_backends", "
 packages = ["gateway_mcp", "gateway_mcp.backends", "gateway_mcp.routes", "gateway_mcp.services", "gateway_mcp.tools"]
 include-package-data = true
 
+[tool.setuptools.package-data]
+"gateway_mcp.backends" = ["platforma_training_data.json"]
+
 [tool.setuptools.data-files]
 "migrations" = ["migrations/*.sql"]
-"." = ["gateway-tools.json", "gateway-policy.json", "gateway-company-indexes.json", "gateway-factory-projects.json"]
+"." = ["gateway-tools.json", "gateway-policy.json", "gateway-company-indexes.json", "gateway-factory-projects.json", "gateway-platforma-tools.json"]
 
 [project.scripts]
 gateway-mcp = "gateway:main"

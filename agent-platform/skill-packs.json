@@ -18,6 +18,18 @@
         "sequential-thinking",
         "document-templates"
       ]
+    },
+    {
+      "name": "platforma-training",
+      "version": "0.1.0",
+      "displayName": "Платформа — учебный помощник",
+      "shortDescription": "Сервисы и заявки: чтение",
+      "author": {"name": "Coffeecan-Oleg", "url": "https://github.com/Coffeecan-Oleg"},
+      "repository": "https://github.com/Coffeecan-Oleg/ai-native",
+      "mcpUrl": "https://195-133-14-140.sslip.io/mcp",
+      "category": "Productivity",
+      "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+      "skills": ["platforma-training-service-reader"]
     }
   ]
 }

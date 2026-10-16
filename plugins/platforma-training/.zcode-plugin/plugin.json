@@ -1,0 +1,13 @@
+{
+  "name": "platforma-training",
+  "version": "0.1.0",
+  "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "skills": "skills",
+  "metadata": {
+    "platformRelease": "2026.09.11"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "platforma-training",
+  "version": "0.1.0",
+  "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "keywords": [
+    "agents",
+    "skills",
+    "ai-native",
+    "productivity"
+  ],
+  "skills": "./skills/",
+  "metadata": {
+    "platformRelease": "2026.09.11"
+  },
+  "interface": {
+    "displayName": "Платформа — учебный помощник",
+    "shortDescription": "Сервисы и заявки: чтение",
+    "longDescription": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+    "developerName": "Coffeecan-Oleg",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "MCP"
+    ],
+    "defaultPrompt": [
+      "Use Платформа — учебный помощник for this work."
+    ]
+  },
+  "mcpServers": "./codex.mcp.json"
+}

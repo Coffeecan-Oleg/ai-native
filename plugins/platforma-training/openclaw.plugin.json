@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "name": "platforma-training",
+  "version": "0.1.0",
+  "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+  "skills": [
+    "./skills"
+  ],
+  "metadata": {
+    "openclaw": {
+      "category": "Productivity"
+    },
+    "platformRelease": "2026.09.11"
+  }
+}

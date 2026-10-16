@@ -11,7 +11,7 @@ Claude Code:
 /mcp
 ```
 
-Authenticate the MCP server when Claude prompts. The endpoint is `https://gateway.example.com/mcp`.
+Authenticate the MCP server when Claude prompts. The endpoint is `https://195-133-14-140.sslip.io/mcp`.
 If Claude was previously connected with an old token or wrong account, open `/mcp`, clear authentication for GatewayMCP, then reconnect.
 
 Smoke tools after login:

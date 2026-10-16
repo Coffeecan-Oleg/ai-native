@@ -1,0 +1,8 @@
+# Enable the fictional read-only catalog while preserving the VM-local owner policy.
+# Use together with docker-compose.yml; contains no credentials.
+services:
+  gateway:
+    environment:
+      GATEWAY_TOOLS_FILE: /app/gateway-platforma-tools.json
+    volumes:
+      - ./gateway-policy.json:/app/gateway-policy.json:ro
