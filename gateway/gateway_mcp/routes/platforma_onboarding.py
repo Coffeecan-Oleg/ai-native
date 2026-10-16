@@ -48,7 +48,9 @@ def _response(title, body, status=200, *, refresh=False):
             '<title>' + escape(title) + '</title>' + CSS + '</head><body><main><h1>' +
             escape(title) + '</h1>' + body + '</main></body></html>')
     response = HTMLResponse(html, status_code=status)
-    response.headers.update({'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer',
+    # Native HTML POSTs under no-referrer carry Origin: null in browsers.
+    # Keep external referrers private while allowing our strict same-origin forms.
+    response.headers.update({'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin',
                              'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff',
                              'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"})
     return response

@@ -327,6 +327,30 @@ class WebTests(ReaderFixture):
         self.assertEqual(self.http.post(path,data=form,follow_redirects=False).status_code,303)
         self.assertIsNone(service.active_reader(self.reader.subject))
 
+    def test_native_browser_form_policy_keeps_strict_origin_and_csrf_checks(self):
+        row=self.pending();self.login(self.owner)
+        page=self.http.get('/admin/platforma-readers')
+        self.assertEqual(page.headers['referrer-policy'],'same-origin')
+        path='/admin/platforma-readers/'+str(row['id'])
+        form={'csrf':self.http.cookies.get('platforma_reader_csrf'),'revision':str(row['revision']),
+              'decision':'approved','reason':'Решение владельца — учебный доступ'}
+        for origin in ['null','https://evil.invalid']:
+            self.assertEqual(self.http.post(path+'/preview',data=form,headers={'Origin':origin}).status_code,403)
+        self.assertEqual(self.counts(),(1,0,0))
+        headers={'Origin':'https://gateway.example.invalid'}
+        preview=self.http.post(path+'/preview',data=form,headers=headers)
+        self.assertEqual(preview.status_code,200,preview.text)
+        self.assertEqual(preview.headers['referrer-policy'],'same-origin')
+        self.assertEqual(self.counts(),(1,0,0))
+        confirm=self.fields(preview);confirm['confirmed']='yes'
+        no_csrf=dict(confirm);no_csrf.pop('csrf')
+        self.assertEqual(self.http.post(path+'/confirm',data=no_csrf,headers=headers).status_code,403)
+        self.assertEqual(self.counts(),(1,0,0))
+        response=self.http.post(path+'/confirm',data=confirm,headers=headers,follow_redirects=False)
+        self.assertEqual(response.status_code,303,response.text)
+        self.assertEqual(self.counts(),(1,6,1))
+        self.assertIsNotNone(service.active_reader(self.reader.subject))
+
     def test_csrf_foreign_origin_and_unsigned_confirmation_are_denied(self):
         row=self.pending();self.login(self.owner);self.http.get('/admin/platforma-readers')
         path='/admin/platforma-readers/'+str(row['id'])
