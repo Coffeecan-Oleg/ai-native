@@ -321,3 +321,25 @@ def web_login_actor(actor):
     # A waiting-room cookie is identity, never an inherited policy/group grant.
     # Approved database grants are resolved freshly when that session is read.
     return replace(actor, groups=(), scopes=())
+
+
+def waiting_room_actor(user_info):
+    """Admit a verified non-owner identity only to the configured waiting room.
+
+    The generic policy and provider/service binding rules stay strict. No policy
+    groups, database grants or tool authority are inherited by this exception.
+    """
+    if not enabled():
+        return None
+    from gateway_mcp.services.policy import actor_from_user_info
+    actor = actor_from_user_info(user_info, include_database_grants=False)
+    if is_owner(actor):
+        return None
+    _identity(actor)
+    try:
+        cfg = settings()
+    except (RuntimeError, ValueError, OSError, KeyError, TypeError):
+        raise PermissionError('Reader entry is temporarily unavailable') from None
+    if cfg['until'] <= datetime.now(timezone.utc):
+        raise PermissionError('Training access period has ended')
+    return replace(actor, groups=(), scopes=())

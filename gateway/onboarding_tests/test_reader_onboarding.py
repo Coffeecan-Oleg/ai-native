@@ -1,5 +1,6 @@
 """Real PostgreSQL fixture and real HTTP MCP/web; no live users or credentials."""
 import copy
+import asyncio
 import base64
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +32,8 @@ class ReaderFixture(unittest.TestCase):
         self.profile_path = self.tmp/'profiles.json'
         self.profile_path.write_text(json.dumps(self.profiles))
         self.policy_path = self.tmp/'policy.json'
-        self.policy_path.write_text(json.dumps({'schema':1,'default_groups':[], 'users':{'owner@example.invalid':{'groups':['admins']}}}))
+        # The live training policy admits only its explicit owner before onboarding.
+        self.policy_path.write_text(json.dumps({'schema':1,'allowed_email_domains':['closed-training.invalid'], 'default_groups':[], 'users':{'owner@example.invalid':{'groups':['admins']}}}))
         self.enterContext(patch.dict(os.environ, {
             'GATEWAY_DATABASE_URL':TEST_URL, 'GATEWAY_MIGRATIONS_DIR':str(ROOT/'migrations'),
             'GATEWAY_POLICY_FILE':str(self.policy_path),'GATEWAY_AUTH_ENABLED':'true',
@@ -174,6 +176,13 @@ class StorageTests(ReaderFixture):
         service.decide(self.owner,row['id'],'revoked',row['revision'],'Test revoke')
         with self.assertRaises(PermissionError):auth.exchange_mcp_refresh_token(refresh_token=rotated['refresh_token'],client_id='isolated-reader-client',resource=auth.resource_url())
 
+    def test_closed_policy_refresh_exception_is_disabled_with_onboarding(self):
+        self.approve()
+        tokens=auth._issue_oauth_tokens(actor=self.fresh(),client_id='isolated-reader-client',resource=auth.resource_url())
+        with patch.dict(os.environ,{'GATEWAY_PLATFORMA_ONBOARDING_ENABLED':'false'}):
+            with self.assertRaises(PermissionError):
+                auth.exchange_mcp_refresh_token(refresh_token=tokens['refresh_token'],client_id='isolated-reader-client',resource=auth.resource_url())
+
     def test_real_code_exchange_from_scope_free_yandex_session_receives_only_approved_role(self):
         self.approve()
         waiting_actor=service.web_login_actor(self.fresh())
@@ -219,6 +228,7 @@ class WebTests(ReaderFixture):
 
     def test_yandex_callback_and_waiting_request_use_authenticated_identity_without_email_form(self):
         # Real callback/state/cookie handling; only the external Yandex service is stubbed.
+        self.assertFalse(policy.is_user_allowed({'id':'9002','default_email':'reader@example.invalid'}))
         state=auth.create_oauth_state('/join')
         with patch.object(auth,'exchange_yandex_code',AsyncMock(return_value={'access_token':'synthetic-yandex-only'})), \
              patch.object(auth,'fetch_yandex_user_info',AsyncMock(return_value={'id':'9002','login':'reader','default_email':'reader@example.invalid'})), \
@@ -229,6 +239,68 @@ class WebTests(ReaderFixture):
         self.assertEqual((claims['sub'],claims['email'],claims['scope'],claims['groups']),('yandex:9002','reader@example.invalid','',[]))
         r=self.http.get('/join');self.assertIn('Заявка отправлена',r.text)
         self.assertNotIn('name="email"',r.text);self.assertEqual(self.counts(),(1,0,0))
+
+    def verified_callback(self, info):
+        state=auth.create_oauth_state('/join')
+        with patch.object(auth,'exchange_yandex_code',AsyncMock(return_value={'access_token':'synthetic-yandex-only'})), \
+             patch.object(auth,'fetch_yandex_user_info',AsyncMock(return_value=info)), \
+             patch.object(auth,'_save_yandex_actor_token'):
+            return self.http.get('/auth/yandex/callback',params={'state':state,'code':'synthetic-code'},follow_redirects=False)
+
+    def test_closed_policy_still_denies_when_onboarding_is_disabled(self):
+        with patch.dict(os.environ,{'GATEWAY_PLATFORMA_ONBOARDING_ENABLED':'false'}):
+            r=self.verified_callback({'id':'9002','login':'reader','default_email':'reader@example.invalid'})
+        self.assertEqual(r.status_code,403);self.assertIn('not allowed by Gateway policy',r.json()['error'])
+        self.assertEqual(self.counts(),(0,0,0));self.assertIsNone(self.http.cookies.get('gateway_token'))
+
+    def test_waiting_entry_requires_verified_id_and_email(self):
+        for info in [{'login':'reader','default_email':'reader@example.invalid'},{'id':'9002','login':'reader'}]:
+            with self.subTest(info=info):
+                self.assertEqual(self.verified_callback(info).status_code,403)
+        self.assertEqual(self.counts(),(0,0,0));self.assertIsNone(self.http.cookies.get('gateway_token'))
+
+    def test_expired_or_unavailable_waiting_room_fails_closed(self):
+        info={'id':'9002','login':'reader','default_email':'reader@example.invalid'}
+        with patch.dict(os.environ,{'GATEWAY_PLATFORMA_READER_UNTIL':'2000-01-01T00:00:00Z'}):
+            self.assertEqual(self.verified_callback(info).status_code,403)
+        with patch.dict(os.environ,{'GATEWAY_ADDON_PROFILES_FILE':str(self.tmp/'missing-private-profile.json')}):
+            r=self.verified_callback(info);self.assertEqual(r.status_code,403)
+            self.assertNotIn(str(self.tmp),r.text)
+        self.assertEqual(self.counts(),(0,0,0))
+
+    def test_closed_policy_owner_login_retains_existing_web_authority(self):
+        r=self.verified_callback({'id':'9001','login':'owner','default_email':'owner@example.invalid'})
+        self.assertEqual(r.status_code,303)
+        claims=auth.verify_gateway_token_claims(self.http.cookies.get('gateway_token'))
+        self.assertEqual(claims['groups'],['admins']);self.assertIn('*',claims['scope'].split())
+        self.assertEqual(self.http.get('/admin/platforma-readers').status_code,200)
+        self.assertEqual(self.counts(),(0,0,0))
+
+    def test_closed_policy_relogin_stays_identity_only_after_approval(self):
+        info={'id':'9002','login':'reader','default_email':'reader@example.invalid'}
+        self.assertEqual(self.verified_callback(info).status_code,303)
+        claims=auth.verify_gateway_token_claims(self.http.cookies.get('gateway_token'))
+        with self.assertRaises(PermissionError):service.oauth_reader_actor(policy.actor_from_claims(claims))
+        self.assertIn('Заявка отправлена',self.http.get('/join').text)
+        self.approve()
+        self.assertEqual(self.verified_callback(info).status_code,303)
+        claims=auth.verify_gateway_token_claims(self.http.cookies.get('gateway_token'))
+        self.assertEqual((claims['scope'],claims['groups']),('',[]))
+        limited=service.oauth_reader_actor(policy.actor_from_claims(claims))
+        self.assertEqual(set(limited.scopes),service.SCOPES)
+        self.assertEqual(set(limited.tool_allowlist),service.TOOLS|service.ROUTES)
+        self.assertEqual(self.http.get('/credentials').status_code,403)
+        self.assertEqual(self.counts(),(1,6,1))
+
+    def test_waiting_exception_does_not_enable_yandex_service_binding(self):
+        info={'id':'9002','login':'reader','default_email':'reader@example.invalid'}
+        with patch.object(auth,'exchange_yandex_code',AsyncMock(return_value={'access_token':'synthetic-yandex-only'})), \
+             patch.object(auth,'fetch_yandex_user_info',AsyncMock(return_value=info)), \
+             patch.object(auth,'_save_yandex_actor_token') as save:
+            with self.assertRaises(PermissionError):
+                asyncio.run(auth.bind_yandex_code_to_actor(code='synthetic-code',actor_subject=self.reader.subject))
+            save.assert_not_called()
+        self.assertEqual(self.counts(),(0,0,0))
 
     def test_waiting_cookie_cannot_inherit_policy_admin_scopes(self):
         broad=policy.GatewayActor(subject='yandex:9002',yandex_id='9002',email='reader@example.invalid',groups=('admins',),scopes=('*',))

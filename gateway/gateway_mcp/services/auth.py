@@ -596,8 +596,12 @@ def exchange_mcp_refresh_token(
         "email": str(actor_data.get("email") or ""),
     }
     if not is_user_allowed(user_info):
-        raise PermissionError("Gateway user is no longer allowed")
-    actor = actor_from_user_info(user_info)
+        from gateway_mcp.services.platforma_onboarding import waiting_room_actor
+        actor = waiting_room_actor(user_info)
+        if actor is None:
+            raise PermissionError("Gateway user is no longer allowed")
+    else:
+        actor = actor_from_user_info(user_info)
     actor = replace(
         actor,
         scope_ceiling=_optional_token_list(actor_data, "scope_ceiling"),
@@ -982,12 +986,14 @@ async def login_with_yandex_code(code: str) -> tuple[GatewayActor, str]:
     token_payload = await exchange_yandex_code(code)
     yandex_token = str(token_payload["access_token"])
     user_info = await fetch_yandex_user_info(yandex_token)
+    from gateway_mcp.services.platforma_onboarding import waiting_room_actor, web_login_actor
     if not is_user_allowed(user_info):
-        record_auth_failure("user_not_allowed")
-        raise PermissionError("Yandex user is not allowed by Gateway policy")
-
-    actor = actor_from_user_info(user_info)
-    from gateway_mcp.services.platforma_onboarding import web_login_actor
+        actor = waiting_room_actor(user_info)
+        if actor is None:
+            record_auth_failure("user_not_allowed")
+            raise PermissionError("Yandex user is not allowed by Gateway policy")
+    else:
+        actor = actor_from_user_info(user_info)
     actor = web_login_actor(actor)
     _save_yandex_actor_token(
         actor_subject=actor.subject,
