@@ -16,7 +16,7 @@ from gateway_mcp.services.storage_core import _connect, ensure_schema, postgres_
 SPACE = 'space:organizational-awareness'
 SCOPES = frozenset({'skills:read', 'access:request', 'tools:read', 'tools:call',
                     'platforma:read', 'memory:read'})
-TOOLS = frozenset({'gateway_access_profile', 'gateway_search_tools', 'gateway_call_tool',
+TOOLS = frozenset({'gateway_corporate_skill_list', 'gateway_corporate_skill_read', 'gateway_access_profile', 'gateway_search_tools', 'gateway_call_tool',
                    'gateway_knowledge_space_list', 'gateway_knowledge_space_get',
                    'gateway_knowledge_document_get', 'gateway_knowledge_search'})
 ROUTES = frozenset({'platforma.context.get', 'platforma.services.list',

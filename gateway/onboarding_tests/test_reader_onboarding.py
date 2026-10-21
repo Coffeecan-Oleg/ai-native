@@ -470,4 +470,24 @@ class ProtocolTests(ReaderFixture):
         self.assertTrue(self.tool('gateway_access_profile')[0].get('isError'))
 
 
+    def test_approved_reader_reads_corporate_pack_and_revocation_stops_it(self):
+        with patch.dict(os.environ,{'GATEWAY_CORPORATE_SKILLS_ENABLED':'true'}):
+            result,data=self.tool('gateway_corporate_skill_list')
+            self.assertFalse(result.get('isError'),data)
+            self.assertEqual(len(data['skills']),5)
+            result,data=self.tool('gateway_corporate_skill_read',{'skill':'message-format-tg-bitrix'})
+            self.assertFalse(result.get('isError'),data)
+            self.assertIn('Telegram',data['content'])
+            service.decide(self.owner,self.row['id'],'revoked',self.row['revision'],'Revoke corporate fixture')
+            self.assertTrue(self.tool('gateway_corporate_skill_list')[0].get('isError'))
+            self.assertTrue(self.tool('gateway_corporate_skill_read',{'skill':'meeting-protocol'})[0].get('isError'))
+
+    def test_corporate_reader_cannot_read_other_files_or_private_owner_tools(self):
+        with patch.dict(os.environ,{'GATEWAY_CORPORATE_SKILLS_ENABLED':'true'}):
+            for name,args in [('gateway_corporate_skill_read',{'skill':'meeting-protocol','path':'../.env'}),
+                              ('gateway_corporate_skill_read',{'skill':'private-memory'}),
+                              ('gateway_usage_dashboard',{}),('gateway_memory_search',{})]:
+                with self.subTest(tool=name):self.assertTrue(self.tool(name,args)[0].get('isError'))
+
+
 if __name__=='__main__':unittest.main()

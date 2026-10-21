@@ -13,6 +13,7 @@ from pathlib import Path
 from gateway_mcp.services.security_guard import authorize
 
 READ_TOOLS = {
+    "gateway_corporate_skill_list", "gateway_corporate_skill_read",
     "gateway_access_profile", "gateway_search_tools", "gateway_call_tool",
     "gateway_knowledge_space_list", "gateway_knowledge_space_get",
     "gateway_knowledge_document_get", "gateway_knowledge_search",

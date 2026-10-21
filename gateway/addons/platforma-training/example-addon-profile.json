@@ -168,6 +168,20 @@
           "operations": [
             "create"
           ]
+        },
+        {
+          "id": "mcp:gateway_corporate_skill_list",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
+        },
+        {
+          "id": "mcp:gateway_corporate_skill_read",
+          "kind": "tool",
+          "operations": [
+            "read"
+          ]
         }
       ],
       "spaces": [

@@ -1,4 +1,5 @@
 from html import escape
+from gateway_mcp.services import branding
 import os
 from typing import Any
 
@@ -34,7 +35,7 @@ def admin_shell(
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>{escape(title)} · Comind AI Native Auth</title>
+      <title>{escape(title)} · {'Акметрон · Платформа' if branding.enabled() else 'Comind AI Native Auth'}</title>
       <style>
         /* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
          * genre: modern-minimal · theme: coMind workbench · macrostructure: operational dashboard
@@ -240,12 +241,13 @@ def admin_shell(
         }}
       </style>
       {extra_head}
+      {branding.head()}
     </head>
     <body>
       <div class="app-shell">
         <aside class="sidebar">
           <div class="sidebar-top">
-            <a class="brand" href="{home_url}"><span class="brand-name">coMind</span><span class="brand-product">AI Native Gateway</span></a>
+            <a class="brand" href="{home_url}">{branding.logo() if branding.enabled() else '<span class="brand-name">coMind</span><span class="brand-product">AI Native Gateway</span>'}</a>
             <details class="mobile-menu"><summary>Разделы</summary><nav class="nav" aria-label="Мобильная навигация">{nav}<div class="mobile-identity">Вы вошли как <strong>{escape(actor.display)}</strong></div></nav></details>
           </div>
           <nav class="nav desktop-nav" aria-label="Основная навигация">{nav}</nav>

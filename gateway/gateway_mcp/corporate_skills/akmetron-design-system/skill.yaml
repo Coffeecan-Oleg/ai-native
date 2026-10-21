@@ -1,0 +1,22 @@
+schema: 1
+name: akmetron-design-system
+version: 0.1.0
+title: "Дизайн-система Акметрон"
+description: "Фирменный стиль Акметрон для страниц, интерфейсов и HTML: логотип, синий акцент, Montserrat и Inter. Применять к явно выбранному корпоративному оформлению."
+compatible_agents:
+  - claude
+  - codex
+  - cursor
+  - opencode
+  - openclaw
+  - hermes
+  - zcode
+requires:
+  mcp: []
+  permissions:
+    filesystem: read
+resources:
+  skill: SKILL.md
+  references: true
+  scripts: false
+  assets: true

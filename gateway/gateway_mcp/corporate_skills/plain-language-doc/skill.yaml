@@ -1,0 +1,22 @@
+schema: 1
+name: plain-language-doc
+version: 0.1.0
+title: "Понятные документы и отчёты"
+description: "Понятные рабочие документы и отчёты с объяснением терминов, схемами и источниками, в корпоративном оформлении Акметрон."
+compatible_agents:
+  - claude
+  - codex
+  - cursor
+  - opencode
+  - openclaw
+  - hermes
+  - zcode
+requires:
+  mcp: []
+  permissions:
+    filesystem: read
+resources:
+  skill: SKILL.md
+  references: true
+  scripts: false
+  assets: true

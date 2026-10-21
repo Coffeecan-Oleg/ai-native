@@ -28,6 +28,7 @@ packages = ["gateway_mcp", "gateway_mcp.backends", "gateway_mcp.routes", "gatewa
 include-package-data = true
 
 [tool.setuptools.package-data]
+"gateway_mcp" = ["branding_assets/*", "branding_assets/fonts/*", "corporate_skills/*", "corporate_skills/*/*", "corporate_skills/*/*/*", "corporate_skills/*/*/*/*"]
 "gateway_mcp.backends" = ["platforma_training_data.json"]
 
 [tool.setuptools.data-files]

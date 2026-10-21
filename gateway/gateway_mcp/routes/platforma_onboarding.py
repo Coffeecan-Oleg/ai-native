@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlsplit
 from starlette.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 
 from gateway_mcp.config import public_url
+from gateway_mcp.services import branding
 from gateway_mcp.services import platforma_onboarding as service
 from gateway_mcp.services.auth import jwt_secret
 from gateway_mcp.services.observability import audit_event
@@ -45,7 +46,7 @@ def _response(title, body, status=200, *, refresh=False):
     meta = '<meta http-equiv="refresh" content="10">' if refresh else ''
     html = ('<!doctype html><html lang="ru"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">' + meta +
-            '<title>' + escape(title) + '</title>' + CSS + '</head><body><main><h1>' +
+            '<title>' + escape(title) + '</title>' + CSS + branding.head() + '</head><body>' + branding.header() + '<main><h1>' +
             escape(title) + '</h1>' + body + '</main></body></html>')
     response = HTMLResponse(html, status_code=status)
     # Native HTML POSTs under no-referrer carry Origin: null in browsers.
@@ -53,6 +54,8 @@ def _response(title, body, status=200, *, refresh=False):
     response.headers.update({'Cache-Control': 'no-store', 'Referrer-Policy': 'same-origin',
                              'X-Frame-Options': 'DENY', 'X-Content-Type-Options': 'nosniff',
                              'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"})
+    if branding.enabled():
+        response.headers['Content-Security-Policy'] = "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'"
     return response
 
 
@@ -207,7 +210,7 @@ def register_platforma_onboarding_routes(mcp):
             body += '<a href="?page=' + str(page+1) + '">Далее</a>'
         from gateway_mcp.routes.admin_ui import admin_shell
         response = _response('Доступ коллег', body)
-        response.body = admin_shell(title='Доступ коллег', active='platforma-readers', actor=actor, body='<h1>Доступ коллег</h1>' + body, extra_head=CSS).encode()
+        response.body = admin_shell(title='Доступ коллег', active='platforma-readers', actor=actor, body='<div class="akm-heading"><span class="eyebrow">Управление доступом</span><h1>Доступ коллег</h1></div><section class="panel">' + body + '</section>' if branding.enabled() else '<h1>Доступ коллег</h1>' + body, extra_head=CSS).encode()
         response.headers['content-length'] = str(len(response.body))
         return _cookie(response, token)
 

@@ -24,12 +24,31 @@
       "version": "0.1.0",
       "displayName": "Платформа — учебный помощник",
       "shortDescription": "Сервисы и заявки: чтение",
-      "author": {"name": "Coffeecan-Oleg", "url": "https://github.com/Coffeecan-Oleg"},
+      "author": {
+        "name": "Coffeecan-Oleg",
+        "url": "https://github.com/Coffeecan-Oleg"
+      },
       "repository": "https://github.com/Coffeecan-Oleg/ai-native",
       "mcpUrl": "https://195-133-14-140.sslip.io/mcp",
       "category": "Productivity",
       "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
-      "skills": ["platforma-training-service-reader"]
+      "skills": [
+        "platforma-training-service-reader"
+      ]
+    },
+    {
+      "name": "akmetron-corporate",
+      "version": "0.1.0",
+      "displayName": "Акметрон — корпоративное оформление",
+      "category": "Productivity",
+      "description": "Фирменные документы, интерфейсы и сообщения Акметрон. Только подготовка результата; доступ к корпоративным источникам не добавляется.",
+      "skills": [
+        "akmetron-design-system",
+        "datasheet-ru-localizer",
+        "meeting-protocol",
+        "message-format-tg-bitrix",
+        "plain-language-doc"
+      ]
     }
   ]
 }
