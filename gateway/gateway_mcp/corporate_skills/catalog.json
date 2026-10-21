@@ -107,12 +107,12 @@
           "bytes": 4368
         },
         "SKILL.md": {
-          "sha256": "7143bb944fed6e79d896ad147fb2a79be3b4d545aadd75febfd87e1c951236e8",
-          "bytes": 14110
+          "sha256": "595da8bc2193172bfa4cdb44a5939ee056aa95934aaf0ed6fb3d54604e918ba4",
+          "bytes": 13941
         },
         "skill.yaml": {
-          "sha256": "e82f861e3b65cafb26cb96088948572a6eda8ad22f3a5d6e3ebb0d6e157ff322",
-          "bytes": 646
+          "sha256": "4d6b19f6cab04e125a95438524f41e2117b2fd9b4528a54844b58f5dbc0d9880",
+          "bytes": 624
         }
       }
     },
@@ -211,8 +211,8 @@
           "bytes": 541
         },
         "assets/render_pdf.py": {
-          "sha256": "f4fa3dea8445131c6e7c8c839384be53313c75f4bb2eab6d3e17a80ea8d0e458",
-          "bytes": 3973
+          "sha256": "7b15a755ba89c227f82073214354cf0deb0007b6ed011659ec150519de5e9d0b",
+          "bytes": 3883
         },
         "assets/renderer.js": {
           "sha256": "945d619efca469386b8330ac7a277a059c130cc90ce8b87b2c04ef8e052bde2c",
@@ -231,12 +231,12 @@
           "bytes": 7701
         },
         "SKILL.md": {
-          "sha256": "2925dc888b87b0d3762bf38e7015255160f4c3fc88220ce44c00e03d57025ce5",
-          "bytes": 12969
+          "sha256": "89a0a210b62f2ce8945df76d422e25e66c920c44341b3142875a741e8377cd03",
+          "bytes": 12807
         },
         "skill.yaml": {
-          "sha256": "1330949ac55dce83b91d0067a8d5ed2f216898db635d38273269cfa01ba450b2",
-          "bytes": 691
+          "sha256": "ddd6482581a2391d3f6decfad1ed5e358071f9c242db8c437793298274622377",
+          "bytes": 669
         }
       }
     },
@@ -327,8 +327,8 @@
           "bytes": 541
         },
         "assets/render_pdf.py": {
-          "sha256": "1cf8f64b8230dc32b2ae973a7166e695586ed03a5c790b3fd5cf777e69b32112",
-          "bytes": 4183
+          "sha256": "09702fd9fe63d58a12ec5688621f414a6ec8df38e09313e53e062ab24d029229",
+          "bytes": 4086
         },
         "assets/renderer.js": {
           "sha256": "dfabff6843296f9606089f229ed6a995cd9beab16d1525f7d64a4308f3cfc176",
@@ -343,12 +343,12 @@
           "bytes": 1317
         },
         "SKILL.md": {
-          "sha256": "407316c12f0b96dea5b75f4b5a05e30250805080e1de06d644b339b52806edae",
-          "bytes": 13422
+          "sha256": "93ea4ee0f452dbca519c89a42599dee278e4fee5f34de86552fc0af49965e28b",
+          "bytes": 13262
         },
         "skill.yaml": {
-          "sha256": "9fefd8a359f66051d7ffe4270a1daf8ab5a4beff808859396c9fce22031290e5",
-          "bytes": 583
+          "sha256": "e8a308bf255807e724b7d78be71bd8311c2c46b0a28908a662e669da472b1e8b",
+          "bytes": 561
         }
       }
     },
@@ -367,12 +367,12 @@
           "bytes": 1317
         },
         "SKILL.md": {
-          "sha256": "490edb459a1f8eff7b64cc4979915e51a9feef6530c5c806e4f01d7bfa90c2ad",
-          "bytes": 7705
+          "sha256": "7c3ef6acb559a9883401ad1229ad4371bc51ab33d5d9d5e4aed0026e33587cf6",
+          "bytes": 7625
         },
         "skill.yaml": {
-          "sha256": "3dfc6c07e1522c8dd88ef185f37c30d1fd42d068260e9ba607ef68eb26b39ccb",
-          "bytes": 606
+          "sha256": "bc0eaac9912007d4bcc68215f3387519f76bf5ddd6ce886b337831229c2373e8",
+          "bytes": 584
         }
       }
     },
@@ -459,16 +459,16 @@
           "bytes": 1317
         },
         "references/layout-and-rendering.md": {
-          "sha256": "dc43876a6ebbda07c12e28e012a90ee039281c954bc8850826f91955137c09f2",
-          "bytes": 17224
+          "sha256": "6d754d06e433e230704b562c002c8c303ece5bfa1cac58945b83d2dac4e95cb6",
+          "bytes": 16984
         },
         "SKILL.md": {
-          "sha256": "b24fc5e61e91d5985c679adfb370e79679ae250aa456c33d6f869b693aaa498f",
-          "bytes": 6964
+          "sha256": "31be65ade36d5d896d553560d2e184d6c60e03773aeafa63d300d7d40c31dff6",
+          "bytes": 6898
         },
         "skill.yaml": {
-          "sha256": "ada16f9070545725e86f9fcde728f89c01f105bf661b7b0b2916ca2cbd0adc39",
-          "bytes": 604
+          "sha256": "1e8d21960a4d7806eacf9da6a472f478900d9a7b6effaf554213e678ce880806",
+          "bytes": 582
         }
       }
     }
