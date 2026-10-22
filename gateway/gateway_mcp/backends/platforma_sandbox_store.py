@@ -147,8 +147,14 @@ class SandboxStore(DemoStore):
         self.periods = sorted({self.period(r) for r in self.requests.values()})
 
     def meta(self):
-        return {**super().meta(), "sandbox_write_pilot": True,
-                "clock": "fixed_snapshot", "base_snapshot_immutable": True}
+        from gateway_mcp.services.platforma_clients import client_identifiers
+        return {**super().meta(), "skill_telemetry_clients": client_identifiers(), "read_only": False, "sandbox_write_pilot": True,
+                "clock": "fixed_snapshot", "base_snapshot_immutable": True,
+                "write_routes": ["platforma.requests.create", "platforma.requests.update"],
+                "write_scope_required": "platforma:write",
+                "authorization_note": "Backend capability is not an actor permission. "
+                    "Writes require platforma:write and an active owner or training participant approval. "
+                    "Only the sandbox overlay changes; the base snapshot stays immutable."}
 
     def request_record(self, row, detail=False):
         record = super().request_record(row, detail=detail)

@@ -21,19 +21,32 @@ def _catalog():
     return catalog
 
 
-def list_skills():
+def list_skills(actor=None):
     data = _catalog()
+    rows = [{k: row[k] for k in ('name', 'title', 'version', 'description')}
+            | {'files': row['files']} for row in data['skills']]
+    from gateway_mcp.services import skill_library
+    if skill_library.enabled() and actor is not None:
+        rows = skill_library.catalogue(actor, rows)
     return {'ok': True, 'pack': data['pack'], 'version': data['version'],
-            'skills': [{k: row[k] for k in ('name', 'title', 'version', 'description')}
-                       | {'files': row['files']} for row in data['skills']],
+            'skills': rows,
             'execution': 'client-side only; this MCP never executes the skill'}
 
 
-def read_skill(skill, path='SKILL.md', offset=0, limit=16384):
+def read_skill(skill, path='SKILL.md', offset=0, limit=16384, *, actor=None):
     catalog = _catalog()
-    row = next((s for s in catalog['skills'] if s['name'] == skill), None)
+    from gateway_mcp.services import skill_library
+    rows = list_skills(actor)['skills']
+    row = next((s for s in rows if s['name'] == skill), None)
+    if row is None and isinstance(skill, str):
+        candidates = [s for s in rows if skill_library.title_key(s['title']) == skill_library.title_key(skill)]
+        if len(candidates) == 1:
+            row = candidates[0]
     if row is None:
         raise PermissionError('Unknown corporate skill')
+    skill = row['name']
+    if row.get('origin') == 'uploaded':
+        return skill_library.read_resource(actor, row, path, offset, limit)
     if not isinstance(path, str) or not path or '\\' in path or ':' in path:
         raise PermissionError('Resource path is not allowed')
     relative = PurePosixPath(path)

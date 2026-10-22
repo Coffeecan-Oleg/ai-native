@@ -402,8 +402,9 @@ def reader_profile(actor):
                                 for r in sorted(PARTICIPANT_ROUTES)]
         owner_profiles = json.loads(Path(os.environ['GATEWAY_ADDON_PROFILES_FILE']).read_text())
         limits = dict(owner_profiles['profiles'][cfg['owner']].get('skill_telemetry',{}))
-        limits['agents'] = ['codex','claude','chatgpt']
-        limits['clients'] = ['codex-desktop','claude-desktop','claude-code','chatgpt']
+        from gateway_mcp.services.platforma_clients import telemetry_agents, telemetry_clients
+        limits['agents'] = list(telemetry_agents())
+        limits['clients'] = list(telemetry_clients())
         result['skill_telemetry'] = limits
     return result
 
@@ -425,6 +426,12 @@ def check_web_path(actor, path):
     if path in {'/platforma/requests', '/platforma/requests/view'}:
         try:
             return active_reader(actor.subject) is not None
+        except Exception:
+            return False
+    if path in {'/platforma/skills', '/platforma/skills/upload', '/platforma/skills/view', '/platforma/skills/rename'}:
+        from gateway_mcp.services.skill_library import enabled as library_enabled
+        try:
+            return library_enabled() and active_reader(actor.subject) is not None
         except Exception:
             return False
     return False

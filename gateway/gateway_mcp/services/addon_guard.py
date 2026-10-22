@@ -110,6 +110,9 @@ def check_call(actor, name, arguments):
         limits = profile.get("skill_telemetry", {})
         skill = arguments.get("skill_id", "")
         expected = limits.get("skills", {}).get(skill)
+        if expected is None:
+            from gateway_mcp.services.skill_library import telemetry_descriptor
+            expected = telemetry_descriptor(actor, skill)
         if not expected or arguments.get("project", "") != limits.get("project"):
             raise PermissionError("addon_telemetry_skill_denied")
         if arguments.get("skill_pack", "") != expected["pack"] or arguments.get("skill_version", "") != expected["version"]:

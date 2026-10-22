@@ -45,6 +45,20 @@ class SandboxWriteTests(unittest.TestCase):
         args.update(overrides)
         return call('platforma.requests.create',**args)['record']
 
+    def test_context_capability_is_separate_from_actor_permission(self):
+        context=call("platforma.context.get")
+        self.assertFalse(context["read_only"])
+        self.assertTrue(context["base_snapshot_immutable"])
+        self.assertEqual(context["write_scope_required"],"platforma:write")
+        self.assertEqual(set(context["write_routes"]),{"platforma.requests.create","platforma.requests.update"})
+        reader=GatewayActor(subject="yandex:9002",scopes=("platforma:read",))
+        with patch("gateway_mcp.backends.platforma_demo.current_actor",return_value=reader):
+            self.assertFalse(call("platforma.context.get")["read_only"])
+            with self.assertRaises(PermissionError): self.create()
+        self.assertFalse(sandbox.overlay_path().exists())
+        with patch.dict(os.environ,{"GATEWAY_PLATFORMA_SANDBOX_WRITE_ENABLED":"false"}):
+            self.assertTrue(call("platforma.context.get")["read_only"])
+
     def test_create_persists_and_reads_through_existing_routes(self):
         before=call('platforma.context.get')['visible_requests']
         row=self.create()
