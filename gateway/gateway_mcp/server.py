@@ -19,6 +19,7 @@ from gateway_mcp.routes.health import register_health_routes
 from gateway_mcp.routes.llm_proxy import register_llm_proxy_routes
 from gateway_mcp.routes.notifications import register_notification_routes
 from gateway_mcp.routes.platforma_onboarding import register_platforma_onboarding_routes
+from gateway_mcp.routes.platforma_requests import register_platforma_request_routes
 from gateway_mcp.routes.telemetry import register_telemetry_routes
 from gateway_mcp.services.auth import mcp_auth_settings, token_verifier
 from gateway_mcp.tools.access import register_access_tools
@@ -63,6 +64,7 @@ def create_mcp():
     register_admin_factory_connection_routes(server)
     register_admin_telemetry_routes(server)
     register_platforma_onboarding_routes(server)
+    register_platforma_request_routes(server)
     register_company_tools(server)
     register_memory_tools(server)
     register_notification_tools(server)

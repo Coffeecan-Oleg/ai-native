@@ -23,7 +23,7 @@ def register_corporate_skill_tools(mcp):
 
     @mcp.tool(annotations=ToolAnnotations(title='Корпоративные навыки Акметрон', readOnlyHint=True))
     async def gateway_corporate_skill_list() -> str:
-        """List five corporate formatting skills and their immutable resource hashes."""
+        """List the available corporate and training skills with immutable resource hashes."""
         return await perform('gateway_corporate_skill_list', {}, corporate_skills.list_skills)
 
     @mcp.tool(annotations=ToolAnnotations(title='Прочитать корпоративный навык', readOnlyHint=True))

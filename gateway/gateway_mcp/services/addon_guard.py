@@ -17,7 +17,7 @@ READ_TOOLS = {
     "gateway_access_profile", "gateway_search_tools", "gateway_call_tool",
     "gateway_knowledge_space_list", "gateway_knowledge_space_get",
     "gateway_knowledge_document_get", "gateway_knowledge_search",
-    "gateway_memory_search", "gateway_usage_dashboard",
+    "gateway_memory_search", "gateway_usage_dashboard", "gateway_telemetry_skill_stats",
 }
 WRITE_TOOLS = {
     "gateway_knowledge_space_create", "gateway_knowledge_document_put",
@@ -29,6 +29,7 @@ ROUTES = {
     "platforma.context.get", "platforma.services.list", "platforma.services.get",
     "platforma.requests.list", "platforma.requests.get",
 }
+WRITE_ROUTES = {"platforma.requests.create": "POST", "platforma.requests.update": "PATCH"}
 
 
 def profile_for(actor):
@@ -93,9 +94,51 @@ def check_call(actor, name, arguments):
         from gateway_mcp.config import read_json, tools_file
         route = next((r for r in read_json(tools_file(), {"tools":[]})["tools"]
                       if r.get("name") == arguments.get("tool_name")), None)
-        if not route or route["name"] not in ROUTES or route.get("http_method") != "GET" or route.get("scope") != "platforma:read":
+        if not route or route.get("transport") != "platforma-demo" or route.get("backend") != "platforma":
             raise PermissionError("addon_backend_route_denied")
-        _check(profile, actor, route["name"], "backend_route", "read")
+        route_name = route["name"]
+        if route_name in ROUTES and route.get("http_method") == "GET" and route.get("scope") == "platforma:read":
+            _check(profile, actor, route_name, "backend_route", "read")
+        elif route_name in WRITE_ROUTES and route.get("http_method") == WRITE_ROUTES[route_name] and route.get("scope") == "platforma:write":
+            from gateway_mcp.services.platforma_onboarding import is_owner
+            if not is_owner(actor):
+                raise PermissionError("addon_owner_write_only")
+            _check(profile, actor, route_name, "backend_route", "write")
+        else:
+            raise PermissionError("addon_backend_route_denied")
+    elif name.startswith("gateway_telemetry_skill_") and name != "gateway_telemetry_skill_stats":
+        limits = profile.get("skill_telemetry", {})
+        skill = arguments.get("skill_id", "")
+        expected = limits.get("skills", {}).get(skill)
+        if not expected or arguments.get("project", "") != limits.get("project"):
+            raise PermissionError("addon_telemetry_skill_denied")
+        if arguments.get("skill_pack", "") != expected["pack"] or arguments.get("skill_version", "") != expected["version"]:
+            raise PermissionError("addon_telemetry_version_denied")
+        if arguments.get("agent", "") not in limits.get("agents", []):
+            raise PermissionError("addon_telemetry_agent_denied")
+        if json.loads(arguments.get("metadata_json", "{}")) != {}:
+            raise PermissionError("addon_telemetry_metadata_denied")
+        if arguments.get("client", "") not in ("", "codex-desktop"):
+            raise PermissionError("addon_telemetry_client_denied")
+        routes = json.loads(arguments.get("mcp_routes_json", "[]"))
+        missing = json.loads(arguments.get("missing_scopes_json", "[]"))
+        if not isinstance(routes, list) or len(routes) > 7 or not all(isinstance(r, str) and r in ROUTES | set(WRITE_ROUTES) for r in routes):
+            raise PermissionError("addon_telemetry_routes_denied")
+        if not isinstance(missing, list) or len(missing) > 9 or not all(isinstance(r, str) and r in limits.get("scopes", []) for r in missing):
+            raise PermissionError("addon_telemetry_scopes_denied")
+        import re
+        for key in ("session_id", "correlation_id", "error_class"):
+            value = arguments.get(key, "")
+            if not isinstance(value, str) or len(value) > 100 or (value and not re.fullmatch(r"[a-zA-Z0-9_.:-]+", value)):
+                raise PermissionError("addon_telemetry_identifier_denied")
+        duration = arguments.get("duration_ms", 0)
+        if type(duration) is not int or not 0 <= duration <= 86400000:
+            raise PermissionError("addon_telemetry_duration_denied")
+    elif name == "gateway_telemetry_skill_stats":
+        if arguments.get("actor_subject", "") not in ("", actor.subject):
+            raise PermissionError("addon_foreign_telemetry_denied")
+        if arguments.get("project", "") not in ("", profile.get("skill_telemetry", {}).get("project")):
+            raise PermissionError("addon_telemetry_project_denied")
     elif name == "gateway_knowledge_space_create":
         if arguments.get("slug") != "organizational-awareness" or json.loads(arguments.get("members_json", "[]")) != []:
             raise PermissionError("addon_space_creation_denied")

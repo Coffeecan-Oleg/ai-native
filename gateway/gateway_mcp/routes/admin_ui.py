@@ -25,10 +25,14 @@ def admin_shell(
     body: str,
     shell_width: str = "1120px",
     extra_head: str = "",
+    training_reader: bool = False,
 ) -> str:
+    from gateway_mcp.services.platforma_onboarding import enabled, is_owner
     is_admin = has_scope(actor, "access:admin")
-    nav = _navigation(active=active, is_admin=is_admin)
-    home_url = "/admin" if is_admin else "/notifications"
+    nav = _navigation(active=active, is_admin=is_admin,
+                      training_enabled=enabled() and (is_owner(actor) or training_reader),
+                      training_reader=training_reader)
+    home_url = "/platforma/requests" if training_reader else "/admin" if is_admin else "/notifications"
     return f"""
     <!doctype html>
     <html lang="ru">
@@ -260,7 +264,13 @@ def admin_shell(
     """
 
 
-def _navigation(*, active: str, is_admin: bool) -> str:
+def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, training_reader: bool = False) -> str:
+    if training_reader:
+        return '<div class="nav-group"><div class="nav-label">Платформа</div>' + ''.join(
+            _nav_link(key, label, href, active) for key, label, href in (
+                ('training-requests', 'Учебные заявки', '/platforma/requests'),
+                ('reader-status', 'Статус доступа', '/join'),
+                ('logout', 'Выйти', '/auth/logout'))) + '</div>'
     groups = []
     if is_admin:
         groups.append(
@@ -298,6 +308,7 @@ def _navigation(*, active: str, is_admin: bool) -> str:
         (
             "Рабочее место",
             (
+                *([("training-requests", "Учебные заявки", "/platforma/requests")] if training_enabled else []),
                 ("my-skills", "Мои навыки", "/my/skills"),
                 ("notifications", "Уведомления", "/notifications"),
                 ("credentials", "Мои подключения", "/credentials"),

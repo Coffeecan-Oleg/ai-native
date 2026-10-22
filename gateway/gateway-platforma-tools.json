@@ -176,6 +176,135 @@
         ],
         "additionalProperties": false
       }
+    },
+    {
+      "name": "platforma.requests.create",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:write",
+      "http_method": "POST",
+      "description": "Create a fictional request from an existing template in the isolated sandbox overlay. Owner only; use the fixed snapshot clock.",
+      "status": "implemented",
+      "requires_idempotency_key": true,
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "template_request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "Обычный",
+              "Высокий",
+              "Критичный"
+            ]
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        },
+        "required": [
+          "template_request_id",
+          "title",
+          "due_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "platforma.requests.update",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:write",
+      "http_method": "PATCH",
+      "description": "Update allowed fields of one fictional request using its exact revision. Completion status is derived from accepted_at; null reopens it.",
+      "status": "implemented",
+      "requires_idempotency_key": true,
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "changes": {
+            "type": "object",
+            "minProperties": 1,
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "Обычный",
+                  "Высокий",
+                  "Критичный"
+                ]
+              },
+              "due_at": {
+                "type": "string",
+                "format": "date"
+              },
+              "assignee_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "accepted_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date"
+              },
+              "reason": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "next_action": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "effort_hours": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 10000
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "request_id",
+          "expected_revision",
+          "changes"
+        ],
+        "additionalProperties": false
+      }
     }
   ]
 }

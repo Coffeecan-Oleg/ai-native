@@ -6,6 +6,10 @@ from typing import Any
 
 from gateway_mcp.backends.common import BackendRouteError
 from gateway_mcp.backends.platforma_demo_store import DATA_FILE, DemoStore, QueryError
+from gateway_mcp.backends import platforma_sandbox_store as sandbox
+from gateway_mcp.services.auth import current_actor
+from gateway_mcp.services.policy import has_scope
+from gateway_mcp.services.platforma_onboarding import is_owner
 
 ROUTES = {
     "platforma.context.get": "context",
@@ -21,8 +25,15 @@ def _store() -> DemoStore:
     return DemoStore()
 
 
+def _active_store():
+    try:
+        return sandbox.SandboxStore() if sandbox.enabled() else _store()
+    except QueryError as error:
+        raise BackendRouteError(str(error)) from None
+
+
 def _context() -> dict[str, Any]:
-    store = _store()
+    store = _active_store()
     return {
         **store.meta(),
         "dataset_sha256": hashlib.sha256(DATA_FILE.read_bytes()).hexdigest(),
@@ -62,12 +73,36 @@ def _validate_arguments(arguments: dict[str, Any]) -> None:
 
 async def _call_platforma_demo(route: dict[str, Any], arguments: dict[str, Any]) -> dict[str, Any]:
     name = str(route.get("name") or "")
+    writes = {"platforma.requests.create": ("POST", sandbox.create_request),
+              "platforma.requests.update": ("PATCH", sandbox.update_request)}
+    if name in writes:
+        verb, method = writes[name]
+        if route.get("scope") != "platforma:write" or route.get("http_method") != verb:
+            raise BackendRouteError("Only declared sandbox writes are supported")
+        actor = current_actor()
+        if not sandbox.enabled() or not is_owner(actor) or not has_scope(actor, "platforma:write"):
+            raise PermissionError("Sandbox write requires the exact owner and platforma:write")
+        if not isinstance(arguments, dict):
+            raise BackendRouteError("arguments must be a JSON object")
+        try:
+            inspect.signature(method).bind(**arguments)
+            for key, value in arguments.items():
+                if key in {"changes", "expected_revision"}:
+                    continue
+                if key == "created_at" and value is None:
+                    continue
+                if not isinstance(value, str) or not value.strip() or len(value) > 2000:
+                    raise QueryError("INVALID_FIELD: " + key)
+            result = method(**arguments)
+        except (TypeError, QueryError) as error:
+            raise BackendRouteError(str(error)) from None
+        return {"ok": True, "status": 200, "data": result}
     if name not in ROUTES or route.get("scope") != "platforma:read" or route.get("http_method") != "GET":
         raise BackendRouteError("Only declared read-only Platforma routes are supported")
     if not isinstance(arguments, dict):
         raise BackendRouteError("arguments must be a JSON object")
     operation = ROUTES[name]
-    method = _context if operation == "context" else getattr(_store(), operation)
+    method = _context if operation == "context" else getattr(_active_store(), operation)
     try:
         inspect.signature(method).bind(**arguments)
     except TypeError:

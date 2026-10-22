@@ -311,7 +311,14 @@ def knowledge_reader(actor, path):
 def check_web_path(actor, path):
     # Authentication/OAuth protocol routes do not use web_actor. All other web
     # handlers which accept browser sessions share this gate, including credentials.
-    return not enabled() or is_owner(actor) or path in {'/join', '/join/request', '/auth/logout'}
+    if not enabled() or is_owner(actor) or path in {'/join', '/join/request', '/auth/logout'}:
+        return True
+    if path in {'/platforma/requests', '/platforma/requests/view'}:
+        try:
+            return active_reader(actor.subject) is not None
+        except Exception:
+            return False
+    return False
 
 
 def web_login_actor(actor):

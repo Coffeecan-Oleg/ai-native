@@ -147,7 +147,7 @@ def register_platforma_onboarding_routes(mcp):
     @_guard()
     async def _entry_authenticated(request, actor):
         if service.is_owner(actor):
-            return _response('Управление доступом коллег', '<p>Ты вошёл как владелец.</p><a class="button" href="/admin/platforma-readers">Заявки и доступ коллег</a>')
+            return _response('Управление доступом коллег', '<p>Ты вошёл как владелец.</p><p><a class="button" href="/platforma/requests">Учебные заявки</a></p><a class="button secondary" href="/admin/platforma-readers">Заявки и доступ коллег</a>')
         row = await to_thread(service.own_request, actor, create=True)
         status = service.effective_status(row)
         # Also surface broken/revoked linked grants as closed, never as an open connection.
@@ -159,6 +159,7 @@ def register_platforma_onboarding_routes(mcp):
             body += '<div class="card"><p>Заявка отправлена владельцу. Пока он её не одобрит, карта знаний, сервисы и заявки закрыты.</p><p class="muted">Страница проверяет решение каждые 10 секунд. Можно закрыть её и вернуться позже.</p></div>'
         elif status == 'approved':
             endpoint = public_url().rstrip('/') + '/mcp'
+            body += '<p><a class="button" href="/platforma/requests">Открыть учебные заявки</a></p>'
             body += '<div class="card"><p>Роль: <strong>Читатель Платформы</strong>. Действует до ' + escape(_time(row['approved_until'])) + '.</p>' + _permissions() + '</div>'
             body += '<h2>Подключить своего ИИ-ассистента</h2><p>Добавь удалённый MCP-сервер с OAuth и войди тем же аккаунтом Яндекса:</p><pre>' + escape(endpoint) + '</pre>'
             body += '<details><summary>Команды для Codex CLI</summary><pre>' + escape('codex mcp add platforma --url ' + endpoint + '\ncodex mcp login platforma') + '</pre></details>'
