@@ -183,7 +183,7 @@
       "transport": "platforma-demo",
       "scope": "platforma:write",
       "http_method": "POST",
-      "description": "Create a fictional request from an existing template in the isolated sandbox overlay. Owner only; use the fixed snapshot clock.",
+      "description": "Create a fictional request from an existing template in the isolated sandbox overlay. Owner or explicitly approved training participant; use the fixed snapshot clock.",
       "status": "implemented",
       "requires_idempotency_key": true,
       "arguments_schema": {

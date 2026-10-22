@@ -29,6 +29,65 @@ DOCUMENTS = frozenset({'awareness/start.md', 'awareness/projects.md', 'awareness
                        'skills/organizational-awareness/references/repository-examples.md'})
 
 
+PARTICIPANT_EXTRA_SCOPES = frozenset({'platforma:write', 'telemetry:read', 'telemetry:write'})
+PARTICIPANT_TOOLS = frozenset({'gateway_telemetry_skill_started', 'gateway_telemetry_skill_completed',
+                             'gateway_telemetry_skill_failed', 'gateway_telemetry_skill_stats'})
+PARTICIPANT_ROUTES = frozenset({'platforma.requests.create', 'platforma.requests.update'})
+
+
+def participant_pilot_enabled():
+    return os.getenv('GATEWAY_PLATFORMA_PARTICIPANT_PILOT_ENABLED', '').casefold() == 'true'
+
+
+def _participant_reason(row):
+    return 'APP11 participant request ' + str(row['id'])
+
+
+def _grant_participant(cur, row, actor, until):
+    ids = []
+    reason = _participant_reason(row)
+    for scope in sorted(PARTICIPANT_EXTRA_SCOPES):
+        cur.execute("""insert into access_scope_grants
+            (subject_type,subject_key,scope,effect,reason,created_by,expires_at)
+            values ('user',%s,%s,'allow',%s,%s,%s) returning id""",
+            (row['subject'].casefold(),scope,reason,actor.subject,until))
+        ids.append(cur.fetchone()['id'])
+    cur.execute("""insert into access_resource_grants
+        (subject_type,subject_key,system,resource_type,resource_pattern,actions,effect,reason,created_by,expires_at)
+        values ('user',%s,'platforma','sandbox_requests','sandbox','["write"]','allow',%s,%s,%s)""",
+        (row['subject'].casefold(),reason,actor.subject,until))
+    return ids
+
+
+def upgrade_approved_participants(actor):
+    """Owner-approved deployment operation; no public MCP or automatic upgrade."""
+    require_owner(actor)
+    if not participant_pilot_enabled():
+        raise PermissionError('Participant pilot is disabled')
+    upgraded = []
+    with _db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""select * from platforma_reader_requests where status='approved'
+                and approved_until>now() order by id for update""")
+            rows = cur.fetchall()
+            for row in rows:
+                # A broken legacy approval is never repaired into broader access.
+                if active_reader(row['subject']) is None:
+                    continue
+                if active_participant(row['subject']) is not None:
+                    continue
+                cur.execute("""select scope from access_scope_grants where id=any(%s)""", (row['scope_grant_ids'],))
+                if {r['scope'] for r in cur.fetchall()} != SCOPES:
+                    raise PermissionError('Unexpected grants; owner review required')
+                extra = _grant_participant(cur,row,actor,row['approved_until'])
+                cur.execute("""update platforma_reader_requests set scope_grant_ids=%s,
+                    revision=revision+1 where id=%s returning *""",(list(row['scope_grant_ids'])+extra,row['id']))
+                changed = cur.fetchone()
+                _event(cur,changed,actor,'approved','Participant role: approved training pilot deployment')
+                upgraded.append(str(row['id']))
+    return {'upgraded_request_ids':upgraded}
+
+
 def enabled():
     return os.getenv('GATEWAY_PLATFORMA_ONBOARDING_ENABLED', '').casefold() == 'true'
 
@@ -168,6 +227,7 @@ def preview(actor, request_id, decision, revision, reason):
         raise PermissionError('Training access period has ended')
     return {'request_id': str(row['id']), 'subject': row['subject'], 'email': row['email'],
             'revision': row['revision'], 'status': row['status'], 'decision': decision,
+            'participant_pilot': participant_pilot_enabled(),
             'reason': reason.strip(), 'until': cfg['until'].isoformat() if decision == 'approved' else None}
 
 
@@ -186,6 +246,11 @@ def _validate_decision(row, decision, revision, reason):
 def _revoke_linked(cur, row):
     cur.execute('update access_scope_grants set revoked_at=coalesce(revoked_at,now()) where id=any(%s)',
                 (row['scope_grant_ids'],))
+    cur.execute("""update access_resource_grants set revoked_at=coalesce(revoked_at,now())
+        where subject_type='user' and subject_key=%s and system='platforma'
+        and resource_type='sandbox_requests' and resource_pattern='sandbox'
+        and actions='["write"]'::jsonb and reason=%s""",
+        (row['subject'].casefold(),_participant_reason(row)))
     if row['resource_grant_id']:
         cur.execute('update access_resource_grants set revoked_at=coalesce(revoked_at,now()) where id=%s',
                     (row['resource_grant_id'],))
@@ -222,6 +287,8 @@ def decide(actor, request_id, decision, revision, reason):
                     values ('user',%s,'platforma','*','["read"]','allow',%s,%s,%s) returning id''',
                     (row['subject'].casefold(), grant_reason, actor.subject, until))
                 resource_id = cur.fetchone()['id']
+                if participant_pilot_enabled():
+                    grant_ids.extend(_grant_participant(cur,row,actor,until))
             elif decision == 'revoked':
                 _revoke_linked(cur, row)
             cur.execute('''update platforma_reader_requests set status=%s,revision=revision+1,
@@ -257,9 +324,35 @@ def active_reader(subject):
                 and actions='["read"]'::jsonb and revoked_at is null and expires_at>now()''',
                 (row['resource_grant_id'], subject.casefold()))
             resource = cur.fetchone()
-    if len(scopes) != len(SCOPES) or {r['scope'] for r in scopes} != SCOPES or not resource:
+    if (len(scopes) != len(row['scope_grant_ids']) or
+            {r['scope'] for r in scopes} not in (SCOPES, SCOPES | PARTICIPANT_EXTRA_SCOPES) or not resource):
         return None
     return row
+
+
+def active_participant(subject):
+    if not participant_pilot_enabled():
+        return None
+    row = active_reader(subject)
+    if row is None:
+        return None
+    with _db() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""select scope from access_scope_grants where id=any(%s)""",(row['scope_grant_ids'],))
+            if {r['scope'] for r in cur.fetchall()} != SCOPES | PARTICIPANT_EXTRA_SCOPES:
+                return None
+            cur.execute("""select id from access_resource_grants where subject_type='user'
+                and subject_key=%s and system='platforma' and resource_type='sandbox_requests'
+                and resource_pattern='sandbox' and actions='["write"]'::jsonb and effect='allow'
+                and reason=%s and revoked_at is null and expires_at=%s and expires_at>now()""",
+                (subject.casefold(),_participant_reason(row),row['approved_until']))
+            if cur.fetchone() is None:
+                return None
+    return row
+
+
+def can_write_sandbox(actor):
+    return is_owner(actor) or active_participant(actor.subject) is not None
 
 
 def oauth_reader_actor(actor):
@@ -276,12 +369,14 @@ def oauth_reader_actor(actor):
     from gateway_mcp.services.policy import actor_from_user_info
     fresh = actor_from_user_info({'id': actor.yandex_id or actor.subject.removeprefix('yandex:'),
                                  'login': actor.login, 'default_email': actor.email})
-    granted = set(fresh.scopes) & SCOPES
-    previous = set(actor.scope_ceiling) if actor.scope_ceiling is not None else SCOPES
-    allowed = TOOLS | ROUTES
+    participant = active_participant(actor.subject) is not None
+    permitted = SCOPES | PARTICIPANT_EXTRA_SCOPES if participant else SCOPES
+    granted = set(fresh.scopes) & permitted
+    previous = set(actor.scope_ceiling) if actor.scope_ceiling is not None else permitted
+    allowed = TOOLS | ROUTES | (PARTICIPANT_TOOLS | PARTICIPANT_ROUTES if participant else frozenset())
     previous_tools = set(actor.tool_allowlist) if actor.tool_allowlist is not None else allowed
     return replace(actor, groups=(), scopes=tuple(sorted(granted)),
-                   scope_ceiling=tuple(sorted(SCOPES & previous)),
+                   scope_ceiling=tuple(sorted(permitted & previous)),
                    tool_allowlist=tuple(sorted(allowed & previous_tools)))
 
 
@@ -290,13 +385,27 @@ def reader_profile(actor):
     if row is None:
         raise PermissionError('addon_reader_not_approved')
     cfg = settings()
-    return {'version': '1.0.0', 'status': 'active', 'subject': actor.subject,
+    result = {'version': '1.0.0', 'status': 'active', 'subject': actor.subject,
             'project': 'APP11', 'expires_at': row['approved_until'].isoformat(),
             'reader_only': True, 'spaces': [SPACE], 'usage_projects': [],
             'forbidden_operations': ['write', 'create', 'delete', 'admin', 'grant', 'export'],
             'resources': [{'id': 'mcp:' + t, 'kind': 'tool', 'operations': ['read']} for t in sorted(TOOLS)] +
                          [{'id': r, 'kind': 'backend_route', 'operations': ['read']} for r in sorted(ROUTES)],
             'documents': {SPACE: cfg['documents']}}
+    if active_participant(actor.subject) is not None:
+        result['participant_role'] = 'training-participant'
+        result['forbidden_operations'] = ['delete','admin','grant','export']
+        result['resources'] += [
+            {'id':'mcp:'+t,'kind':'tool','operations':['read' if t.endswith('_stats') else 'write']}
+            for t in sorted(PARTICIPANT_TOOLS)]
+        result['resources'] += [{'id':r,'kind':'backend_route','operations':['write']}
+                                for r in sorted(PARTICIPANT_ROUTES)]
+        owner_profiles = json.loads(Path(os.environ['GATEWAY_ADDON_PROFILES_FILE']).read_text())
+        limits = dict(owner_profiles['profiles'][cfg['owner']].get('skill_telemetry',{}))
+        limits['agents'] = ['codex','claude','chatgpt']
+        limits['clients'] = ['codex-desktop','claude-desktop','claude-code','chatgpt']
+        result['skill_telemetry'] = limits
+    return result
 
 
 def knowledge_reader(actor, path):

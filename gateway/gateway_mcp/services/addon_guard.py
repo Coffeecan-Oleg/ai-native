@@ -100,9 +100,9 @@ def check_call(actor, name, arguments):
         if route_name in ROUTES and route.get("http_method") == "GET" and route.get("scope") == "platforma:read":
             _check(profile, actor, route_name, "backend_route", "read")
         elif route_name in WRITE_ROUTES and route.get("http_method") == WRITE_ROUTES[route_name] and route.get("scope") == "platforma:write":
-            from gateway_mcp.services.platforma_onboarding import is_owner
-            if not is_owner(actor):
-                raise PermissionError("addon_owner_write_only")
+            from gateway_mcp.services.platforma_onboarding import can_write_sandbox
+            if not can_write_sandbox(actor):
+                raise PermissionError("addon_sandbox_participant_required")
             _check(profile, actor, route_name, "backend_route", "write")
         else:
             raise PermissionError("addon_backend_route_denied")
@@ -118,7 +118,7 @@ def check_call(actor, name, arguments):
             raise PermissionError("addon_telemetry_agent_denied")
         if json.loads(arguments.get("metadata_json", "{}")) != {}:
             raise PermissionError("addon_telemetry_metadata_denied")
-        if arguments.get("client", "") not in ("", "codex-desktop"):
+        if arguments.get("client", "") not in ["", *limits.get("clients", ["codex-desktop"])]:
             raise PermissionError("addon_telemetry_client_denied")
         routes = json.loads(arguments.get("mcp_routes_json", "[]"))
         missing = json.loads(arguments.get("missing_scopes_json", "[]"))
@@ -252,7 +252,8 @@ def register(server):
             return ServerResult(ListToolsResult(tools=[]))
         result = await list_handler(request)
         root = getattr(result, "root", result)
-        allowed = set(TOOLS)
+        allowed = {row['id'].removeprefix('mcp:') for row in profile.get('resources', [])
+                   if row.get('kind') == 'tool' and row.get('id', '').startswith('mcp:')}
         if actor.tool_allowlist is not None:
             allowed.intersection_update(actor.tool_allowlist)
         root.tools = [t for t in root.tools if t.name in allowed]

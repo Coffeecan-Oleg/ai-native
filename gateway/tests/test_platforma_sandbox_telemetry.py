@@ -72,7 +72,7 @@ class TelemetryBoundaryTests(unittest.TestCase):
     def test_colleague_with_forged_profile_write_is_still_denied(self):
         reader=GatewayActor(subject='yandex:9002',scopes=('platforma:write',))
         self.profile['subject']=reader.subject
-        with self.assertRaisesRegex(PermissionError,'owner_write_only'):
+        with self.assertRaisesRegex(PermissionError,'sandbox_participant_required'):
             addon_guard.check_call(reader,'gateway_call_tool',{'tool_name':'platforma.requests.create'})
 
     def test_unknown_delete_route_denied(self):

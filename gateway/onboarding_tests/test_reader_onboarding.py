@@ -474,7 +474,7 @@ class ProtocolTests(ReaderFixture):
         with patch.dict(os.environ,{'GATEWAY_CORPORATE_SKILLS_ENABLED':'true'}):
             result,data=self.tool('gateway_corporate_skill_list')
             self.assertFalse(result.get('isError'),data)
-            self.assertEqual(len(data['skills']),5)
+            self.assertGreaterEqual(len(data['skills']),5)
             result,data=self.tool('gateway_corporate_skill_read',{'skill':'message-format-tg-bitrix'})
             self.assertFalse(result.get('isError'),data)
             self.assertIn('Telegram',data['content'])

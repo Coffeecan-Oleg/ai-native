@@ -129,7 +129,22 @@ def _guard(owner=False):
     return decorate
 
 
-def _permissions():
+def _permissions(participant=None):
+    if participant if participant is not None else service.participant_pilot_enabled():
+        return ('<ul><li>Чтение общей карты знаний, каталога навыков, вымышленных сервисов и заявок.</li>'
+                '<li>Создание и изменение вымышленных заявок через MCP.</li>'
+                '<li>Запись запусков навыков и чтение только собственной статистики навыков через MCP.</li></ul>'
+                '<p class="muted">Без личной памяти и статистики владельца, администрирования, удаления и рабочих систем. '
+                'Владелец видит учебные изменения и технический учёт запусков.</p>')
+    return _reader_permissions()
+
+
+def _role(participant=None):
+    active = participant if participant is not None else service.participant_pilot_enabled()
+    return 'Участник учебного практикума' if active else 'Читатель Платформы'
+
+
+def _reader_permissions():
     return ('<ul><li>Чтение общей карты знаний Платформы.</li><li>Чтение вымышленных сервисов и заявок.</li></ul>'
             '<p class="muted">Без изменения данных, администрирования, личной памяти и статистики владельца.</p>')
 
@@ -158,9 +173,10 @@ def register_platforma_onboarding_routes(mcp):
         if status == 'pending':
             body += '<div class="card"><p>Заявка отправлена владельцу. Пока он её не одобрит, карта знаний, сервисы и заявки закрыты.</p><p class="muted">Страница проверяет решение каждые 10 секунд. Можно закрыть её и вернуться позже.</p></div>'
         elif status == 'approved':
+            participant = await to_thread(service.active_participant, actor.subject) is not None
             endpoint = public_url().rstrip('/') + '/mcp'
             body += '<p><a class="button" href="/platforma/requests">Открыть учебные заявки</a></p>'
-            body += '<div class="card"><p>Роль: <strong>Читатель Платформы</strong>. Действует до ' + escape(_time(row['approved_until'])) + '.</p>' + _permissions() + '</div>'
+            body += '<div class="card"><p>Роль: <strong>' + escape(_role(participant)) + '</strong>. Действует до ' + escape(_time(row['approved_until'])) + '.</p>' + _permissions(participant) + '</div>'
             body += '<h2>Подключить своего ИИ-ассистента</h2><p>Добавь удалённый MCP-сервер с OAuth и войди тем же аккаунтом Яндекса:</p><pre>' + escape(endpoint) + '</pre>'
             body += '<details><summary>Команды для Codex CLI</summary><pre>' + escape('codex mcp add platforma --url ' + endpoint + '\ncodex mcp login platforma') + '</pre></details>'
             body += '<p>Первый запрос ассистенту:</p><pre>Прочитай awareness/start.md и awareness/project-profile.md в space:organizational-awareness. Покажи доступную карту и учебные сервисы.</pre>'
@@ -185,7 +201,7 @@ def register_platforma_onboarding_routes(mcp):
         listing = await to_thread(service.list_requests, actor, page * 50)
         token = _csrf(request, actor)
         body = '<p>Общая ссылка для коллег: <a href="/join">' + escape(public_url().rstrip('/') + '/join') + '</a></p>'
-        body += '<p>Одобрение выдаёт только роль «Читатель Платформы».</p>' + _permissions()
+        body += '<p>Одобрение выдаёт роль «' + escape(_role()) + '».</p>' + _permissions()
         body += '<table><thead><tr><th>Аккаунт Яндекса</th><th>Состояние</th><th>Решение</th></tr></thead><tbody>'
         for row in listing['rows']:
             status = service.effective_status(row)
@@ -228,7 +244,7 @@ def register_platforma_onboarding_routes(mcp):
         label = {'approved': 'Подтвердить одобрение', 'rejected': 'Подтвердить отказ', 'revoked': 'Подтвердить отзыв'}[preview['decision']]
         body = '<div class="card"><p>Аккаунт: <strong>' + escape(preview['email']) + '</strong></p>'
         if preview['decision'] == 'approved':
-            body += '<p>Откроется роль «Читатель Платформы» до ' + escape(_time(service._utc(preview['until']))) + '.</p>' + _permissions()
+            body += '<p>Откроется роль «' + escape(_role()) + '» до ' + escape(_time(service._utc(preview['until']))) + '.</p>' + _permissions()
         else:
             body += '<p>Доступ к данным будет закрыт. Скачанные ранее копии это не удаляет.</p>'
         body += '<p>Комментарий: ' + escape(preview['reason']) + '</p></div><form method="post" action="/admin/platforma-readers/' + preview['request_id'] + '/confirm">'

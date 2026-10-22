@@ -9,7 +9,7 @@ from gateway_mcp.backends.platforma_demo_store import DATA_FILE, DemoStore, Quer
 from gateway_mcp.backends import platforma_sandbox_store as sandbox
 from gateway_mcp.services.auth import current_actor
 from gateway_mcp.services.policy import has_scope
-from gateway_mcp.services.platforma_onboarding import is_owner
+from gateway_mcp.services.platforma_onboarding import can_write_sandbox
 
 ROUTES = {
     "platforma.context.get": "context",
@@ -80,8 +80,8 @@ async def _call_platforma_demo(route: dict[str, Any], arguments: dict[str, Any])
         if route.get("scope") != "platforma:write" or route.get("http_method") != verb:
             raise BackendRouteError("Only declared sandbox writes are supported")
         actor = current_actor()
-        if not sandbox.enabled() or not is_owner(actor) or not has_scope(actor, "platforma:write"):
-            raise PermissionError("Sandbox write requires the exact owner and platforma:write")
+        if not sandbox.enabled() or not can_write_sandbox(actor) or not has_scope(actor, "platforma:write"):
+            raise PermissionError("Sandbox write requires the owner or an approved training participant and platforma:write")
         if not isinstance(arguments, dict):
             raise BackendRouteError("arguments must be a JSON object")
         try:
