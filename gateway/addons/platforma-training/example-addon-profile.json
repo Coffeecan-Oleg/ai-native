@@ -182,6 +182,13 @@
           "operations": [
             "read"
           ]
+        },
+        {
+          "id": "platforma.unisender-demo.stats.get",
+          "kind": "backend_route",
+          "operations": [
+            "read"
+          ]
         }
       ],
       "spaces": [

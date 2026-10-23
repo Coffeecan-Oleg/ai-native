@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import Any
 
 from gateway_mcp.backends.common import BackendRouteError
+from gateway_mcp.backends.unisender_demo import campaign_stats
 from gateway_mcp.backends.platforma_demo_store import DATA_FILE, DemoStore, QueryError
 from gateway_mcp.backends import platforma_sandbox_store as sandbox
 from gateway_mcp.services.auth import current_actor
@@ -13,6 +14,7 @@ from gateway_mcp.services.platforma_onboarding import can_write_sandbox
 
 ROUTES = {
     "platforma.context.get": "context",
+    "platforma.unisender-demo.stats.get": "unisender_demo_stats",
     "platforma.services.list": "list_services",
     "platforma.services.get": "get_service",
     "platforma.requests.list": "list_requests",
@@ -102,7 +104,8 @@ async def _call_platforma_demo(route: dict[str, Any], arguments: dict[str, Any])
     if not isinstance(arguments, dict):
         raise BackendRouteError("arguments must be a JSON object")
     operation = ROUTES[name]
-    method = _context if operation == "context" else getattr(_active_store(), operation)
+    method = (_context if operation == "context" else campaign_stats if operation == "unisender_demo_stats"
+              else getattr(_active_store(), operation))
     try:
         inspect.signature(method).bind(**arguments)
     except TypeError:

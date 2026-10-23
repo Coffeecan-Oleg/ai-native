@@ -27,6 +27,7 @@ WRITE_TOOLS = {
 }
 ROUTES = {
     "platforma.context.get", "platforma.services.list", "platforma.services.get",
+    "platforma.unisender-demo.stats.get",
     "platforma.requests.list", "platforma.requests.get",
 }
 WRITE_ROUTES = {"platforma.requests.create": "POST", "platforma.requests.update": "PATCH"}
@@ -125,7 +126,7 @@ def check_call(actor, name, arguments):
             raise PermissionError("addon_telemetry_client_denied")
         routes = json.loads(arguments.get("mcp_routes_json", "[]"))
         missing = json.loads(arguments.get("missing_scopes_json", "[]"))
-        if not isinstance(routes, list) or len(routes) > 7 or not all(isinstance(r, str) and r in ROUTES | set(WRITE_ROUTES) for r in routes):
+        if not isinstance(routes, list) or len(routes) > len(ROUTES | set(WRITE_ROUTES)) or not all(isinstance(r, str) and r in ROUTES | set(WRITE_ROUTES) for r in routes):
             raise PermissionError("addon_telemetry_routes_denied")
         if not isinstance(missing, list) or len(missing) > 9 or not all(isinstance(r, str) and r in limits.get("scopes", []) for r in missing):
             raise PermissionError("addon_telemetry_scopes_denied")

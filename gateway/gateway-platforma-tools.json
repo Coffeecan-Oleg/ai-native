@@ -305,6 +305,30 @@
         ],
         "additionalProperties": false
       }
+    },
+    {
+      "name": "platforma.unisender-demo.stats.get",
+      "backend": "platforma",
+      "transport": "platforma-demo",
+      "scope": "platforma:read",
+      "http_method": "GET",
+      "description": "ВЫМЫШЛЕННЫЙ учебный пример статистики UniSender, только campaign_id=LAB-UNISENDER-001. Реальный UniSender не подключён; ключи, адресаты и отправка отсутствуют.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {
+          "campaign_id": {
+            "type": "string",
+            "enum": [
+              "LAB-UNISENDER-001"
+            ]
+          }
+        },
+        "required": [
+          "campaign_id"
+        ],
+        "additionalProperties": false
+      }
     }
   ]
 }

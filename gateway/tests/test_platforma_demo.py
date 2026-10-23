@@ -104,10 +104,10 @@ class PlatformaDemoTests(unittest.TestCase):
         with self.assertRaises(BackendRouteError):
             call("platforma.services.get")
 
-    def test_five_read_routes_and_two_bounded_write_routes_exist(self):
-        self.assertEqual(len(ROUTES), 7)
+    def test_six_read_routes_and_two_bounded_write_routes_exist(self):
+        self.assertEqual(len(ROUTES), 8)
         reads = [route for route in ROUTES.values() if route["http_method"] == "GET"]
-        self.assertEqual(len(reads), 5)
+        self.assertEqual(len(reads), 6)
         self.assertTrue(all(route["scope"] == "platforma:read" for route in reads))
         forged = {**ROUTES["platforma.requests.get"], "name": "platforma.requests.delete"}
         with self.assertRaises(BackendRouteError):

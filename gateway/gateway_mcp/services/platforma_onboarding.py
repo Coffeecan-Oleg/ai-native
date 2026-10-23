@@ -19,7 +19,7 @@ SCOPES = frozenset({'skills:read', 'access:request', 'tools:read', 'tools:call',
 TOOLS = frozenset({'gateway_corporate_skill_list', 'gateway_corporate_skill_read', 'gateway_access_profile', 'gateway_search_tools', 'gateway_call_tool',
                    'gateway_knowledge_space_list', 'gateway_knowledge_space_get',
                    'gateway_knowledge_document_get', 'gateway_knowledge_search'})
-ROUTES = frozenset({'platforma.context.get', 'platforma.services.list',
+ROUTES = frozenset({'platforma.unisender-demo.stats.get', 'platforma.context.get', 'platforma.services.list',
                     'platforma.services.get', 'platforma.requests.list', 'platforma.requests.get'})
 DOCUMENTS = frozenset({'awareness/start.md', 'awareness/projects.md', 'awareness/resources.md',
                        'awareness/refresh.md', 'awareness/project-profile.md',
