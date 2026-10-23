@@ -15,8 +15,8 @@
     "gateway_mcp_url": {
       "type": "string",
       "title": "GatewayMCP URL",
-      "description": "Remote GatewayMCP HTTP endpoint. Production: https://gateway.example.com/mcp",
-      "default": "https://gateway.example.com/mcp",
+      "description": "Remote GatewayMCP HTTP endpoint. Production: https://195-133-14-140.sslip.io/mcp",
+      "default": "https://195-133-14-140.sslip.io/mcp",
       "required": true
     }
   }

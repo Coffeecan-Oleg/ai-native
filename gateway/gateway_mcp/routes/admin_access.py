@@ -91,6 +91,9 @@ def _guard(handler):
         actor = web_actor(request)
         if actor is None:
             return login_redirect("/admin")
+        from gateway_mcp.routes.training_admin import is_training_visitor, overview_response
+        if is_training_visitor(actor) and request.url.path == "/admin":
+            return await overview_response(actor)
         if not has_scope(actor, "access:admin"):
             return PlainTextResponse("access:admin is required.", status_code=403)
         try:
@@ -407,6 +410,12 @@ def register_admin_access_routes(mcp):
             + "</section>"
         )
         body += '<section class="access-band"><h2>Прямые назначения ресурсов</h2>'
+        body += ("<p>Здесь перечислены отдельные правила доступа, а не итоговые права аккаунта. "
+                 "Строка read означает чтение указанного ресурса. В учебной Платформе "
+                 "чтение platforma · * и запись platforma · sandbox_requests · sandbox "
+                 "выдаются отдельно. Для изменения заявок через MCP также нужны "
+                 "platforma:write, действующее одобрение участника и разрешение в его личном подключении. "
+                 "Роль администратора сама по себе эти ограничения не отменяет.</p>")
         body += (
             _table(
                 ["Система и ресурс", "Действия", "Состояние", "Срок"],

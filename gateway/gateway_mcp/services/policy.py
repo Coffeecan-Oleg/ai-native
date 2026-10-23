@@ -142,6 +142,8 @@ class GatewayActor:
     yandex_id: str = ""
     groups: tuple[str, ...] = ()
     scopes: tuple[str, ...] = ()
+    scope_ceiling: tuple[str, ...] | None = None
+    tool_allowlist: tuple[str, ...] | None = None
 
     @property
     def display(self) -> str:
@@ -264,6 +266,12 @@ def actor_from_claims(claims: dict[str, Any]) -> GatewayActor:
         yandex_id=yandex_id,
         groups=list(groups or []),
     )
+    ceiling = _optional_token_list(claims, "scope_ceiling")
+    allowed_tools = _optional_token_list(claims, "tool_allowlist")
+    if ceiling is not None:
+        scope_values.intersection_update(ceiling)
+        # Delegated credentials must never regain group-based authority.
+        groups = []
     return GatewayActor(
         subject=subject,
         email=email,
@@ -271,7 +279,20 @@ def actor_from_claims(claims: dict[str, Any]) -> GatewayActor:
         yandex_id=yandex_id,
         groups=tuple(groups or []),
         scopes=tuple(sorted(scope_values)),
+        scope_ceiling=ceiling,
+        tool_allowlist=allowed_tools,
     )
+
+
+def _optional_token_list(claims: dict[str, Any], name: str) -> tuple[str, ...] | None:
+    if name not in claims:
+        return None
+    value = claims[name]
+    if not isinstance(value, (list, tuple)) or any(
+        not isinstance(item, str) or not item or "*" in item for item in value
+    ):
+        raise ValueError(f"invalid delegated token {name}")
+    return tuple(sorted(set(value)))
 
 
 def has_scope(actor: GatewayActor, required_scope: str) -> bool:

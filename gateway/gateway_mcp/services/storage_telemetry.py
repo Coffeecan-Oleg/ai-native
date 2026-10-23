@@ -37,6 +37,7 @@ def upsert_assistant_session(
                     project = excluded.project,
                     metadata = assistant_sessions.metadata || excluded.metadata,
                     updated_at = now()
+                where assistant_sessions.actor_subject = excluded.actor_subject
                 returning *
                 """,
                 (
@@ -49,6 +50,8 @@ def upsert_assistant_session(
                 ),
             )
             row = cur.fetchone()
+            if row is None:
+                raise PermissionError("Telemetry session belongs to another actor")
         conn.commit()
     return _row(row)
 

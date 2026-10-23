@@ -1,0 +1,12 @@
+{
+  "name": "platforma-training",
+  "version": "0.2.0",
+  "description": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "metadata": {
+    "platformRelease": "2026.09.11"
+  }
+}

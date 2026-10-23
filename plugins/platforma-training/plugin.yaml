@@ -1,0 +1,4 @@
+name: platforma-training
+version: "0.2.0"
+description: "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода."
+platform_release: "2026.09.11"

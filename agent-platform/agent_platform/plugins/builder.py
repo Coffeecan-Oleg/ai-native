@@ -3,6 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from agent_platform.io import write_json, write_text, yaml_quote
 from agent_platform.plugins.gateway import (
@@ -32,6 +33,29 @@ def marketplace_entry(name: str, category: str) -> dict[str, Any]:
     }
 
 
+def write_pack_mcp(plugin_root: Path, pack: dict[str, Any], manifest: dict[str, Any]) -> None:
+    """Optional OAuth connection for an own pack, with a portable manifest."""
+    url = str(pack.get("mcpUrl") or "")
+    if not url:
+        return
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ValueError("pack mcpUrl must be an HTTPS endpoint without credentials or query parameters")
+    manifest["mcpServers"] = "./codex.mcp.json"
+    manifest["interface"]["capabilities"] = ["Skills", "MCP"]
+    write_json(plugin_root / "codex.mcp.json", {"mcpServers": {"gateway": {"type": "http", "url": url, "timeout": 60000}}})
+    write_json(plugin_root / "mcp.json", {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+        "mcpServers": {"gateway": {"type": "streamable-http", "url": url}},
+    })
+    write_json(plugin_root / "plugin.json", {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        "name": manifest["name"], "version": manifest["version"],
+        "description": manifest["description"], "author": manifest["author"],
+        "extensions": {"com.openai": {"interface": manifest["interface"]}},
+    })
+
+
 def build_plugins(source: Path, registry: dict[str, Any], output: Path, clean: bool) -> dict[str, Any]:
     plugins_root = output / "plugins"
     if clean and plugins_root.exists():
@@ -50,7 +74,9 @@ def build_plugins(source: Path, registry: dict[str, Any], output: Path, clean: b
         for skill in pack["skills"]:
             copy_skill(source, skill, plugin_root / "skills")
 
-        write_json(plugin_root / ".codex-plugin/plugin.json", pack_plugin_manifest(pack, platform_release))
+        manifest = pack_plugin_manifest(pack, platform_release)
+        write_pack_mcp(plugin_root, pack, manifest)
+        write_json(plugin_root / ".codex-plugin/plugin.json", manifest)
         write_claude_manifest(plugin_root, pack, platform_release)
         write_cursor_manifest(plugin_root, pack, platform_release)
         write_openclaw_manifest(plugin_root, pack, platform_release)

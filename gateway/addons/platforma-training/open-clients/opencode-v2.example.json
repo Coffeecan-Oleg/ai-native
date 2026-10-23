@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "platforma": {
+        "type": "remote",
+        "url": "https://kromin.axion-test.akmetron.ru/mcp",
+        "protocol": "legacy",
+        "codemode": false,
+        "oauth": {
+          "scope": "access:request memory:read platforma:read platforma:write skills:read telemetry:read telemetry:write tools:call tools:read",
+          "callback_port": 19876,
+          "redirect_uri": "http://127.0.0.1:19876/callback"
+        }
+      }
+    }
+  }
+}

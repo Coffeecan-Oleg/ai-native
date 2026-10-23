@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Акметрон</title>
+
+
+
+<!-- Иконки Lucide: тонкие линейные глифы, синий штрих. Без эмодзи. -->
+
+<link href="akmetron.css" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Sticky-навигация -->
+  <nav class="nav-sticky">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:72px;">
+      <span class="akm-logo"><img src="logo-mark.png" alt="" /><span>АКМЕТРОН</span></span>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <a class="btn btn--ghost" href="#">Каталог</a>
+        <a class="btn btn--primary" href="#">Опишите задачу</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header style="position:relative;overflow:hidden;">
+    <div class="puzzle-edge"></div>
+    <div class="container reveal" style="padding:128px 48px;position:relative;max-width:760px;margin-left:0;">
+      <p class="eyebrow">Контрольно-измерительное оборудование</p>
+      <h1 style="margin-top:24px;">Измеряем точно. Разрабатываем под задачу</h1>
+      <p class="lead" style="margin-top:24px;max-width:540px;">
+        Подбор приборов и радиоэлектроники под конкретную инженерную задачу — без посредника, в один клик.
+      </p>
+      <div style="display:flex;gap:16px;margin-top:48px;">
+        <a class="btn btn--primary" href="#">Получить расчёт</a>
+        <a class="btn btn--secondary" href="#">Каталог направлений</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Секция со статистикой -->
+  <section class="container" style="padding:96px 48px;">
+    <p class="eyebrow">Диапазоны и сроки</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px;">
+      <div class="card">
+        <div class="stat-value">67 ГГц</div>
+        <div class="stat-label">Верхняя граница диапазона измерений</div>
+      </div>
+      <div class="card">
+        <div class="stat-value">&lt;1 ч</div>
+        <div class="stat-label">Предварительный расчёт по задаче</div>
+      </div>
+      <div class="card">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Направлений каталога</div>
+      </div>
+    </div>
+  </section>
+
+  <script></script>
+</body>
+</html>

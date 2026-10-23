@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "name": "platforma-training",
+  "version": "0.2.0",
+  "description": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+  "skills": [
+    "./skills"
+  ],
+  "metadata": {
+    "openclaw": {
+      "category": "Productivity"
+    },
+    "platformRelease": "2026.09.11"
+  }
+}

@@ -178,6 +178,12 @@ async def _proxy_completion(request: Request, *, api: str) -> Response:
         summary=restored.summary,
         duration_ms=int((time.perf_counter() - started) * 1000),
     )
+    try:
+        from gateway_mcp.services.usage_meter import provider_usage
+        import asyncio
+        await asyncio.to_thread(provider_usage, actor, request_id, body, request.headers.get('x-gateway-project', ''))
+    except Exception:
+        record_upstream_error('usage-meter', 'observation_failed')
     duration_ms = int((time.perf_counter() - started) * 1000)
     observe_privacy_summary(surface="llm_response", summary=restored.summary.as_dict())
     observe_llm_proxy_request(api=api, status="ok", duration_ms=duration_ms)

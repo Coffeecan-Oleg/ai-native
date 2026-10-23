@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gateway": {
+      "type": "http",
+      "url": "https://195-133-14-140.sslip.io/mcp",
+      "timeout": 60000
+    }
+  }
+}

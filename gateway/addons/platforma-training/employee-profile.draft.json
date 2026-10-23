@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "status": "draft",
+  "subject": null,
+  "project": null,
+  "approver_subject": null,
+  "expires_at": null,
+  "access_term": "not_selected",
+  "protect_existing_skills": true,
+  "sending_mailbox": null,
+  "forbidden_operations": [
+    "admin",
+    "grant",
+    "delete",
+    "export"
+  ],
+  "approval_operations": [],
+  "resources": []
+}

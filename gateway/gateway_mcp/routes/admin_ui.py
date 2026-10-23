@@ -1,4 +1,6 @@
 from html import escape
+from gateway_mcp.services import branding
+import os
 from typing import Any
 
 from gateway_mcp.services.policy import GatewayActor, has_scope
@@ -23,17 +25,21 @@ def admin_shell(
     body: str,
     shell_width: str = "1120px",
     extra_head: str = "",
+    training_reader: bool = False,
 ) -> str:
+    from gateway_mcp.services.platforma_onboarding import enabled, is_owner
     is_admin = has_scope(actor, "access:admin")
-    nav = _navigation(active=active, is_admin=is_admin)
-    home_url = "/admin" if is_admin else "/notifications"
+    nav = _navigation(active=active, is_admin=is_admin,
+                      training_enabled=enabled() and (is_owner(actor) or training_reader),
+                      training_reader=training_reader)
+    home_url = "/admin" if training_reader or is_admin else "/notifications"
     return f"""
     <!doctype html>
     <html lang="ru">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>{escape(title)} · Comind AI Native Auth</title>
+      <title>{escape(title)} · {'Акметрон · Платформа' if branding.enabled() else 'Comind AI Native Auth'}</title>
       <style>
         /* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
          * genre: modern-minimal · theme: coMind workbench · macrostructure: operational dashboard
@@ -239,12 +245,13 @@ def admin_shell(
         }}
       </style>
       {extra_head}
+      {branding.head()}
     </head>
     <body>
       <div class="app-shell">
         <aside class="sidebar">
           <div class="sidebar-top">
-            <a class="brand" href="{home_url}"><span class="brand-name">coMind</span><span class="brand-product">AI Native Gateway</span></a>
+            <a class="brand" href="{home_url}">{branding.logo() if branding.enabled() else '<span class="brand-name">coMind</span><span class="brand-product">AI Native Gateway</span>'}</a>
             <details class="mobile-menu"><summary>Разделы</summary><nav class="nav" aria-label="Мобильная навигация">{nav}<div class="mobile-identity">Вы вошли как <strong>{escape(actor.display)}</strong></div></nav></details>
           </div>
           <nav class="nav desktop-nav" aria-label="Основная навигация">{nav}</nav>
@@ -257,7 +264,18 @@ def admin_shell(
     """
 
 
-def _navigation(*, active: str, is_admin: bool) -> str:
+def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, training_reader: bool = False) -> str:
+    if training_reader:
+        return '<div class="nav-group"><div class="nav-label">Платформа</div>' + ''.join(
+            _nav_link(key, label, href, active) for key, label, href in (
+                ('training-overview', 'Обзор MCP', '/admin'),
+                ('training-audit', 'Мои обращения к MCP', '/admin/audit'),
+                ('training-telemetry', 'Мои запуски навыков', '/admin/telemetry/skills'),
+                ('training-requests', 'Учебные заявки', '/platforma/requests'),
+                *([('skill-library', 'Каталог навыков', '/platforma/skills')] if os.getenv('GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED', '').casefold() == 'true' else []),
+                ('how-it-works', 'Как это работает', '/platforma/how-it-works'),
+                ('reader-status', 'Статус доступа', '/join'),
+                ('logout', 'Выйти', '/auth/logout'))) + '</div>'
     groups = []
     if is_admin:
         groups.append(
@@ -278,6 +296,8 @@ def _navigation(*, active: str, is_admin: bool) -> str:
                 "Управление",
                 (
                     ("access-requests", "Заявки на доступ", "/admin/access-requests"),
+                    *([("platforma-readers", "Доступ коллег", "/admin/platforma-readers")]
+                      if os.getenv('GATEWAY_PLATFORMA_ONBOARDING_ENABLED', '').casefold() == 'true' else []),
                     ("users", "Доступ пользователей", "/admin/users"),
                     ("metrics", "Состояние шлюза", "/admin/metrics"),
                     ("integrations", "Интеграции", "/admin/integrations"),
@@ -293,6 +313,9 @@ def _navigation(*, active: str, is_admin: bool) -> str:
         (
             "Рабочее место",
             (
+                *([("training-requests", "Учебные заявки", "/platforma/requests")] if training_enabled else []),
+                *([('skill-library', 'Каталог навыков', '/platforma/skills')] if training_enabled and os.getenv('GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED', '').casefold() == 'true' else []),
+                *([('how-it-works', 'Как это работает', '/platforma/how-it-works')] if training_enabled else []),
                 ("my-skills", "Мои навыки", "/my/skills"),
                 ("notifications", "Уведомления", "/notifications"),
                 ("credentials", "Мои подключения", "/credentials"),

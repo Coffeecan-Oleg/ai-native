@@ -1,0 +1,34 @@
+{
+  "name": "platforma-training",
+  "version": "0.2.0",
+  "description": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "keywords": [
+    "agents",
+    "skills",
+    "ai-native",
+    "productivity"
+  ],
+  "skills": "./skills/",
+  "metadata": {
+    "platformRelease": "2026.09.11"
+  },
+  "interface": {
+    "displayName": "Платформа — учебный помощник",
+    "shortDescription": "Сервисы, знания и учёт расхода",
+    "longDescription": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+    "developerName": "Coffeecan-Oleg",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "MCP"
+    ],
+    "defaultPrompt": [
+      "Use Платформа — учебный помощник for this work."
+    ]
+  },
+  "mcpServers": "./codex.mcp.json"
+}

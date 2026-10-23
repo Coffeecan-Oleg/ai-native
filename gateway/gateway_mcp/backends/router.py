@@ -5,6 +5,7 @@ from gateway_mcp.backends.common import BackendRouteError, _apply_argument_alias
 
 
 BACKEND_DISPATCH: dict[str, tuple[str, str]] = {
+    "platforma-demo": ("gateway_mcp.backends.platforma_demo", "_call_platforma_demo"),
     "bitrix24-rest": ("gateway_mcp.backends.bitrix24", "_call_bitrix24"),
     "caldav": ("gateway_mcp.backends.caldav", "_call_caldav"),
     "gitlab-rest": ("gateway_mcp.backends.gitlab", "_call_gitlab"),

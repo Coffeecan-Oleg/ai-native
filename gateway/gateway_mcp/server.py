@@ -10,12 +10,18 @@ from gateway_mcp.routes.admin_showcase import register_admin_showcase_routes
 from gateway_mcp.routes.admin_telemetry import register_admin_telemetry_routes
 from gateway_mcp.routes.admin_user_roles import register_admin_user_role_routes
 from gateway_mcp.routes.auth import register_auth_routes
+from gateway_mcp.routes.branding import register_branding_routes
+from gateway_mcp.tools.corporate_skills import register_corporate_skill_tools
 from gateway_mcp.routes.credentials import register_credentials_routes
 from gateway_mcp.routes.factory_git import register_factory_git_routes
 from gateway_mcp.routes.file_transfers import register_file_transfer_routes
 from gateway_mcp.routes.health import register_health_routes
 from gateway_mcp.routes.llm_proxy import register_llm_proxy_routes
 from gateway_mcp.routes.notifications import register_notification_routes
+from gateway_mcp.routes.platforma_onboarding import register_platforma_onboarding_routes
+from gateway_mcp.routes.platforma_requests import register_platforma_request_routes
+from gateway_mcp.routes.platforma_skills import register_platforma_skill_routes
+from gateway_mcp.routes.platforma_guide import register_platforma_guide_routes
 from gateway_mcp.routes.telemetry import register_telemetry_routes
 from gateway_mcp.services.auth import mcp_auth_settings, token_verifier
 from gateway_mcp.tools.access import register_access_tools
@@ -41,6 +47,8 @@ def create_mcp():
         token_verifier=token_verifier(),
         auth=mcp_auth_settings(),
     )
+    register_branding_routes(server)
+    register_corporate_skill_tools(server)
     register_health_routes(server)
     register_telemetry_routes(server)
     register_auth_routes(server)
@@ -57,6 +65,10 @@ def create_mcp():
     register_admin_metrics_routes(server)
     register_admin_factory_connection_routes(server)
     register_admin_telemetry_routes(server)
+    register_platforma_onboarding_routes(server)
+    register_platforma_request_routes(server)
+    register_platforma_skill_routes(server)
+    register_platforma_guide_routes(server)
     register_company_tools(server)
     register_memory_tools(server)
     register_notification_tools(server)
@@ -72,6 +84,10 @@ def create_mcp():
     register_access_request_tools(server)
     register_approval_tools(server)
     register_router_tools(server)
+    from gateway_mcp.services.usage_meter import register as register_meter
+    from gateway_mcp.services.addon_guard import register as register_addon_guard
+    register_addon_guard(server)
+    register_meter(server)
     return server
 
 

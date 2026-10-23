@@ -1,0 +1,22 @@
+schema: 1
+name: datasheet-ru-localizer
+version: 0.1.0
+title: "Технические даташиты на русском"
+description: "Перевод технических даташитов на русский с сохранением таблиц, единиц и структуры; фирменный PDF Акметрон из предоставленного источника и реального фото прибора."
+compatible_agents:
+  - claude
+  - codex
+  - cursor
+  - opencode
+  - openclaw
+  - hermes
+  - zcode
+requires:
+  mcp: []
+  permissions:
+    filesystem: read
+resources:
+  skill: SKILL.md
+  references: true
+  scripts: false
+  assets: true
