@@ -58,7 +58,12 @@ def register_knowledge_tools(mcp):
         )
     )
     async def gateway_knowledge_space_list(include_personal: bool = True) -> str:
-        """Compatibility alias for gateway_knowledge_spaces."""
+        """List visible knowledge spaces; read the result from content or structuredContent.result.
+
+        For later knowledge calls, copy the exact returned space identifier.
+        The Platforma training profile allows space:organizational-awareness;
+        an omitted, empty, or unprefixed space is not an all-spaces search.
+        """
         tool = "gateway_knowledge_space_list"
         run = ToolRun.start(
             tool=tool,
@@ -446,7 +451,13 @@ def register_knowledge_tools(mcp):
         include_personal: bool = True,
         include_groups: bool = True,
     ) -> str:
-        """Search accessible markdown knowledge spaces and return citations."""
+        """Search accessible markdown knowledge spaces and return citations.
+
+        In the constrained Platforma training profile, set space explicitly to
+        space:organizational-awareness. Empty space and other spaces are denied.
+        Read the response from content or structuredContent.result; the latter
+        is a JSON string matching the filtered text, not a separate document set.
+        """
         tool = "gateway_knowledge_search"
         run = ToolRun.start(
             tool=tool,

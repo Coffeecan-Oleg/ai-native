@@ -186,6 +186,7 @@ def filter_result(actor, name, result, profile):
     if not profile.get("reader_only"):
         allowed.add("personal:" + _personal_slug(actor))
     root = getattr(result, "root", result)
+    filtered_texts = []
     for item in getattr(root, "content", []):
         if getattr(item, "type", "") != "text":
             continue
@@ -204,9 +205,15 @@ def filter_result(actor, name, result, profile):
                 payload["documents"] = [d for d in payload.get("documents", []) if permitted(d)]
                 payload["count"] = len(payload["documents"])
             item.text = json.dumps(payload, ensure_ascii=False)
-    # Knowledge tools return text, not structuredContent; never pass an unfiltered copy.
-    if getattr(root, "structuredContent", None) is not None:
-        root.structuredContent = None
+        filtered_texts.append(item.text)
+    # FastMCP advertises {"result": str} for these string-returning tools.
+    # Rebuild it from the filtered text; the original may contain other spaces.
+    if hasattr(root, "structuredContent"):
+        root.structuredContent = (
+            {"result": filtered_texts[0]}
+            if not getattr(root, "isError", False) and len(filtered_texts) == 1
+            else None
+        )
     return result
 
 
