@@ -270,6 +270,7 @@ def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, 
             _nav_link(key, label, href, active) for key, label, href in (
                 ('training-requests', 'Учебные заявки', '/platforma/requests'),
                 *([('skill-library', 'Каталог навыков', '/platforma/skills')] if os.getenv('GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED', '').casefold() == 'true' else []),
+                ('how-it-works', 'Как это работает', '/platforma/how-it-works'),
                 ('reader-status', 'Статус доступа', '/join'),
                 ('logout', 'Выйти', '/auth/logout'))) + '</div>'
     groups = []
@@ -311,6 +312,7 @@ def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, 
             (
                 *([("training-requests", "Учебные заявки", "/platforma/requests")] if training_enabled else []),
                 *([('skill-library', 'Каталог навыков', '/platforma/skills')] if training_enabled and os.getenv('GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED', '').casefold() == 'true' else []),
+                *([('how-it-works', 'Как это работает', '/platforma/how-it-works')] if training_enabled else []),
                 ("my-skills", "Мои навыки", "/my/skills"),
                 ("notifications", "Уведомления", "/notifications"),
                 ("credentials", "Мои подключения", "/credentials"),
