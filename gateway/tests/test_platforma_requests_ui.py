@@ -131,8 +131,10 @@ class RequestBrowserTests(unittest.TestCase):
         self.web.return_value=READER
         response,html=self.get()
         self.assertEqual(response.status_code,200);self.assertIn('/join',html)
-        for private in ['/admin/audit','/admin/telemetry','/credentials','/notifications']:
+        for private in ['/admin/users','/admin/platforma-readers','/credentials','/notifications']:
             self.assertNotIn('href="'+private,html)
+        for personal in ['/admin','/admin/audit','/admin/telemetry/skills']:
+            self.assertIn('href="'+personal+'"',html)
         self.owner_check.assert_not_called();self.reader_check.assert_called_once()
 
     def test_resource_and_profile_denials_never_show_records(self):
@@ -157,12 +159,13 @@ class RequestBrowserTests(unittest.TestCase):
         self.get(params={'query':'DO-NOT-LOG-CONTENT'})
         self.assertNotIn('DO-NOT-LOG-CONTENT',str(self.audit.call_args_list))
 
-    def test_web_path_gate_opens_only_two_exact_paths_with_live_approval(self):
+    def test_web_path_gate_opens_only_exact_training_paths_with_live_approval(self):
         with patch.object(onboarding,'active_reader',return_value={'status':'approved'}) as approval:
-            for path in [ui.LIST_PATH,ui.DETAIL_PATH]:self.assertTrue(onboarding.check_web_path(READER,path))
-            for path in ['/platforma/requests/export','/admin/telemetry/skills','/credentials','/my/skills']:
+            for path in [ui.LIST_PATH,ui.DETAIL_PATH,'/admin','/admin/audit','/admin/telemetry/skills']:
+                self.assertTrue(onboarding.check_web_path(READER,path))
+            for path in ['/platforma/requests/export','/admin/audit/export','/credentials','/my/skills']:
                 self.assertFalse(onboarding.check_web_path(READER,path))
-            self.assertEqual(approval.call_count,2)
+            self.assertEqual(approval.call_count,5)
         for result in [None,{}]:
             with patch.object(onboarding,'active_reader',return_value=result if result is None else None):
                 self.assertFalse(onboarding.check_web_path(READER,ui.LIST_PATH))

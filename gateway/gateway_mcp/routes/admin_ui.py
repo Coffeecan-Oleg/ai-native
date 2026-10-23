@@ -32,7 +32,7 @@ def admin_shell(
     nav = _navigation(active=active, is_admin=is_admin,
                       training_enabled=enabled() and (is_owner(actor) or training_reader),
                       training_reader=training_reader)
-    home_url = "/platforma/requests" if training_reader else "/admin" if is_admin else "/notifications"
+    home_url = "/admin" if training_reader or is_admin else "/notifications"
     return f"""
     <!doctype html>
     <html lang="ru">
@@ -268,6 +268,9 @@ def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, 
     if training_reader:
         return '<div class="nav-group"><div class="nav-label">Платформа</div>' + ''.join(
             _nav_link(key, label, href, active) for key, label, href in (
+                ('training-overview', 'Обзор MCP', '/admin'),
+                ('training-audit', 'Мои обращения к MCP', '/admin/audit'),
+                ('training-telemetry', 'Мои запуски навыков', '/admin/telemetry/skills'),
                 ('training-requests', 'Учебные заявки', '/platforma/requests'),
                 *([('skill-library', 'Каталог навыков', '/platforma/skills')] if os.getenv('GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED', '').casefold() == 'true' else []),
                 ('how-it-works', 'Как это работает', '/platforma/how-it-works'),

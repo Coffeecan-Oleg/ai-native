@@ -91,6 +91,9 @@ def _guard(handler):
         actor = web_actor(request)
         if actor is None:
             return login_redirect("/admin")
+        from gateway_mcp.routes.training_admin import is_training_visitor, overview_response
+        if is_training_visitor(actor) and request.url.path == "/admin":
+            return await overview_response(actor)
         if not has_scope(actor, "access:admin"):
             return PlainTextResponse("access:admin is required.", status_code=403)
         try:

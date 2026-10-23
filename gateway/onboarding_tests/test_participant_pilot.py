@@ -111,7 +111,7 @@ class ParticipantPilotTests(ReaderFixture):
             with self.subTest(name=name):
                 with self.assertRaises(PermissionError):addon_guard.check_call(actor,name,args)
         addon_guard.check_call(actor,'gateway_knowledge_document_get',{'space':service.SPACE,'document':'awareness/start.md'})
-        self.assertFalse(service.check_web_path(actor,'/admin/telemetry/skills'))
+        self.assertTrue(service.check_web_path(actor,'/admin/telemetry/skills'))
         self.assertFalse(service.check_web_path(actor,'/credentials'))
         self.assertTrue(service.check_web_path(actor,'/platforma/requests'))
 

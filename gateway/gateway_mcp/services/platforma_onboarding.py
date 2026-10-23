@@ -423,7 +423,8 @@ def check_web_path(actor, path):
     # handlers which accept browser sessions share this gate, including credentials.
     if not enabled() or is_owner(actor) or path in {'/join', '/join/request', '/auth/logout'}:
         return True
-    if path in {'/platforma/requests', '/platforma/requests/view',
+    if path in {'/admin', '/admin/audit', '/admin/telemetry/skills',
+                '/platforma/requests', '/platforma/requests/view',
                 '/platforma/how-it-works', '/platforma/how-it-works/download'}:
         try:
             return active_reader(actor.subject) is not None

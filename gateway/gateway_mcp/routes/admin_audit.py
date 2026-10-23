@@ -35,6 +35,9 @@ def register_admin_audit_routes(mcp) -> None:
         actor = web_actor(request)
         if actor is None:
             return login_redirect("/admin/audit")
+        from gateway_mcp.routes.training_admin import is_training_visitor, audit_response
+        if is_training_visitor(actor):
+            return await audit_response(request, actor)
         if not has_scope(actor, "access:admin"):
             return PlainTextResponse("access:admin is required.", status_code=403)
 
