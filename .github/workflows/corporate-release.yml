@@ -26,6 +26,7 @@ jobs:
           python3 -m unittest discover -s gateway/release -p test_ci_check.py
           python3 -m unittest discover -s gateway/release -p test_build_watchdog.py
           python3 -m unittest discover -s gateway/release -p test_apt_transport.py
+          python3 -m unittest discover -s gateway/release -p test_apt_mirrors.py
       - name: Check separate builder resources before building
         run: python3 gateway/release/ci-check.py preflight --reports "$RUNNER_TEMP/gateway-ci-report"
       - name: Build fixed inputs without Gateway overlay layers

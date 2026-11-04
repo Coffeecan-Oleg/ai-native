@@ -157,6 +157,38 @@ APT helper; they never build on the production host. Before acceptance, run a
 complete Docker build and the installed-image checks on a separate builder.
 Preparation on a copy does not publish code or update the live Gateway.
 
+## Frozen indexes with package mirror fallback
+
+The snapshot service can return 503/504 for individual package lookups even when
+its signed indexes are available. The two local mirrorlists now let APT choose
+another endpoint for a failed file without changing the archive state.
+
+`locks/debian.sources` uses the built-in `mirror+file` transport. Each list
+permits the regular Debian CDN only with `type:deb`; it is excluded from index
+requests. The CDN can therefore serve only the exact package filename selected
+from an authenticated frozen index. Index requests use only the two snapshot
+frontends at the original 20261021T124057Z timestamp. Explicit priorities avoid
+random selection: package CDN first, then the snapshot frontends. The security
+archive also has its ordinary security CDN as a package-only alternative.
+
+The 35 exact `package=version` pins remain in `locks/os.txt`. APT still validates
+the InRelease signature with the original Debian archive keyring and verifies
+the package length and cryptographic hash from that authenticated index. A
+different file at a CDN URL cannot silently replace the expected bytes. Missing
+versions, invalid signatures and corrupt payloads fail instead of upgrading or
+relaxing authentication. All endpoints use HTTPS; no new signing key, trusted=yes,
+allow-unauthenticated option, mutable release index or custom downloader is added.
+The existing historical-snapshot Valid-Until policy and build time limits stay
+unchanged.
+
+`release/test_apt_mirrors.py` creates an ephemeral signing key and a tiny signed
+repository on loopback. It tests package-only CDN selection, fallback after 503,
+all mirrors unavailable, same-length corruption, invalid signatures and absent
+pinned versions. These tests do not install packages or contact public mirrors.
+The separate verification of real public files must record the exact versions,
+signature identities and SHA256 matches. A successful download check is not an
+installed-image or production-runtime acceptance.
+
 ## References
 
 - [pip secure installs](https://pip.pypa.io/en/stable/topics/secure-installs/)
@@ -164,4 +196,5 @@ Preparation on a copy does not publish code or update the live Gateway.
 - [Docker build best practices](https://docs.docker.com/build/building/best-practices/)
 - [APT transport timeouts](https://manpages.debian.org/trixie/apt/apt-transport-http.1.en.html)
 - [APT update error handling](https://manpages.debian.org/trixie/apt/apt-get.8.en.html)
+- [APT mirror selection and type restrictions](https://manpages.debian.org/trixie/apt/apt-transport-mirror.1.en.html)
 - [Python subprocess management](https://docs.python.org/3/library/subprocess.html)

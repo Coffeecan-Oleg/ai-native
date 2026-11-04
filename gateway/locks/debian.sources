@@ -1,12 +1,12 @@
 Types: deb
-URIs: https://snapshot.debian.org/archive/debian/20261021T124057Z/
+URIs: mirror+file:/etc/apt/mirrors/debian.mirrors
 Suites: trixie trixie-updates
 Components: main
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
 Check-Valid-Until: no
 
 Types: deb
-URIs: https://snapshot.debian.org/archive/debian-security/20261021T124057Z/
+URIs: mirror+file:/etc/apt/mirrors/debian-security.mirrors
 Suites: trixie-security
 Components: main
 Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg

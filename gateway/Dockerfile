@@ -24,6 +24,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
     GATEWAY_TRANSPORT=streamable-http GATEWAY_HOST=0.0.0.0 GATEWAY_PORT=8000 \
     GATEWAY_AUTH_ENABLED=true GATEWAY_LOGIN_PROVIDER=bitrix24
 COPY locks/debian.sources /etc/apt/sources.list.d/debian.sources
+COPY locks/debian.mirrors locks/debian-security.mirrors /etc/apt/mirrors/
 COPY locks/os.txt /tmp/gateway-os.txt
 COPY locks/apt-build.conf /etc/apt/apt.conf.d/80gateway-build
 RUN echo 'gateway-build: Debian indexes (240s limit)' \
