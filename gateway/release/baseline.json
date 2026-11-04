@@ -1019,5 +1019,6 @@
     "gateway-factory-projects.json",
     "gateway-platforma-tools.json"
   ],
-  "sdk_sha256": "945ad491df8ffb7490b89f4914a439b5a3f575c950c3480562815716a3e07f23"
+  "sdk_sha256": "945ad491df8ffb7490b89f4914a439b5a3f575c950c3480562815716a3e07f23",
+  "test_postgres_image": "postgres@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea"
 }

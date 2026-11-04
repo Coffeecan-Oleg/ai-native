@@ -5,23 +5,37 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: corporate-gateway-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   pinned-image:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      SOURCE_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      DOCKER_HOST: unix:///var/run/docker.sock
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6, resolved 2026-11-04
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Test CI guard and cleanup logic without Docker operations
+        run: python3 -m unittest discover -s gateway/release -p test_ci_check.py
+      - name: Check separate builder resources before building
+        run: python3 gateway/release/ci-check.py preflight --reports "$RUNNER_TEMP/gateway-ci-report"
       - name: Build fixed inputs without Gateway overlay layers
-        run: docker build --platform linux/amd64 --pull=false -t gateway-corporate-ci gateway
-      - name: Verify installed source and dependencies
         run: >-
-          docker run --rm --network none --read-only --cap-drop ALL
-          --security-opt no-new-privileges:true
-          gateway-corporate-ci python /usr/local/share/gateway-release/verify-image.py
-      - name: Corporate and metrics regression on installed wheel
-        run: >-
-          docker run --rm --network none --read-only --cap-drop ALL
-          --security-opt no-new-privileges:true --memory 384m --pids-limit 96
-          --tmpfs /tmp:rw,nosuid,nodev,size=96m
-          -v "$PWD/gateway:/checks:ro"
-          gateway-corporate-ci python /checks/release/run-tests.py
+          docker build --platform linux/amd64 --pull=false
+          --label "org.opencontainers.image.revision=$SOURCE_GIT_SHA"
+          -t gateway-corporate-ci gateway
+      - name: Verify installed image, regression and empty isolated database
+        run: python3 gateway/release/ci-check.py checks --image gateway-corporate-ci --reports "$RUNNER_TEMP/gateway-ci-report"
+      - name: Save check reports only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7, resolved 2026-11-04
+        with:
+          name: gateway-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/gateway-ci-report/*.json
+          if-no-files-found: warn
+          retention-days: 7

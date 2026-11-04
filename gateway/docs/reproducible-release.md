@@ -61,6 +61,32 @@ bit-identical OCI images. Do not claim deterministic image IDs without proof.
 
 ## Validation and release boundary
 
+The corporate workflow uses a separate Ubuntu24.04 GitHub-hosted runner and the
+exact PR head commit, without persisted checkout credentials. It has contents:read
+only, pinned checkout/upload actions, bounded job time and one run per PR/ref.
+It first tests the runner guards with fake Docker responses, then refuses known
+production container names or insufficient memory/disk before the image build.
+No SSH key or deployment credential is configured.
+
+After image checks, release/ci-check.py creates one internal network and temporary
+PostgreSQL/Gateway containers with synthetic credentials, no published ports and
+no production mounts. The test PostgreSQL image digest is pinned to the already
+used engine image. It applies all25 migrations to a new tmpfs database and checks
+health/auth, anonymous MCP/frame-session denials, closed metrics and SDK integrity.
+Cleanup verifies a per-run nonce label before deleting only its own resources.
+This is a fresh-schema test, not a backup restore or real Bitrix login.
+
+The downloadable artifact contains JSON reports only, retained7 days. No Docker
+image, SDK blob, live configuration, .env, secret, corporate document or database
+is uploaded. Image distribution to a private destination and production rollout
+remain separate steps. Legacy CI is not replaced or declared passing by this job.
+
+The initial trigger is the existing PR's synchronize event after publishing the
+candidate. workflow_dispatch becomes usable only once the workflow is present
+on the default branch; do not merge into main just to make the button appear.
+The public Actions view currently has zero runs; owner-level enablement was not
+verified because the browser is signed out and the connector lacks that endpoint.
+
 `release/run-tests.py` starts separate regression and metrics processes, checks
 the installed package and rejects skipped tests. It uses synthetic credentials
 and no external business services. The CI workflow tests the candidate but does
