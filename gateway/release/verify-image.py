@@ -1,5 +1,5 @@
 """No network, no secrets: verify installed code, versions and packaging."""
-import hashlib,importlib.metadata as metadata,json,os,re,sys
+import hashlib,importlib.metadata as metadata,json,os,re,sys,platform
 from pathlib import Path
 import gateway_mcp
 from gateway_mcp.services.migrations import migration_files
@@ -9,6 +9,7 @@ assert '/site-packages/gateway_mcp' in str(root)
 assert not Path('/app/gateway_mcp').exists()
 assert not list(Path('/app').glob('*.py'))
 assert os.getuid()==os.getgid()==10001
+assert sys.platform=='linux' and platform.machine()=='x86_64'
 assert sys.version.split()[0]==baseline['python_version']
 for name,expected in baseline['live_source_fingerprints'].items():
     data=(root/name).read_bytes();digest=hashlib.sha256(data).hexdigest()

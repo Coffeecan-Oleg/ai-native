@@ -8,10 +8,16 @@ UTF-8 text is normalized to LF for checkout and wheel packaging.
 
 ## Build
 
-From the repository root on Linux amd64 with Docker:
+Use a separate Linux amd64 builder or CI runner, not the running service host.
+Inventory memory/cgroup headroom and free Docker disk space before any local build.
+Per-container limits alone do not reserve resources for the other services.
+The copy-test launcher now requires at least 1.5 GiB available memory headroom and
+3 GiB free Docker disk before starting a 1 GiB build. These are launch gates, not
+a proof of adequate capacity under load. If they fail, use a separate runner.
+From the repository root on that builder:
 
 ```sh
-docker build --pull=false -t gateway-corporate-candidate gateway
+docker build --platform linux/amd64 --pull=false -t gateway-corporate-candidate gateway
 docker run --rm --network none --read-only --cap-drop ALL \
   --security-opt no-new-privileges:true gateway-corporate-candidate \
   python /usr/local/share/gateway-release/verify-image.py
