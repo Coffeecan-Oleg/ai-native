@@ -79,7 +79,8 @@ This is a fresh-schema test, not a backup restore or real Bitrix login.
 The downloadable artifact contains JSON reports only, retained7 days. No Docker
 image, SDK blob, live configuration, .env, secret, corporate document or database
 is uploaded. Image distribution to a private destination and production rollout
-remain separate steps. Legacy CI is not replaced or declared passing by this job.
+remain separate steps. Legacy CI is retained with contents:read permissions;
+its jobs are not replaced or declared passing by this corporate job.
 
 The initial trigger is the existing PR's synchronize event after publishing the
 candidate. workflow_dispatch becomes usable only once the workflow is present
