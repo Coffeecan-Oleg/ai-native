@@ -30,7 +30,9 @@ class UniSenderDemoMcpTests(onboarding_test.ReaderFixture):
     def test_approved_reader_discovers_and_reads_audited_fictional_aggregate(self):
         result,found=self.tool('gateway_search_tools',{'query':'unisender'})
         self.assertFalse(result.get('isError'),found)
-        self.assertEqual([r['name'] for r in found['tools']],[ROUTE_NAME])
+        self.assertEqual([r['name'] for r in found['tools']],
+                         [ROUTE_NAME,'unisender.getLists','unisender.getContactCount'])
+        self.assertTrue(all(r['scope']=='unisender:read' for r in found['tools'] if r['backend']=='unisender'))
         with patch('httpx.AsyncClient',side_effect=AssertionError('No external calls allowed')):
             result,data=self.read()
         self.assertFalse(result.get('isError'),data);self.assertTrue(data['data']['synthetic'])
@@ -45,7 +47,8 @@ class UniSenderDemoMcpTests(onboarding_test.ReaderFixture):
     def test_different_campaign_and_real_unisender_routes_are_denied(self):
         self.assertTrue(self.read('42')[0].get('isError'))
         self.assertTrue(self.read('LAB-UNISENDER-002')[0].get('isError'))
-        for route in ('unisender.campaign.stats','unisender_list_campaigns','unisender.send','platforma.unisender-demo.send'):
+        for route in ('unisender.campaign.stats','unisender_list_campaigns','unisender.send','platforma.unisender-demo.send',
+                      'unisender.getLists','unisender.getContactCount'):
             result,_=self.tool('gateway_call_tool',{'tool_name':route,'arguments_json':'{}'})
             self.assertTrue(result.get('isError'),route)
 

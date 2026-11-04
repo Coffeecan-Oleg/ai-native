@@ -34,6 +34,9 @@ WRITE_ROUTES = {"platforma.requests.create": "POST", "platforma.requests.update"
 
 
 def profile_for(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.profile(actor)
     configured = os.getenv("GATEWAY_ADDON_PROFILES_FILE", "")
     if not configured:
         return None
@@ -95,6 +98,14 @@ def check_call(actor, name, arguments):
         from gateway_mcp.config import read_json, tools_file
         route = next((r for r in read_json(tools_file(), {"tools":[]})["tools"]
                       if r.get("name") == arguments.get("tool_name")), None)
+        from gateway_mcp.services import unisender_readonly as unisender
+        if (route and route.get('name') in unisender.ROUTES
+                and route.get('transport') == 'unisender-readonly'
+                and route.get('backend') == 'unisender'
+                and route.get('scope') == unisender.SCOPE and route.get('http_method') == 'GET'):
+            unisender.require_actor(actor)
+            _check(profile, actor, route['name'], 'backend_route', 'read')
+            return profile
         if not route or route.get("transport") != "platforma-demo" or route.get("backend") != "platforma":
             raise PermissionError("addon_backend_route_denied")
         route_name = route["name"]
@@ -180,13 +191,53 @@ def check_call(actor, name, arguments):
 
 
 def filter_result(actor, name, result, profile):
-    if not profile or name not in {"gateway_knowledge_space_list", "gateway_knowledge_search"}:
+    if not profile or name not in {"gateway_knowledge_space_list", "gateway_knowledge_search",
+                                   "gateway_knowledge_space_get", "gateway_knowledge_document_get"}:
         return result
     from gateway_mcp.services.knowledge import _personal_slug
     allowed = set(profile.get("spaces", []))
     if not profile.get("reader_only"):
         allowed.add("personal:" + _personal_slug(actor))
     root = getattr(result, "root", result)
+    # FastMCP errors may be plain text, not the tool's successful JSON string.
+    # Keep the MCP error flag and discard stale/unfiltered structured content.
+    def fail(code, required_scope=None):
+        from mcp.types import TextContent
+        payload = {'ok': False, 'error': code}
+        if required_scope:
+            payload.update(required_scope=required_scope,
+                           reauthentication_required=required_scope == 'knowledge:read')
+        root.content = [TextContent(type='text', text=json.dumps(payload, ensure_ascii=False))]
+        root.isError = True
+        if hasattr(root, 'structuredContent'):
+            root.structuredContent = None
+        return result
+
+    content = getattr(root, 'content', [])
+    if len(content) != 1 or getattr(content[0], 'type', '') != 'text':
+        return fail('knowledge_result_invalid')
+    try:
+        parsed = json.loads(content[0].text)
+    except (ValueError, TypeError):
+        if getattr(root, 'isError', False):
+            import re
+            scope = re.search(r'missing required scope(?::| for [^:]+:)\s*(knowledge:read|memory:read)\b', content[0].text)
+            return fail('knowledge_scope_required' if scope else 'knowledge_call_failed',
+                        scope.group(1) if scope else None)
+        return fail('knowledge_result_invalid')
+    if not isinstance(parsed, dict):
+        return fail('knowledge_result_invalid')
+    if getattr(root, 'isError', False):
+        if hasattr(root, 'structuredContent'):
+            root.structuredContent = None
+        return result
+    if parsed.get('ok') is not True:
+        return fail('knowledge_call_failed')
+    if name not in {'gateway_knowledge_space_list', 'gateway_knowledge_search'}:
+        return result
+    key = 'spaces' if name == 'gateway_knowledge_space_list' else 'documents'
+    if not isinstance(parsed.get(key), list) or not all(isinstance(row, dict) for row in parsed[key]):
+        return fail('knowledge_result_invalid')
     filtered_texts = []
     for item in getattr(root, "content", []):
         if getattr(item, "type", "") != "text":
@@ -253,7 +304,8 @@ def register(server):
     async def reader_tools(request):
         from gateway_mcp.services.platforma_onboarding import enabled, is_owner, TOOLS
         actor = current_actor()
-        if not enabled() or is_owner(actor):
+        from gateway_mcp.services.corporate_access import enabled as corporate_enabled
+        if not enabled() or is_owner(actor) and not corporate_enabled():
             return await list_handler(request)
         try:
             profile = profile_for(actor)
@@ -278,8 +330,11 @@ def register(server):
         name = request.params.name
         args = request.params.arguments or {}
         try:
+            # Reject a forbidden call before creating/acquiring a write lock.
+            profile = check_call(actor, name, args)
             async with write_lock(bool(os.getenv("GATEWAY_ADDON_PROFILES_FILE")) and name in WRITE_TOOLS):
-                profile = check_call(actor, name, args)
+                if name in WRITE_TOOLS:
+                    profile = check_call(actor, name, args)
                 if profile and profile.get("reader_only") and name == "gateway_knowledge_space_list":
                     request.params.arguments = {**args, "include_personal": False}
                 result = await handler(request)

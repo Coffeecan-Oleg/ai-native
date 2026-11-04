@@ -34,6 +34,9 @@ UTC = timezone.utc
 
 
 def register_credentials_routes(mcp):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return
     def _credential_status(actor: GatewayActor) -> dict[str, dict[str, Any]]:
         return {
             item["provider"]: item for item in list_user_oauth_tokens(actor.subject)

@@ -127,10 +127,15 @@ def render_overview(actor, approval, profile, registry, *, participant):
 async def overview_response(actor):
     try:
         approval = await _approved(actor)
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled():
+            from gateway_mcp.routes.corporate_ui import guide_body
+            return _page(actor, 'Платформа Акметрон', 'overview', guide_body())
         profile = await to_thread(onboarding.reader_profile, actor)
         participant = await to_thread(onboarding.active_participant, actor.subject) is not None
         registry = await to_thread(read_json, tools_file(), {'tools': []})
         body = render_overview(actor, approval, profile, registry, participant=participant)
+        body = body.replace('Реальный UniSender пока не подключён.','Рабочие сервисы доступны только при наличии отдельного разрешения.')
         return _page(actor, 'Обзор MCP', 'training-overview', body)
     except Exception as exc:
         return _failure(actor, exc)

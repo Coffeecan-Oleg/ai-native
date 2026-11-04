@@ -66,7 +66,9 @@ def create_mcp():
     register_admin_factory_connection_routes(server)
     register_admin_telemetry_routes(server)
     register_platforma_onboarding_routes(server)
-    register_platforma_request_routes(server)
+    from gateway_mcp.services import corporate_access
+    if not corporate_access.enabled():
+        register_platforma_request_routes(server)
     register_platforma_skill_routes(server)
     register_platforma_guide_routes(server)
     register_company_tools(server)

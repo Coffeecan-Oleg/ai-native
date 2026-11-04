@@ -19,14 +19,20 @@ def web_actor(request: Request) -> GatewayActor | None:
 
     authorization = request.headers.get("authorization", "")
     token = ""
+    from gateway_mcp.services import bitrix_embed
+    frame_cookie = ''
     if authorization.casefold().startswith("bearer "):
         token = authorization.split(" ", 1)[1].strip()
     if not token:
-        token = request.cookies.get("gateway_token", "")
+        frame_cookie = request.cookies.get(bitrix_embed.COOKIE,'') if bitrix_embed.enabled() else ''
+        token = frame_cookie or request.cookies.get("gateway_token", "")
     if not token:
         return None
     try:
-        actor = actor_from_claims(verify_gateway_token_claims(token))
+        claims = verify_gateway_token_claims(token)
+        if claims.get('browser_channel') != (bitrix_embed.CHANNEL if frame_cookie else None):
+            return None
+        actor = actor_from_claims(claims)
         # A constrained MCP credential is never a browser/admin session, even
         # when its identity is the same as the human owner.
         if actor.tool_allowlist is not None:
@@ -61,8 +67,12 @@ def clear_gateway_cookie(response: Response) -> Response:
         httponly=True,
         samesite="lax",
     )
-    return response
+    from gateway_mcp.services import bitrix_embed
+    return bitrix_embed.clear_session(response) if bitrix_embed.enabled() else response
 
 
 def login_redirect(next_url: str = "/credentials") -> RedirectResponse:
+    from gateway_mcp.services import bitrix_identity
+    if bitrix_identity.enabled():
+        return RedirectResponse('/auth/bitrix24/login?next='+quote(bitrix_identity.safe_next(next_url),safe=''),status_code=303)
     return RedirectResponse(f"/auth/yandex/login?next={quote(next_url, safe='/?:=&')}", status_code=303)

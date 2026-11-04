@@ -1,4 +1,5 @@
 import base64
+import asyncio
 import hashlib
 import ipaddress
 import os
@@ -79,6 +80,7 @@ DEFAULT_SUPPORTED_SCOPES = [
     "google_sheets:write",
     "infra:read",
     "infra:ssh:exec",
+    "knowledge:read",
     "mail:read",
     "mail:send",
     "llm:proxy",
@@ -99,6 +101,7 @@ DEFAULT_SUPPORTED_SCOPES = [
     "telegram:write",
     "tools:call",
     "tools:read",
+    "unisender:read",
     "tracker:read",
     "tracker:write",
     "webmaster:read",
@@ -180,7 +183,11 @@ def mcp_auth_settings() -> AuthSettings | None:
 class GatewayJwtVerifier:
     async def verify_token(self, token: str) -> AccessToken | None:
         try:
-            claims = verify_gateway_token_claims(token)
+            from gateway_mcp.services.bitrix_identity import enabled as bitrix_enabled
+            claims = (await asyncio.to_thread(verify_gateway_token_claims,token)
+                      if bitrix_enabled() else verify_gateway_token_claims(token))
+            if claims.get('browser_channel') is not None:
+                raise PermissionError('browser_session_cannot_authorize_mcp')
         except Exception as exc:  # noqa: BLE001 - authentication boundary fails closed
             record_auth_failure(exc.__class__.__name__)
             return None
@@ -261,7 +268,9 @@ def require_scope(required_scope: str, *, tool: str) -> GatewayActor:
     raise PermissionError(f"missing required scope for {tool}: {required_scope}")
 
 
-def mint_gateway_token(actor: GatewayActor, *, ttl_seconds: int | None = None) -> str:
+def mint_gateway_token(actor: GatewayActor, *, ttl_seconds: int | None = None, browser_channel: str | None = None) -> str:
+    if browser_channel not in (None,'bitrix24-frame'):
+        raise ValueError('invalid_browser_channel')
     now = int(time.time())
     exp = now + (ttl_seconds if ttl_seconds is not None else token_ttl_seconds())
     claims = {
@@ -281,6 +290,8 @@ def mint_gateway_token(actor: GatewayActor, *, ttl_seconds: int | None = None) -
         claims["scope_ceiling"] = list(actor.scope_ceiling)
     if actor.tool_allowlist is not None:
         claims["tool_allowlist"] = list(actor.tool_allowlist)
+    if browser_channel is not None:
+        claims['browser_channel'] = browser_channel
     return jwt.encode(claims, jwt_secret(), algorithm="HS256")
 
 
@@ -430,7 +441,9 @@ async def build_oauth_authorization_redirect(params: dict[str, str]) -> str:
         },
         ttl_seconds=600,
     )
-    return build_yandex_authorize_url(oauth_state)
+    from gateway_mcp.services import bitrix_identity
+    return (bitrix_identity.authorize_url(oauth_state) if bitrix_identity.enabled()
+            else build_yandex_authorize_url(oauth_state))
 
 
 async def fetch_oauth_client_metadata(client_id: str) -> dict[str, Any]:
@@ -588,6 +601,16 @@ def exchange_mcp_refresh_token(
         actor_data = json.loads(actor_data)
     if not isinstance(actor_data, dict):
         raise TypeError("refresh token has no actor")
+    from gateway_mcp.services import bitrix_identity, corporate_access
+    if bitrix_identity.enabled():
+        if not bitrix_identity.is_subject(actor_data.get('subject','')):
+            raise PermissionError('corporate_bitrix_login_required')
+        actor = corporate_access.fresh_actor(actor_data['subject'],
+            ceiling=_optional_token_list(actor_data,'scope_ceiling'),
+            tools=_optional_token_list(actor_data,'tool_allowlist'))
+        return _issue_oauth_tokens(actor=actor,client_id=client_id,resource=expected_resource)
+    if bitrix_identity.is_subject(actor_data.get('subject','')):
+        raise PermissionError('bitrix_login_disabled')
     user_info = {
         "id": str(actor_data.get("yandex_id") or ""),
         "uid": str(actor_data.get("yandex_id") or ""),

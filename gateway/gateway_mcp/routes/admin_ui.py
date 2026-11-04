@@ -265,6 +265,24 @@ def admin_shell(
 
 
 def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, training_reader: bool = False) -> str:
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        items = [
+            ('overview', 'Обзор', '/admin'),
+            ('skill-library', 'Каталог навыков', '/platforma/skills'),
+            ('audit', 'Журнал событий' if is_admin else 'Мои обращения к MCP', '/admin/audit'),
+            ('telemetry', 'Учёт навыков' if is_admin else 'Мои запуски навыков', '/admin/telemetry/skills'),
+            ('how-it-works', 'Как это работает', '/platforma/how-it-works'),
+        ]
+        if is_admin:
+            items += [('users', 'Сотрудники и входы', '/admin/users'),
+                      ('showcase', 'Использование AI', '/admin/showcase'),
+                      ('people', 'Люди и AI', '/admin/people'),
+                      ('agents', 'Автономные агенты', '/admin/agents'),
+                      ('metrics', 'Состояние шлюза', '/admin/metrics')]
+        items += [('reader-status', 'Мой доступ', '/join'), ('logout', 'Выйти', '/auth/logout')]
+        return '<div class="nav-group"><div class="nav-label">Платформа Акметрон</div>' + ''.join(
+            _nav_link(key, label, href, active) for key, label, href in items) + '</div>'
     if training_reader:
         return '<div class="nav-group"><div class="nav-label">Платформа</div>' + ''.join(
             _nav_link(key, label, href, active) for key, label, href in (

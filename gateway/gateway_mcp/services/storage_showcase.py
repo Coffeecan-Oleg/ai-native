@@ -1,6 +1,6 @@
 """Aggregate projections only: no prompts, event payloads, credentials or HR data."""
 
-from gateway_mcp.services.storage_admin_console import _USERS, _rows
+from gateway_mcp.services.storage_admin_console import _users_cte, _rows
 from gateway_mcp.services.storage_core import _connect, ensure_schema
 
 
@@ -10,6 +10,9 @@ def _runs(days, subject=None, agent=None, people_only=False):
         "s.created_at >= now() - (%s * interval '1 day')",
         "s.created_at <= now()",
     ]
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        where.append("s.actor_subject in (" + _users_cte() + "select subject from known_users)")
     params = [days]
     if subject is not None:
         where.append("s.actor_subject = %s")
@@ -80,7 +83,7 @@ def showcase_people(days=30, query="", offset=0, limit=12):
     sql = (
         cte
         + ", "
-        + _USERS.strip().removeprefix("with ")
+        + _users_cte().strip().removeprefix("with ")
         + f""",
         totals as (select actor_subject, {_COUNTS} from runs group by actor_subject),
         clients as (select actor_subject, array_agg(distinct agent order by agent) as clients
@@ -172,6 +175,10 @@ def set_skill_favorite(subject, pack, skill, selected):
 
 def agent_profiles(days=30):
     cte, params = _runs(days)
+    from gateway_mcp.services import corporate_access
+    allowed = ""
+    if corporate_access.enabled():
+        allowed = "where p.actor_subject in (" + _users_cte() + "select subject from known_users)"
     return _rows(
         cte
         + f""", activity as (
@@ -180,14 +187,20 @@ def agent_profiles(days=30):
             a.starts, a.completed, a.failed, a.pending, a.timed, a.median_ms, a.last_activity
         from assistant_agent_profiles p left join activity a
             on p.actor_subject = a.actor_subject and p.agent = a.agent and p.actor_subject <> ''
+        {allowed}
         order by p.display_name, p.agent_key""",
         params,
     )
 
 
 def agent_binding_options():
+    from gateway_mcp.services import corporate_access
+    allowed = ""
+    if corporate_access.enabled():
+        allowed = " and actor_subject in (" + _users_cte() + "select subject from known_users)"
     return _rows("""select actor_subject, agent, max(created_at) as last_activity
         from assistant_skill_events where event_type = 'started' and actor_subject <> '' and agent <> ''
+        """ + allowed + """
         group by actor_subject, agent order by last_activity desc, actor_subject, agent limit 100""")
 
 

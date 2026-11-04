@@ -21,8 +21,11 @@ def head():
 
 
 def logo():
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return '<img class="brand-mark" src="/branding/logo-mark.png" width="44" height="44" alt=""><span><span class="brand-name">Акметрон</span><span class="brand-product">Корпоративная MCP Платформа</span></span>'
     return '<img class="brand-mark" src="/branding/logo-mark.png" width="44" height="44" alt=""><span><span class="brand-name">Акметрон</span><span class="brand-product">Платформа · учебная песочница</span></span>'
 
 
 def header():
-    return '<header class="akm-entry-brand"><a class="brand" href="/join" aria-label="Акметрон — учебная Платформа">' + logo() + '</a></header>' if enabled() else ''
+    return '<header class="akm-entry-brand"><a class="brand" href="/join" aria-label="Акметрон — Платформа">' + logo() + '</a></header>' if enabled() else ''

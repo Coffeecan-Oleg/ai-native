@@ -96,6 +96,9 @@ def _guard(handler):
             return await overview_response(actor)
         if not has_scope(actor, "access:admin"):
             return PlainTextResponse("access:admin is required.", status_code=403)
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled() and request.url.path.startswith('/admin/access-requests'):
+            return PlainTextResponse('Базовый корпоративный доступ открывается при личном входе.',status_code=410)
         try:
             response = await handler(request, actor)
         except PermissionError:
@@ -341,6 +344,12 @@ def register_admin_access_routes(mcp):
         users = await run_in_threadpool(
             admin_users_page, query=query, offset=offset, limit=PAGE_SIZE + 1
         )
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled():
+            from gateway_mcp.routes.corporate_ui import roster_body
+            body = roster_body(users[:PAGE_SIZE], query)
+            body += _pager("/admin/users", offset, len(users) > PAGE_SIZE, {"q": query})
+            return _page(actor, "Сотрудники и входы", "users", body)
         body = f'<form method="get" class="access-form"><label>Почта или учётная запись<input name="q" value="{escape(query)}" maxlength="200"></label><div><button type="submit">Найти</button></div></form>'
         rows = []
         for user in users[:PAGE_SIZE]:
@@ -367,6 +376,10 @@ def register_admin_access_routes(mcp):
         user = await run_in_threadpool(admin_user_get, subject)
         if user is None:
             return PlainTextResponse("Пользователь не найден.", status_code=404)
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled():
+            from gateway_mcp.routes.corporate_ui import employee_body
+            return _page(actor, "Сотрудник и входы", "users", employee_body(user))
         offset = _offset(request)
         grants = await run_in_threadpool(
             admin_user_grants, user, offset=offset, limit=PAGE_SIZE + 1

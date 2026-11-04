@@ -48,7 +48,13 @@ CSS = '''<style>
 
 
 def content():
-    return json.loads((ASSETS/'platforma-guide.json').read_text(encoding='utf-8'))
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        from gateway_mcp.routes.corporate_ui import guide_text
+        text = guide_text()
+        return {'updated':'03.11.2026','documents':{'memo':text,'message':text,'card':text}}
+    data = json.loads((ASSETS/'platforma-guide.json').read_text(encoding='utf-8'))
+    return data
 
 
 def e(value):
@@ -60,6 +66,10 @@ def _memo_sections(text):
 
 
 def render_body(data):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        from gateway_mcp.routes.corporate_ui import guide_body
+        return guide_body()
     fields = ''.join('<label for="'+e(row['id'])+'"><span>'+str(i)+'. '+e(row['question'])+
         '</span><small>'+e(row['hint'])+'</small><textarea id="'+e(row['id'])+
         '" data-card-answer maxlength="2000" autocomplete="off" placeholder="Можно написать: не знаю"></textarea></label>'

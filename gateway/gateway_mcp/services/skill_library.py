@@ -29,6 +29,12 @@ def enabled():
 
 
 def authorize(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        if not enabled() or actor is None:
+            raise PermissionError('Skill library is disabled or a personal login is required')
+        corporate_access.fresh_actor(actor.subject)
+        return
     if not enabled() or actor is None:
         raise PermissionError('Skill library is disabled or a personal login is required')
     cfg = onboarding.settings()

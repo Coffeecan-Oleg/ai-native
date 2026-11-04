@@ -109,6 +109,11 @@ def _guard(owner=False):
     def decorate(handler):
         @wraps(handler)
         async def guarded(request):
+            from gateway_mcp.services import corporate_access
+            if owner and corporate_access.enabled():
+                if request.method != 'GET':
+                    return PlainTextResponse('Legacy reader decisions are disabled in corporate mode',status_code=403)
+                return RedirectResponse('/admin/users',status_code=303)
             if not service.enabled():
                 return PlainTextResponse('Not found', status_code=404)
             actor = web_actor(request)
@@ -152,6 +157,10 @@ def _reader_permissions():
 def register_platforma_onboarding_routes(mcp):
     @mcp.custom_route('/join', methods=['GET'], include_in_schema=False)
     async def entry(request):
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled():
+            from gateway_mcp.routes.bitrix_auth import entry as corporate_entry
+            return await corporate_entry(request)
         if not service.enabled():
             return PlainTextResponse('Not found', status_code=404)
         actor = web_actor(request)

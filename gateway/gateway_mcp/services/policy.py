@@ -244,6 +244,13 @@ def actor_from_user_info(
 
 
 def actor_from_claims(claims: dict[str, Any]) -> GatewayActor:
+    from gateway_mcp.services import bitrix_identity, corporate_access
+    if bitrix_identity.enabled():
+        if not bitrix_identity.is_subject(claims.get('sub','')):
+            raise PermissionError('corporate_bitrix_login_required')
+        return corporate_access.from_claims(claims)
+    if bitrix_identity.is_subject(claims.get('sub','')):
+        raise PermissionError('bitrix_login_disabled')
     policy = _read_policy()
     scopes = claims.get("scope", "")
     if isinstance(scopes, str):

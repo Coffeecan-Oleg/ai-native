@@ -11,6 +11,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID, uuid4
 
+from gateway_mcp.services import unisender_readonly as unisender
+
 from gateway_mcp.services.storage_core import _connect, ensure_schema, postgres_enabled
 
 SPACE = 'space:organizational-awareness'
@@ -30,6 +32,15 @@ DOCUMENTS = frozenset({'awareness/start.md', 'awareness/projects.md', 'awareness
 
 
 PARTICIPANT_EXTRA_SCOPES = frozenset({'platforma:write', 'telemetry:read', 'telemetry:write'})
+
+
+def reader_scopes():
+    return SCOPES | ({unisender.SCOPE} if unisender.enabled() else set())
+
+
+def _valid_scope_sets():
+    return (SCOPES, SCOPES | PARTICIPANT_EXTRA_SCOPES,
+            SCOPES | {unisender.SCOPE}, SCOPES | PARTICIPANT_EXTRA_SCOPES | {unisender.SCOPE})
 PARTICIPANT_TOOLS = frozenset({'gateway_telemetry_skill_started', 'gateway_telemetry_skill_completed',
                              'gateway_telemetry_skill_failed', 'gateway_telemetry_skill_stats'})
 PARTICIPANT_ROUTES = frozenset({'platforma.requests.create', 'platforma.requests.update'})
@@ -77,7 +88,7 @@ def upgrade_approved_participants(actor):
                 if active_participant(row['subject']) is not None:
                     continue
                 cur.execute("""select scope from access_scope_grants where id=any(%s)""", (row['scope_grant_ids'],))
-                if {r['scope'] for r in cur.fetchall()} != SCOPES:
+                if {r['scope'] for r in cur.fetchall()} not in (SCOPES, SCOPES | {unisender.SCOPE}):
                     raise PermissionError('Unexpected grants; owner review required')
                 extra = _grant_participant(cur,row,actor,row['approved_until'])
                 cur.execute("""update platforma_reader_requests set scope_grant_ids=%s,
@@ -89,10 +100,16 @@ def upgrade_approved_participants(actor):
 
 
 def enabled():
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return True
     return os.getenv('GATEWAY_PLATFORMA_ONBOARDING_ENABLED', '').casefold() == 'true'
 
 
 def is_owner(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.is_owner(actor)
     subject = os.getenv('GATEWAY_PLATFORMA_OWNER_SUBJECT', '')
     return bool(subject) and actor.subject == subject
 
@@ -123,6 +140,9 @@ def settings():
 
 
 def require_owner(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.require_owner(actor)
     if actor.tool_allowlist is not None or not is_owner(actor):
         raise PermissionError('Only the human owner can decide reader access')
     from gateway_mcp.services.admin_roles import require_current_admin
@@ -244,6 +264,7 @@ def _validate_decision(row, decision, revision, reason):
 
 
 def _revoke_linked(cur, row):
+    unisender.revoke_resource(cur, row)
     cur.execute('update access_scope_grants set revoked_at=coalesce(revoked_at,now()) where id=any(%s)',
                 (row['scope_grant_ids'],))
     cur.execute("""update access_resource_grants set revoked_at=coalesce(revoked_at,now())
@@ -276,7 +297,7 @@ def decide(actor, request_id, decision, revision, reason):
                 if until <= datetime.now(timezone.utc):
                     raise PermissionError('Training access period has ended')
                 grant_reason = 'APP11 reader request ' + str(row['id'])
-                for scope in sorted(SCOPES):
+                for scope in sorted(reader_scopes()):
                     cur.execute('''insert into access_scope_grants
                         (subject_type,subject_key,scope,effect,reason,created_by,expires_at)
                         values ('user',%s,%s,'allow',%s,%s,%s) returning id''',
@@ -287,6 +308,8 @@ def decide(actor, request_id, decision, revision, reason):
                     values ('user',%s,'platforma','*','["read"]','allow',%s,%s,%s) returning id''',
                     (row['subject'].casefold(), grant_reason, actor.subject, until))
                 resource_id = cur.fetchone()['id']
+                if unisender.enabled():
+                    unisender.grant_resource(cur, row, actor, until)
                 if participant_pilot_enabled():
                     grant_ids.extend(_grant_participant(cur,row,actor,until))
             elif decision == 'revoked':
@@ -301,6 +324,9 @@ def decide(actor, request_id, decision, revision, reason):
 
 
 def active_reader(subject):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.active_row(subject)
     if not enabled():
         return None
     cfg = settings()
@@ -325,12 +351,15 @@ def active_reader(subject):
                 (row['resource_grant_id'], subject.casefold()))
             resource = cur.fetchone()
     if (len(scopes) != len(row['scope_grant_ids']) or
-            {r['scope'] for r in scopes} not in (SCOPES, SCOPES | PARTICIPANT_EXTRA_SCOPES) or not resource):
+            {r['scope'] for r in scopes} not in _valid_scope_sets() or not resource):
         return None
     return row
 
 
 def active_participant(subject):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.active_row(subject)
     if not participant_pilot_enabled():
         return None
     row = active_reader(subject)
@@ -339,7 +368,8 @@ def active_participant(subject):
     with _db() as conn:
         with conn.cursor() as cur:
             cur.execute("""select scope from access_scope_grants where id=any(%s)""",(row['scope_grant_ids'],))
-            if {r['scope'] for r in cur.fetchall()} != SCOPES | PARTICIPANT_EXTRA_SCOPES:
+            if {r['scope'] for r in cur.fetchall()} not in (SCOPES | PARTICIPANT_EXTRA_SCOPES,
+                                                          SCOPES | PARTICIPANT_EXTRA_SCOPES | {unisender.SCOPE}):
                 return None
             cur.execute("""select id from access_resource_grants where subject_type='user'
                 and subject_key=%s and system='platforma' and resource_type='sandbox_requests'
@@ -356,6 +386,9 @@ def can_write_sandbox(actor):
 
 
 def oauth_reader_actor(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.delegated(actor)
     if not enabled() or is_owner(actor):
         return actor
     try:
@@ -370,10 +403,12 @@ def oauth_reader_actor(actor):
     fresh = actor_from_user_info({'id': actor.yandex_id or actor.subject.removeprefix('yandex:'),
                                  'login': actor.login, 'default_email': actor.email})
     participant = active_participant(actor.subject) is not None
-    permitted = SCOPES | PARTICIPANT_EXTRA_SCOPES if participant else SCOPES
+    permitted = reader_scopes() | (PARTICIPANT_EXTRA_SCOPES if participant else frozenset())
     granted = set(fresh.scopes) & permitted
     previous = set(actor.scope_ceiling) if actor.scope_ceiling is not None else permitted
     allowed = TOOLS | ROUTES | (PARTICIPANT_TOOLS | PARTICIPANT_ROUTES if participant else frozenset())
+    if unisender.enabled() and unisender.SCOPE in granted:
+        allowed |= unisender.ROUTES
     previous_tools = set(actor.tool_allowlist) if actor.tool_allowlist is not None else allowed
     return replace(actor, groups=(), scopes=tuple(sorted(granted)),
                    scope_ceiling=tuple(sorted(permitted & previous)),
@@ -381,6 +416,9 @@ def oauth_reader_actor(actor):
 
 
 def reader_profile(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.profile(actor)
     row = active_reader(actor.subject)
     if row is None:
         raise PermissionError('addon_reader_not_approved')
@@ -392,6 +430,10 @@ def reader_profile(actor):
             'resources': [{'id': 'mcp:' + t, 'kind': 'tool', 'operations': ['read']} for t in sorted(TOOLS)] +
                          [{'id': r, 'kind': 'backend_route', 'operations': ['read']} for r in sorted(ROUTES)],
             'documents': {SPACE: cfg['documents']}}
+    from gateway_mcp.services.policy import has_scope
+    if unisender.enabled() and has_scope(actor, unisender.SCOPE):
+        result['resources'] += [{'id': r, 'kind': 'backend_route', 'operations': ['read']}
+                                for r in sorted(unisender.ROUTES)]
     if active_participant(actor.subject) is not None:
         result['participant_role'] = 'training-participant'
         result['forbidden_operations'] = ['delete','admin','grant','export']
@@ -410,6 +452,9 @@ def reader_profile(actor):
 
 
 def knowledge_reader(actor, path):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.knowledge_reader(actor,path)
     if not enabled() or Path(path) != Path(os.environ.get('GATEWAY_KNOWLEDGE_VAULT_PATH', '/data/company-knowledge-vault')) / 'spaces' / 'organizational-awareness':
         return False
     try:
@@ -419,6 +464,9 @@ def knowledge_reader(actor, path):
 
 
 def check_web_path(actor, path):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.web_path_allowed(actor,path)
     # Authentication/OAuth protocol routes do not use web_actor. All other web
     # handlers which accept browser sessions share this gate, including credentials.
     if not enabled() or is_owner(actor) or path in {'/join', '/join/request', '/auth/logout'}:
@@ -440,6 +488,9 @@ def check_web_path(actor, path):
 
 
 def web_login_actor(actor):
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        return corporate_access.fresh_actor(actor.subject)
     if not enabled() or is_owner(actor):
         return actor
     _identity(actor)

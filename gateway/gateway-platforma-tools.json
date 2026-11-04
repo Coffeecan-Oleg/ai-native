@@ -329,6 +329,31 @@
         ],
         "additionalProperties": false
       }
+    },
+    {
+      "name": "unisender.getLists",
+      "backend": "unisender",
+      "transport": "unisender-readonly",
+      "scope": "unisender:read",
+      "http_method": "GET",
+      "description": "РАБОЧИЕ данные UniSender: ID и названия списков, только чтение. Не возвращает контакты или API-ключ. Требует нового личного OAuth с unisender:read и действующего одобрения.",
+      "status": "implemented",
+      "arguments_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "unisender.getContactCount",
+      "backend": "unisender",
+      "transport": "unisender-readonly",
+      "scope": "unisender:read",
+      "http_method": "GET",
+      "description": "РАБОЧИЕ данные UniSender: количество контактов указанного списка и типа (address=email, phone=телефон), без выгрузки адресов/номеров. Не является счётчиком активных подписчиков. Отправка и изменение данных отсутствуют.",
+      "status": "implemented",
+      "arguments_schema": {
+        "type": "object",
+        "properties": {"list_id": {"type": "integer", "minimum": 1}, "contact_type": {"type": "string", "enum": ["address", "phone"], "default": "address"}},
+        "required": ["list_id"],
+        "additionalProperties": false
+      }
     }
   ]
 }

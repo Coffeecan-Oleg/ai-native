@@ -20,10 +20,11 @@ def register_access_request_tools(mcp):
     )
     async def gateway_access_profile() -> str:
         """Show the current authenticated identity, effective scopes, access packages, and recent access requests."""
+        from gateway_mcp.services import corporate_access
         run = ToolRun.start(
             tool="gateway_access_profile",
             system="access",
-            scope="access:request",
+            scope="skills:read" if corporate_access.enabled() else "access:request",
             arguments={},
         )
         try:
