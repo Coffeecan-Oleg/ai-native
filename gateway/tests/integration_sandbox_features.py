@@ -10,7 +10,9 @@ from unittest.mock import patch
 from uuid import uuid4
 
 assert os.getenv('SANDBOX_DISPOSABLE_DATABASE')=='true'
-assert 'sandbox_feature_test' in os.environ['GATEWAY_DATABASE_URL']
+from psycopg.conninfo import conninfo_to_dict
+connection=conninfo_to_dict(os.environ['GATEWAY_DATABASE_URL'])
+assert connection.get('dbname')=='sandbox_feature_test' and connection.get('host') in {'127.0.0.1','localhost','::1'}
 from gateway_mcp.services.migrations import migrate_up
 from gateway_mcp.services import addon_guard, storage_telemetry
 from gateway_mcp.services.policy import GatewayActor, has_scope
@@ -44,7 +46,7 @@ for pattern,kind,actions in [('*','',['read']),('sandbox','sandbox_requests',['w
         resource_type=kind,actions_json=json.dumps(actions),effect='allow',priority=10,
         reason='Disposable integration test',actor=actor,ttl_days=1,dry_run=False)
 
-profile_data=json.loads(Path('/candidate/candidate/profiles-after.json').read_text())
+profile_data=json.loads(Path(os.environ['SANDBOX_TEST_PROFILES_FILE']).read_text())
 assert len(profile_data['profiles']) == 1
 profile=next(iter(profile_data['profiles'].values()));profile['subject']=OWNER
 os.environ['GATEWAY_PLATFORMA_OWNER_SUBJECT']=OWNER
@@ -128,7 +130,7 @@ async def main():
         # Browser reads the exact same overlay; only the browser identity is injected.
         # Resource grants, reader approval, profiles, SQL and ASGI GET/405 are real.
         os.environ['GATEWAY_PLATFORMA_ONBOARDING_ENABLED']='true'
-        os.environ['GATEWAY_PLATFORMA_READER_UNTIL']='2026-10-31T20:59:59Z'
+        os.environ['GATEWAY_PLATFORMA_READER_UNTIL']='2099-01-01T00:00:00Z' # Synthetic fixture, not a deployed expiry.
         os.environ['GATEWAY_BRAND']='akmetron'
         profile_file=Path('/tmp/browser-test-profiles.json')
         profile_file.write_text(json.dumps({'schema':1,'profiles':{OWNER:profile}}))
@@ -167,13 +169,18 @@ async def main():
                 assert onboarding.check_web_path(colleague,request_ui.LIST_PATH)
                 response=await client.get(request_ui.LIST_PATH,params={'query':'Проверенная учебная заявка','period':'all'})
                 assert response.status_code==200 and identifier in response.text
-                for private in ('/admin/audit','/admin/telemetry/skills','/credentials','/notifications'):
+                for personal in ('/admin/audit','/admin/telemetry/skills'):
+                    assert 'href="'+personal in response.text
+                    assert onboarding.check_web_path(colleague,personal)
+                for private in ('/credentials','/notifications','/admin/users'):
                     assert 'href="'+private not in response.text
                     assert not onboarding.check_web_path(colleague,private)
                 ok('real_database_reader_approval_opens_only_readonly_browser_views')
                 onboarding.decide(actor,str(approved['id']),'revoked',approved['revision'],'Disposable revocation test')
                 assert (await client.get(request_ui.DETAIL_PATH,params={'id':identifier})).status_code==403
                 assert not onboarding.check_web_path(colleague,request_ui.LIST_PATH)
+                for personal in ('/admin/audit','/admin/telemetry/skills'):
+                    assert not onboarding.check_web_path(colleague,personal)
                 ok('reader_revocation_closes_existing_browser_identity_immediately')
         assert hashlib.sha256(DATA_FILE.read_bytes()).hexdigest()==sha
         ok('original_9144_snapshot_bytes_unchanged')

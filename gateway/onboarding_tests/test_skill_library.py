@@ -139,7 +139,7 @@ class SkillLibraryWebTests(SkillLibraryFixture):
     def setUp(self):
         super().setUp()
         from gateway_mcp.server import create_mcp
-        self.http=self.enterContext(TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid'))
+        self.http=self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
 
     def login(self,actor):
         self.http.cookies.set('gateway_token',auth.mint_gateway_token(actor),domain='gateway.example.invalid',path='/')
@@ -234,7 +234,9 @@ class SkillLibraryWebTests(SkillLibraryFixture):
         counter=10
         def tool(name,args=None):
             nonlocal counter
-            counter+=1;value=rpc({'id':counter,'method':'tools/call','params':{'name':name,'arguments':args or {}}})['result']
+            counter+=1;response=rpc({'id':counter,'method':'tools/call','params':{'name':name,'arguments':args or {}}})
+            self.assertIn('result',response,str(response)[:700])
+            value=response['result']
             self.assertFalse(value.get('isError'),value)
             return json.loads(next(c['text'] for c in value['content'] if c['type']=='text'))
         catalogue=tool('gateway_corporate_skill_list')

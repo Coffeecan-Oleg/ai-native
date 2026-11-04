@@ -21,9 +21,9 @@
     },
     {
       "name": "platforma-training",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "displayName": "Платформа — учебный помощник",
-      "shortDescription": "Сервисы и заявки: чтение",
+      "shortDescription": "Учебные сервисы и заявки",
       "author": {
         "name": "Coffeecan-Oleg",
         "url": "https://github.com/Coffeecan-Oleg"
@@ -31,9 +31,10 @@
       "repository": "https://github.com/Coffeecan-Oleg/ai-native",
       "mcpUrl": "https://195-133-14-140.sslip.io/mcp",
       "category": "Productivity",
-      "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+      "description": "Вымышленные сервисы и заявки: чтение и согласованное создание/изменение только в учебной песочнице. Серверные права доступа выдаются отдельно; к реальным данным навык записи не применяется.",
       "skills": [
-        "platforma-training-service-reader"
+        "platforma-training-service-reader",
+        "platforma-training-service-writer"
       ]
     },
     {

@@ -164,7 +164,7 @@ class ParticipantPilotTests(ReaderFixture):
         from gateway_mcp.server import create_mcp
         from gateway_mcp.services.auth import mint_gateway_token
         actor=self.participant()
-        with TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid') as http:
+        with TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid') as http:
             headers={'Authorization':'Bearer '+mint_gateway_token(actor),'Accept':'application/json, text/event-stream'}
             seq=10
             def rpc(body):

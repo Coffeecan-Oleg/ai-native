@@ -104,7 +104,7 @@ class OpenClientContracts(ReaderFixture):
         from starlette.testclient import TestClient
         from gateway_mcp.server import create_mcp
         actor=self.participant()
-        with TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid') as http:
+        with TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid') as http:
             for client in ('opencode','openclaw'):
                 headers={'Authorization':'Bearer '+auth.mint_gateway_token(actor),'Accept':'application/json, text/event-stream'}
                 seq=10
@@ -121,7 +121,9 @@ class OpenClientContracts(ReaderFixture):
                 def tool(name,args):
                     nonlocal seq
                     seq+=1
-                    result=rpc({'id':seq,'method':'tools/call','params':{'name':name,'arguments':args}})['result']
+                    response=rpc({'id':seq,'method':'tools/call','params':{'name':name,'arguments':args}})
+                    self.assertIn('result',response,str(response)[:700])
+                    result=response['result']
                     self.assertFalse(result.get('isError'),str(result)[:350])
                     return json.loads(next(c['text'] for c in result['content'] if c['type']=='text'))
                 names={t['name'] for t in rpc({'id':2,'method':'tools/list'})['result']['tools']}

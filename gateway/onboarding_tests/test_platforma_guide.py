@@ -19,7 +19,7 @@ class GuideWebTests(ReaderFixture):
         self.enterContext(patch.dict(os.environ, {'GATEWAY_BRAND':'akmetron',
             'GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED':'true'}))
         from gateway_mcp.server import create_mcp
-        self.http = self.enterContext(TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid'))
+        self.http = self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
 
     def login(self,actor):
         self.http.cookies.set('gateway_token',auth.mint_gateway_token(actor),domain='gateway.example.invalid',path='/')

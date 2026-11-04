@@ -36,7 +36,7 @@ class ProtocolTests(unittest.TestCase):
         self.token=auth.mint_gateway_token(self.actor)
         from gateway_mcp.server import create_mcp
         server=create_mcp()
-        self.http=self.enterContext(TestClient(server.streamable_http_app()))
+        self.http=self.enterContext(TestClient(server.streamable_http_app(),base_url='https://127.0.0.1:8000'))
         self.headers={"Authorization":"Bearer "+self.token,"Accept":"application/json, text/event-stream"}
         result=self.rpc({"id":1,"method":"initialize","params":{
             "protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"isolated-addon-test","version":"1"}}})

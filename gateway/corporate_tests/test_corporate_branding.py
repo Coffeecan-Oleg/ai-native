@@ -52,7 +52,9 @@ class ResourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp); folder=root/'test-skill';folder.mkdir()
             (folder/'SKILL.md').write_text('changed')
-            (root/'catalog.json').write_text(json.dumps({'schema':1,'pack':'akmetron-corporate','skills':[{'name':'test-skill','files':{'SKILL.md':{'bytes':7,'sha256':'0'*64}}}]}))
+            (root/'catalog.json').write_text(json.dumps({'schema':1,'pack':'akmetron-corporate','version':'fixture',
+                'skills':[{'name':'test-skill','title':'Synthetic skill','version':'fixture','description':'Hash failure fixture',
+                           'files':{'SKILL.md':{'bytes':7,'sha256':'0'*64}}}]}))
             with patch.object(skills,'ROOT',root), self.assertRaises(ValueError):skills.read_skill('test-skill')
 
     def test_disabled_pack_fails_closed(self):

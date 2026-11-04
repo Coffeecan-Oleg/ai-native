@@ -23,6 +23,16 @@ TEST_URL = os.getenv('ONBOARDING_TEST_DATABASE_URL', '')
 
 @unittest.skipUnless(TEST_URL, 'Disposable PostgreSQL required')
 class ReaderFixture(unittest.TestCase):
+    def mcp_test_server(self):
+        """Admit only the synthetic ASGI host; retain DNS rebinding protection."""
+        from gateway_mcp.server import create_mcp
+        server = create_mcp()
+        security = server.settings.transport_security
+        self.assertTrue(security.enable_dns_rebinding_protection)
+        security.allowed_hosts.append('gateway.example.invalid')
+        security.allowed_origins.append('https://gateway.example.invalid')
+        return server
+
     def setUp(self):
         self.tmp = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         self.profiles = json.loads((ROOT/'addons/platforma-training/example-addon-profile.json').read_text())
@@ -203,7 +213,7 @@ class WebTests(ReaderFixture):
     def setUp(self):
         super().setUp()
         from gateway_mcp.server import create_mcp
-        server=create_mcp();self.http=self.enterContext(TestClient(server.streamable_http_app(),base_url='https://gateway.example.invalid'))
+        server=self.mcp_test_server();self.http=self.enterContext(TestClient(server.streamable_http_app(),base_url='https://gateway.example.invalid'))
 
     def login(self,actor):
         self.http.cookies.set('gateway_token',auth.mint_gateway_token(actor),domain='gateway.example.invalid',path='/')
@@ -406,10 +416,15 @@ class WebTests(ReaderFixture):
 
 
 class ProtocolTests(ReaderFixture):
+    def test_untrusted_host_is_still_rejected(self):
+        response = self.http.post('/mcp', json={'jsonrpc':'2.0','id':99,'method':'tools/list'},
+                                  headers=self.headers | {'Host':'untrusted.example.invalid'})
+        self.assertEqual(response.status_code, 421)
+
     def setUp(self):
         super().setUp()
         from gateway_mcp.server import create_mcp
-        self.http=self.enterContext(TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid'))
+        self.http=self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
         from gateway_mcp.services.knowledge import create_space,put_document
         create_space(actor=self.owner,slug='organizational-awareness',title='Training map',members_json='[]')
         doc=json.loads((ROOT/'addons/platforma-training/awareness-bundle.json').read_text())['documents'][0]

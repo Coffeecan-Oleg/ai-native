@@ -16,7 +16,7 @@ class UniSenderDemoMcpTests(onboarding_test.ReaderFixture):
     def setUp(self):
         super().setUp()
         from gateway_mcp.server import create_mcp
-        self.http=self.enterContext(TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid'))
+        self.http=self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
         self.row=self.approve()
         actor=service.oauth_reader_actor(self.fresh())
         self.headers={'Authorization':'Bearer '+auth.mint_gateway_token(actor),'Accept':'application/json, text/event-stream'}

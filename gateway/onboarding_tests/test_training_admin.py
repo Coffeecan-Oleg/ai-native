@@ -28,7 +28,7 @@ class TrainingAdminTests(fixtures.ReaderFixture):
         self.profiles['profiles']['yandex:9001']['skill_telemetry']={'project':'platforma-training'}
         self.profile_path.write_text(json.dumps(self.profiles))
         from gateway_mcp.server import create_mcp
-        self.http=self.enterContext(TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid'))
+        self.http=self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
 
     def login(self,actor):
         self.http.cookies.clear()
@@ -50,7 +50,8 @@ class TrainingAdminTests(fixtures.ReaderFixture):
         self.assertIn('LAB-UNISENDER-001',page)
         self.assertIn('platforma.requests.update',page)
         self.assertIn('gateway_corporate_skill_read',page)
-        self.assertIn('Реальный UniSender пока не подключён',page)
+        self.assertIn('Рабочие сервисы доступны только при наличии отдельного разрешения.',page)
+        self.assertNotIn('Реальный UniSender пока не подключён',page)
         self.assertNotIn('href="/admin/users"',page)
 
     def test_anonymous_and_delegated_credentials_require_browser_login(self):

@@ -105,8 +105,16 @@ class PlatformaDemoTests(unittest.TestCase):
             call("platforma.services.get")
 
     def test_six_read_routes_and_two_bounded_write_routes_exist(self):
-        self.assertEqual(len(ROUTES), 8)
-        reads = [route for route in ROUTES.values() if route["http_method"] == "GET"]
+        # This contract covers the fictional backend. Real read-only UniSender
+        # has its own registry/negative tests and must not be counted as a demo.
+        demo = {name: route for name, route in ROUTES.items() if route['backend'] == 'platforma'}
+        self.assertEqual(set(demo), {
+            'platforma.context.get', 'platforma.services.list', 'platforma.services.get',
+            'platforma.requests.list', 'platforma.requests.get',
+            'platforma.requests.create', 'platforma.requests.update',
+            'platforma.unisender-demo.stats.get',
+        })
+        reads = [route for route in demo.values() if route["http_method"] == "GET"]
         self.assertEqual(len(reads), 6)
         self.assertTrue(all(route["scope"] == "platforma:read" for route in reads))
         forged = {**ROUTES["platforma.requests.get"], "name": "platforma.requests.delete"}

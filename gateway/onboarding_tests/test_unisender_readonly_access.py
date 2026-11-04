@@ -81,7 +81,7 @@ class UniSenderProtocolTests(ReaderFixture):
             'GATEWAY_MCP_OAUTH_TOOLS':os.environ['GATEWAY_MCP_OAUTH_TOOLS']+' '+' '.join(boundary.ROUTES)}))
         self.row=self.approve();actor=onboarding.oauth_reader_actor(self.fresh())
         from gateway_mcp.server import create_mcp
-        self.http=self.enterContext(TestClient(create_mcp().streamable_http_app(),base_url='https://gateway.example.invalid'))
+        self.http=self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
         self.headers={'Authorization':'Bearer '+auth.mint_gateway_token(actor),'Accept':'application/json, text/event-stream'}
         init=self.rpc({'id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'unisender-access-test','version':'1'}}})
         self.headers['MCP-Protocol-Version']=init['result']['protocolVersion'];self.rpc({'method':'notifications/initialized'});self.seq=10
