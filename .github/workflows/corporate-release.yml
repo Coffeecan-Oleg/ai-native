@@ -15,6 +15,7 @@ jobs:
     env:
       SOURCE_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       DOCKER_HOST: unix:///var/run/docker.sock
+      BUILDKIT_PROGRESS: plain
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6, resolved 2026-11-04
         with:
@@ -24,39 +25,12 @@ jobs:
         run: |
           python3 -m unittest discover -s gateway/release -p test_ci_check.py
           python3 -m unittest discover -s gateway/release -p test_build_watchdog.py
+          python3 -m unittest discover -s gateway/release -p test_apt_transport.py
       - name: Check separate builder resources before building
         run: python3 gateway/release/ci-check.py preflight --reports "$RUNNER_TEMP/gateway-ci-report"
       - name: Build fixed inputs without Gateway overlay layers
         timeout-minutes: 20
-        shell: bash
-        run: |
-          # BEGIN BUILD WATCHDOG
-          set -euo pipefail
-          build_seconds=${GATEWAY_CI_BUILD_SECONDS:-1080}
-          [[ "$build_seconds" =~ ^[1-9][0-9]{0,3}$ ]] && (( build_seconds <= 1080 )) || exit 64
-          mkdir -p "$RUNNER_TEMP/gateway-ci-report"
-          build_log="$RUNNER_TEMP/gateway-build.log"
-          set +e
-          BUILDKIT_PROGRESS=plain timeout --signal=TERM --kill-after=10s "${build_seconds}s" \
-            docker build --platform linux/amd64 --pull=false \
-            --label "org.opencontainers.image.revision=$SOURCE_GIT_SHA" \
-            -t gateway-corporate-ci gateway 2>&1 | tee "$build_log"
-          build_status=${PIPESTATUS[0]}
-          set -e
-          BUILD_EXIT_CODE="$build_status" python3 - <<'PY'
-          import collections,json,os
-          from pathlib import Path
-          root=Path(os.environ['RUNNER_TEMP'])
-          with (root/'gateway-build.log').open(errors='replace') as stream:
-              tail=[line.rstrip()[:500] for line in collections.deque(stream,maxlen=60)]
-          code=int(os.environ['BUILD_EXIT_CODE'])
-          report={'successful':code==0,'exit_code':code,'timeout_exit':code==124,
-                  'forced_kill_or_signal_exit':code==137,'source_sha':os.environ['SOURCE_GIT_SHA'],
-                  'deployment':False,'real_credentials_provided':False,'build_tail':tail}
-          (root/'gateway-ci-report/build.json').write_text(json.dumps(report,indent=2)+'\n')
-          PY
-          exit "$build_status"
-          # END BUILD WATCHDOG
+        run: python3 gateway/release/build-image.py --reports "$RUNNER_TEMP/gateway-ci-report"
       - name: Verify installed image, regression and empty isolated database
         run: python3 gateway/release/ci-check.py checks --image gateway-corporate-ci --reports "$RUNNER_TEMP/gateway-ci-report"
       - name: Save check reports only

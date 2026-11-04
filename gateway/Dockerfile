@@ -25,9 +25,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
     GATEWAY_AUTH_ENABLED=true GATEWAY_LOGIN_PROVIDER=bitrix24
 COPY locks/debian.sources /etc/apt/sources.list.d/debian.sources
 COPY locks/os.txt /tmp/gateway-os.txt
-RUN apt-get -o Acquire::Retries=2 -o Acquire::Languages=none -o Acquire::ForceIPv4=true update \
-    && xargs -r apt-get install -y --no-install-recommends < /tmp/gateway-os.txt \
-    && rm -rf /var/lib/apt/lists/* /tmp/gateway-os.txt
+COPY locks/apt-build.conf /etc/apt/apt.conf.d/80gateway-build
+RUN echo 'gateway-build: Debian indexes (240s limit)' \
+    && timeout --signal=TERM --kill-after=5s 240s apt-get update \
+    && echo 'gateway-build: pinned Debian packages (360s limit)' \
+    && DEBIAN_FRONTEND=noninteractive timeout --signal=TERM --kill-after=5s 360s \
+       xargs -r apt-get install -y --no-install-recommends < /tmp/gateway-os.txt \
+    && echo 'gateway-build: Debian packages installed' \
+    && rm -rf /var/lib/apt/lists/* /tmp/gateway-os.txt /etc/apt/apt.conf.d/80gateway-build
 COPY --from=builder /wheels /wheels
 RUN python -m pip install --no-cache-dir --no-index --no-deps --require-hashes -r /wheels/requirements.txt \
     && python -m pip check \

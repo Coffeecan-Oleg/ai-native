@@ -85,8 +85,9 @@ its jobs are not replaced or declared passing by this corporate job.
 The initial trigger is the existing PR's synchronize event after publishing the
 candidate. workflow_dispatch becomes usable only once the workflow is present
 on the default branch; do not merge into main just to make the button appear.
-The public Actions view currently has zero runs; owner-level enablement was not
-verified because the browser is signed out and the connector lacks that endpoint.
+Read the checks for the exact candidate commit after publication. Source CI and
+the installed-image workflow are separate results; neither a queued workflow nor
+a successful source suite establishes image acceptance.
 
 `release/run-tests.py` starts separate regression and metrics processes, checks
 the installed package and rejects skipped tests. It uses synthetic credentials
@@ -107,8 +108,60 @@ Before any production switch: owner approval, fresh closed backup, immutable
 candidate image ID, constrained Gateway-only rollout and timed rollback, then
 live HTTPS/MCP/Bitrix acceptance. This source release alone does none of these.
 
+## Bounded builds and diagnostics
+
+The observed 53cee4c7 build completed the application wheel, then repeatedly
+printed `Ign:` while fetching pinned Debian packages. Its first runner received
+a shutdown signal (exit143); logs for the long second attempt were unavailable.
+The second attempt was cancelled after exceeding the configured job limit.
+These facts do not establish the underlying reason for that runner's delay.
+
+A separate synthetic regression reproduced a defect in the old watchdog:
+`timeout docker ... | tee ...` kept waiting for EOF after the Docker parent
+exited, because a descendant retained stdout. With a one-second limit, the
+six-second example eventually reported success. This is a demonstrated weakness
+of the pipeline, not proof that the same descendant caused the hosted incident.
+
+`release/build-image.py` now supervises the Docker client directly and writes
+stdout/stderr to a regular file. Waiting for a pipe reader is unnecessary.
+The build limit remains 1080 seconds. On timeout or cancellation it signals only
+its own client process group, waits up to 5 seconds, then requests SIGKILL with
+another bounded 2-second wait. Unconfirmed client termination is recorded rather
+than reported as successful cleanup. This is not a daemon-wide Docker kill.
+
+The helper writes an initial unsuccessful report, updates it every 15 seconds,
+and writes the actual final result. Timeout exits 124; SIGTERM exits 143 and
+SIGINT exits 130; a missing executable exits 127. Invalid source/deadline input
+fails before Docker is invoked. The JSON includes a bounded log tail (last 24 KB,
+at most 60 lines of 500 characters), elapsed time and source SHA. A runner shutdown
+or SIGKILL can still prevent artifact upload; no script can promise an artifact
+after loss of the host. Check report state as well as `successful`.
+
+`locks/apt-build.conf` applies IPv4, one retry, a 15-second HTTP/HTTPS transport
+timeout and disabled pipelining to both `apt-get update` and `apt-get install`.
+Any index error, including a transient one, fails the update. Docker also limits
+the entire index phase to 240 seconds and package installation to 360 seconds,
+with explicit phase markers in the log. A transport timeout is not the total
+operation deadline. The build-only configuration is removed after installation.
+APT's transport may also retry connections internally; `Acquire::Retries=1`
+alone is not a cap on network attempts. The phase deadlines remain necessary.
+
+The base-image digest, Debian snapshot timestamp, 35 pinned OS packages,
+Python dependency hashes, official SDK check and runtime permissions remain
+unchanged. No mutable mirror fallback or relaxed signature checks are added.
+An unavailable archive should produce a bounded, diagnosable failure; this
+change does not make the external archive available.
+
+Tests use synthetic subprocesses and a loopback-only HTTP server with the real
+APT helper; they never build on the production host. Before acceptance, run a
+complete Docker build and the installed-image checks on a separate builder.
+Preparation on a copy does not publish code or update the live Gateway.
+
 ## References
 
 - [pip secure installs](https://pip.pypa.io/en/stable/topics/secure-installs/)
 - [Debian snapshot](https://snapshot.debian.org/)
 - [Docker build best practices](https://docs.docker.com/build/building/best-practices/)
+- [APT transport timeouts](https://manpages.debian.org/trixie/apt/apt-transport-http.1.en.html)
+- [APT update error handling](https://manpages.debian.org/trixie/apt/apt-get.8.en.html)
+- [Python subprocess management](https://docs.python.org/3/library/subprocess.html)
