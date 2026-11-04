@@ -19,6 +19,11 @@ class UniSenderDemoMcpTests(onboarding_test.ReaderFixture):
         self.http=self.enterContext(TestClient(self.mcp_test_server().streamable_http_app(),base_url='https://gateway.example.invalid'))
         self.row=self.approve()
         actor=service.oauth_reader_actor(self.fresh())
+        self.start_session(actor)
+
+    def start_session(self,actor):
+        # A different authorization context needs its own MCP session. Do not
+        # reuse the previous actor's Mcp-Session-Id (SDK 1.30 rejects that).
         self.headers={'Authorization':'Bearer '+auth.mint_gateway_token(actor),'Accept':'application/json, text/event-stream'}
         response=self.rpc({'id':1,'method':'initialize','params':{'protocolVersion':'2025-03-26','capabilities':{},'clientInfo':{'name':'isolated-demo-client','version':'1'}}})
         self.headers['MCP-Protocol-Version']=response['result']['protocolVersion']
@@ -54,7 +59,7 @@ class UniSenderDemoMcpTests(onboarding_test.ReaderFixture):
 
     def test_owner_uses_same_bounded_read_route(self):
         actor=service.oauth_reader_actor(self.owner)
-        self.headers['Authorization']='Bearer '+auth.mint_gateway_token(actor)
+        self.start_session(actor)
         result,data=self.read()
         self.assertFalse(result.get('isError'),data)
         self.assertTrue(data['data']['synthetic'])
