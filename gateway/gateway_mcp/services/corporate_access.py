@@ -22,7 +22,7 @@ WEB_PATHS = frozenset({'/admin','/admin/audit','/admin/telemetry/skills',
     '/auth/bitrix24/frame-session',
     '/platforma/skills','/platforma/skills/upload',
     '/platforma/skills/view','/platforma/skills/rename','/platforma/how-it-works',
-    '/platforma/how-it-works/download','/join','/auth/logout'})
+    '/platforma/how-it-works/download','/platforma/connection','/join','/auth/logout'})
 
 
 def enabled():

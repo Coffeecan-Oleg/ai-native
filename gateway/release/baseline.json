@@ -1,5 +1,5 @@
 {
-  "release_id": "corporate-2026.11.04-rc.1",
+  "release_id": "corporate-2026.11.04-rc.2-connection-check",
   "accepted_runtime_image": "sha256:daf4dad646b2a6c3bac88b40b149c3f63d5395869074e70becce8f5e8e59e138",
   "accepted_source_git_base": "8e5df74acb332c8af1f69ae4e6036a1db11eefaa",
   "python_base_image": "python@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2",
@@ -53,9 +53,9 @@
       "size": 3139
     },
     "server.py": {
-      "sha256": "1dd90281fef9f4ffdd5b4ae2622baf39c5b2896ff838a503bc362ab299333060",
-      "lf_sha256": "ed755f8aa35d425ecc24b792d66bce6f58a000cd1d1924626b4c6239cf013f55",
-      "size": 4787
+      "sha256": "cf2059a1736140e85af5a517131dde175cd46244a9c09cf3ac4726431540e026",
+      "lf_sha256": "cf2059a1736140e85af5a517131dde175cd46244a9c09cf3ac4726431540e026",
+      "size": 4835
     },
     "smoke.py": {
       "sha256": "ea87dad3d1ee651ebc691a51814a5df9dc6bff4fe7e880f21d211adab55a40d5",
@@ -243,9 +243,9 @@
       "size": 8965
     },
     "routes/admin_ui.py": {
-      "sha256": "8f1178c857ffff8ba6c9b39b1b69d5965d2a582f3319bf71ff3c43ce238d6ace",
-      "lf_sha256": "780cd1ad8d58df49adb16946656448ceb47f1c784ad529e219a1ab9f274a5ec5",
-      "size": 22414
+      "sha256": "81b40d3ad083da86c733d0f2fa7e07332b089115f28ac024562d90c446b393b4",
+      "lf_sha256": "81b40d3ad083da86c733d0f2fa7e07332b089115f28ac024562d90c446b393b4",
+      "size": 22161
     },
     "routes/admin_user_roles.py": {
       "sha256": "b616f47ce05d3e3a9a76cdcedaa5320243497fd386335f7bf267e3085f43c2a1",
@@ -713,9 +713,9 @@
       "size": 12653
     },
     "services/corporate_access.py": {
-      "sha256": "8cb2233c17673993b27428a5fa9c276be3e3052c8fcbbf8ecb303f282e3aed3b",
-      "lf_sha256": "8eaa9a55763e9eb97f82c2acba9300242a97ebe19cb4f39eb462a7d9f422921b",
-      "size": 9787
+      "sha256": "a8d523e2ea23d5f19de51ab163d84fa1f0375be7c297559374d80322ee2b0c9e",
+      "lf_sha256": "a8d523e2ea23d5f19de51ab163d84fa1f0375be7c297559374d80322ee2b0c9e",
+      "size": 9621
     },
     "services/corporate_knowledge.py": {
       "sha256": "4aecde7c6eca3f8f34c0c4d7cfb9ca706eeb4a1a7ed800ecfc2e3a4fdee37b78",
@@ -748,9 +748,9 @@
       "size": 18914
     },
     "tools/access_requests.py": {
-      "sha256": "5e7bd0c8bd13333e78d5a5ab03023a400a430c0127d8b7ff24741d8667239b9b",
-      "lf_sha256": "5e7bd0c8bd13333e78d5a5ab03023a400a430c0127d8b7ff24741d8667239b9b",
-      "size": 7483
+      "sha256": "a793afa02532e0eae30944af5660755e1a5143e4a1d6759c7c298e785fb5f382",
+      "lf_sha256": "a793afa02532e0eae30944af5660755e1a5143e4a1d6759c7c298e785fb5f382",
+      "size": 7956
     },
     "tools/approvals.py": {
       "sha256": "977b770689bcc6c74c2f4b33aaa4ac306baeac231e2039305598b7ea7fc415b1",
@@ -926,6 +926,16 @@
       "sha256": "5b6958520638bb8609f9eacb17c4d189563efeae96d5da49f7c2043988697205",
       "lf_sha256": null,
       "size": 18020
+    },
+    "routes/connection_diagnostics.py": {
+      "sha256": "83e2f5cc6cf31178f5ca9636a40b9db7f1045b47913cad7b41cfc28e8b097a87",
+      "lf_sha256": "83e2f5cc6cf31178f5ca9636a40b9db7f1045b47913cad7b41cfc28e8b097a87",
+      "size": 8208
+    },
+    "services/connection_diagnostics.py": {
+      "sha256": "c9b9fb73bd45ec4c4436984835f24bf8d78c0d76de8742d651c35e0218628eab",
+      "lf_sha256": "c9b9fb73bd45ec4c4436984835f24bf8d78c0d76de8742d651c35e0218628eab",
+      "size": 5685
     }
   },
   "private_mounts_excluded": [
@@ -1020,5 +1030,15 @@
     "gateway-platforma-tools.json"
   ],
   "sdk_sha256": "945ad491df8ffb7490b89f4914a439b5a3f575c950c3480562815716a3e07f23",
-  "test_postgres_image": "postgres@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea"
+  "test_postgres_image": "postgres@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea",
+  "candidate_source_git_base": "e1208617958a9c6ad49137c617e79bd9791029c9",
+  "source_fingerprints_role": "candidate expectations; not proof of live deployment or acceptance",
+  "candidate_changed_source_files": [
+    "routes/admin_ui.py",
+    "server.py",
+    "services/corporate_access.py",
+    "tools/access_requests.py",
+    "routes/connection_diagnostics.py",
+    "services/connection_diagnostics.py"
+  ]
 }

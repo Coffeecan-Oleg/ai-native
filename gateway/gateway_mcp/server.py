@@ -10,6 +10,7 @@ from gateway_mcp.routes.admin_showcase import register_admin_showcase_routes
 from gateway_mcp.routes.admin_telemetry import register_admin_telemetry_routes
 from gateway_mcp.routes.admin_user_roles import register_admin_user_role_routes
 from gateway_mcp.routes.auth import register_auth_routes
+from gateway_mcp.routes.connection_diagnostics import register_connection_diagnostics_routes
 from gateway_mcp.routes.branding import register_branding_routes
 from gateway_mcp.tools.corporate_skills import register_corporate_skill_tools
 from gateway_mcp.routes.credentials import register_credentials_routes
@@ -52,6 +53,7 @@ def create_mcp():
     register_health_routes(server)
     register_telemetry_routes(server)
     register_auth_routes(server)
+    register_connection_diagnostics_routes(server)
     register_credentials_routes(server)
     register_file_transfer_routes(server)
     register_factory_git_routes(server)

@@ -273,6 +273,7 @@ def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, 
             ('audit', 'Журнал событий' if is_admin else 'Мои обращения к MCP', '/admin/audit'),
             ('telemetry', 'Учёт навыков' if is_admin else 'Мои запуски навыков', '/admin/telemetry/skills'),
             ('how-it-works', 'Как это работает', '/platforma/how-it-works'),
+            ('connection-check', 'Проверить подключение', '/platforma/connection'),
         ]
         if is_admin:
             items += [('users', 'Сотрудники и входы', '/admin/users'),

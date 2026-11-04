@@ -18,7 +18,7 @@ def register_access_request_tools(mcp):
     @mcp.tool(
         annotations=ToolAnnotations(title="Gateway Access Profile", readOnlyHint=True)
     )
-    async def gateway_access_profile() -> str:
+    async def gateway_access_profile(diagnostic_id: str = "") -> str:
         """Show the current authenticated identity, effective scopes, access packages, and recent access requests."""
         from gateway_mcp.services import corporate_access
         run = ToolRun.start(
@@ -29,7 +29,15 @@ def register_access_request_tools(mcp):
         )
         try:
             actor = run.require_scope()
+            if diagnostic_id:
+                from gateway_mcp.services.connection_diagnostics import record_probe, validate_mark
+                mark = validate_mark(diagnostic_id)
             result = access_profile(actor)
+            if diagnostic_id:
+                check = record_probe(actor,mark,mcp)
+                run.arguments.update(diagnostic_id=mark,gateway_request_id=check['gateway_request_id'])
+            if diagnostic_id:
+                result['connection_check'] = check
             run.finish()
             return _json({"ok": True, **result})
         except PermissionError as exc:
