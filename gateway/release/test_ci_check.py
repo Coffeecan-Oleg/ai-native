@@ -73,6 +73,9 @@ class CopyChecks(unittest.TestCase):
         self.assertIn('--internal', network)
         starts = [c for c in self.calls if c[1] == 'run']
         self.assertEqual(len(starts), 2)
+        app = next(c for c in starts if c[c.index('--name') + 1].endswith('-app'))
+        env = dict(value.split('=', 1) for i, value in enumerate(app) if i and app[i - 1] == '-e')
+        self.assertEqual(env.get('GATEWAY_BITRIX_EMBED_ENABLED'), 'true')
         for args in starts:
             self.assertNotIn('-p', args)
             self.assertNotIn('--publish', args)
@@ -97,6 +100,12 @@ class CopyChecks(unittest.TestCase):
             HTTP.clear(); HTTP.update(original)
         self.assertEqual(len([c for c in self.calls if c[1] == 'rm']), 2)
         self.assertFalse((self.reports/'fresh-database-startup.json').exists())
+        probe = json.loads((self.reports/'startup-probe.json').read_text())
+        self.assertEqual(probe['http']['/metrics']['status'], 200)
+        self.assertEqual(probe['migrations'], {'database_enabled': True, 'applied_count': 25, 'pending_count': 0})
+        self.assertNotIn('body', probe['http']['/healthz'])
+        for secret in ['synthetic-copy-password', 'synthetic-application-secret', 'GATEWAY_JWT_SECRET']:
+            self.assertNotIn(secret, json.dumps(probe))
 
     def test_foreign_label_not_deleted(self):
         self.copy.containers = [self.copy.prefix+'-db']

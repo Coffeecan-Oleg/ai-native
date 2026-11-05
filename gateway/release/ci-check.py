@@ -142,6 +142,7 @@ class CopyRun:
             env = {
                 'GATEWAY_DATABASE_URL': 'postgresql://copy:synthetic-copy-password@db:5432/copy',
                 'GATEWAY_AUTH_ENABLED': 'true', 'GATEWAY_LOGIN_PROVIDER': 'bitrix24',
+                'GATEWAY_BITRIX_EMBED_ENABLED': 'true',
                 'GATEWAY_BITRIX_PORTAL': 'akmetron.bitrix24.ru',
                 'GATEWAY_BITRIX_CLIENT_ID': 'local.synthetic.12345678',
                 'GATEWAY_BITRIX_CLIENT_SECRET': 'synthetic-application-secret',
@@ -176,6 +177,16 @@ class CopyRun:
             else:
                 raise CheckFailure('copy_gateway_startup_timeout')
             migrations = json.loads(command(['docker', 'exec', app, 'gateway-mcp', 'migrate', 'status']).stdout)
+            # Preserve a bounded, credential-free explanation if acceptance fails.
+            write_report(self.reports, 'startup-probe.json', {
+                'http': {path: {key: value for key, value in row.items() if key in {'status', 'sha256'}}
+                         for path, row in http.items()},
+                'health': {'auth_enabled': http['/healthz']['body'].get('auth_enabled'),
+                           'postgres_ok': http['/healthz']['body'].get('postgres', {}).get('ok')},
+                'migrations': {'database_enabled': migrations.get('database_enabled'),
+                               'applied_count': len(migrations.get('applied', [])),
+                               'pending_count': len(migrations.get('pending', []))},
+            })
             validate_startup(http, migrations, self.baseline)
             report = {'successful': True, 'http': http, 'migrations': migrations,
                       'network_internal': True, 'host_ports_published': False,
