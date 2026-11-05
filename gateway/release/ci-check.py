@@ -134,7 +134,10 @@ class CopyRun:
                      '-e', 'POSTGRES_PASSWORD=synthetic-copy-password', '-e', 'POSTGRES_USER=copy',
                      '-e', 'POSTGRES_DB=copy', self.baseline['test_postgres_image']])
             for _ in range(45):
-                if command(['docker', 'exec', pg, 'pg_isready', '-U', 'copy', '-d', 'copy'], required=False).returncode == 0:
+                # Official entrypoint's initialization server accepts Unix
+                # sockets before POSTGRES_DB exists. TCP is enabled only by the
+                # final server, after initialization has finished.
+                if command(['docker', 'exec', pg, 'pg_isready', '-h', '127.0.0.1', '-U', 'copy', '-d', 'copy'], required=False).returncode == 0:
                     break
                 time.sleep(1)
             else:

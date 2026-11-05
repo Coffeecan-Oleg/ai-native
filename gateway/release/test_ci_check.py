@@ -78,6 +78,8 @@ class CopyChecks(unittest.TestCase):
         app = next(c for c in starts if c[c.index('--name') + 1].endswith('-app'))
         env = dict(value.split('=', 1) for i, value in enumerate(app) if i and app[i - 1] == '-e')
         self.assertEqual(env.get('GATEWAY_BITRIX_EMBED_ENABLED'), 'true')
+        ready=next(c for c in self.calls if 'pg_isready' in c)
+        self.assertEqual(ready[ready.index('-h')+1],'127.0.0.1')
         for args in starts:
             self.assertNotIn('-p', args)
             self.assertNotIn('--publish', args)
