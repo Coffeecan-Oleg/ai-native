@@ -81,6 +81,19 @@ class LifecycleStorageTests(LifecycleFixture):
         self.action(sid,'request_changes');self.assertEqual(self.row(sid)['stage'],'draft')
         with self.assertRaises(ValueError):self.action(sid,'publish')
 
+    def test_restore_keeps_newer_unreviewed_candidate_as_draft(self):
+        sid=self.draft()['name'];self.publish(sid)
+        previous=corporate_skills.read_skill(sid,actor=self.other)
+        service.update_draft(self.reader,skill_id=sid,expected_revision=self.row(sid)['revision'],
+            title='Следующая редакция',version='1.0.1',filename='SKILL.md',
+            content=CONTENT+b'\nNew unreviewed instruction.\n',bundled=self.bundled)
+        self.action(sid,'submit',self.reader);self.action(sid,'archive');self.action(sid,'restore')
+        self.assertEqual(self.row(sid)['stage'],'draft')
+        self.assertEqual(corporate_skills.read_skill(sid,actor=self.other)['sha256'],previous['sha256'])
+        with self.assertRaises(ValueError):self.action(sid,'publish')
+        self.action(sid,'submit',self.reader);self.action(sid,'publish')
+        self.assertIn('New unreviewed instruction.',corporate_skills.read_skill(sid,actor=self.other)['content'])
+
     def test_mcp_credentials_cannot_enter_browser_workflow_even_for_owner(self):
         sid=self.draft()['name'];delegated=replace(self.owner,tool_allowlist=('gateway_corporate_skill_read',))
         for op in [lambda:self.draft(delegated),lambda:service.dashboard(delegated),lambda:service.detail(delegated,sid),lambda:self.action(sid,'archive',delegated)]:

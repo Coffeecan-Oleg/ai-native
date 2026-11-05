@@ -234,7 +234,10 @@ def transition(actor,*,skill_id,expected_revision,action,bundled,review_ack=Fals
             row=_advance(cur,row,'archived');event='archived'
         else:
             if row['stage']!='archived':raise ValueError('Навык не находится в архиве.')
-            row=_advance(cur,row,'published' if row['published_revision'] is not None else 'draft');event='restored'
+            # A newer candidate still needs review after restoration. Only the
+            # last published snapshot becomes public again, never the draft.
+            stage='published' if row['published_revision']==row['candidate_revision'] else 'draft'
+            row=_advance(cur,row,stage);event='restored'
         _event(cur,row,actor,event)
     return row
 
