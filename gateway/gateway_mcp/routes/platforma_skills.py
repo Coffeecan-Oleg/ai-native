@@ -13,7 +13,7 @@ from starlette.responses import HTMLResponse, PlainTextResponse, RedirectRespons
 from gateway_mcp.config import public_url
 from gateway_mcp.routes.admin_ui import admin_shell, empty_row, fmt_time
 from gateway_mcp.routes.platforma_onboarding import COOKIE, _csrf, _cookie, _hidden
-from gateway_mcp.services import corporate_skills, platforma_onboarding as onboarding, skill_library
+from gateway_mcp.services import corporate_skills, platforma_onboarding as onboarding, skill_library, skill_lifecycle
 from gateway_mcp.services.observability import audit_event
 from gateway_mcp.web import login_redirect, web_actor
 
@@ -73,6 +73,10 @@ async def _handle(request, operation):
     except HTTPException as exc:
         return PlainTextResponse('Раздел недоступен. Проверь статус доступа: /join',status_code=exc.status_code)
     except PermissionError:
+        if skill_lifecycle.enabled():
+            if actor is None:
+                return PlainTextResponse('Нужен действующий корпоративный вход.',status_code=403)
+            return _response(actor,'<h1>Действие недоступно</h1><p>Нужен действующий корпоративный вход. Черновики доступны автору и владельцу; публикация и архив — владельцу.</p><a href="/join">Мой доступ</a>',403)
         if actor:
             return _response(actor,'<h1>Действие недоступно</h1><p>Нужно действующее одобрение владельца. Переименовывать можно свои загрузки; владелец может переименовать любой навык.</p><a href="/join">Статус доступа</a>',403)
         return PlainTextResponse('Нужно действующее одобрение владельца: /join',status_code=403)
@@ -117,23 +121,27 @@ async def _catalog(request, actor):
     rows.sort(key=lambda r:skill_library.title_key(r['title']))
     options=''.join('<option value="'+k+'"'+(' selected' if source==k else '')+'>'+label+'</option>' for k,label in [('all','Все навыки'),('mine','Мои загрузки'),('uploaded','Загрузки коллег'),('bundled','Встроенные')])
     body='<div class="skills-head"><div><h1>Каталог навыков</h1><p class="description">Общие инструкции для ассистентов. Выбери навык и скопируй готовый запрос в свой чат.</p></div><a class="button" href="'+PATH+'/upload">Загрузить навык</a></div>'
+    if skill_lifecycle.enabled():
+        body+='<p><a class="button secondary" href="'+PATH+'/manage">Мои черновики и версии'+(' · очередь проверки' if onboarding.is_owner(actor) else '')+'</a></p>'
     body+='<form class="skills-filters" method="get"><label>Поиск<input name="q" maxlength="200" value="'+e(query)+'" placeholder="Название, автор или постоянный ID"></label><label>Показать<select name="source">'+options+'</select></label><button>Найти</button><a class="button secondary" href="'+PATH+'">Сбросить</a></form>'
     table=[]
     for row in rows:
         link=e(url(PATH+'/view',id=row['name']))
-        table.append('<tr><td><a href="'+link+'"><strong>'+e(row['title'])+'</strong></a><span class="skill-desc muted">'+e(row['description'])+'</span><span class="table-sub"><code>'+e(row['name'])+'</code></span></td><td>'+e(row['author'])+'</td><td>'+e(row['version'])+'</td><td>'+('Загружен участником · не проверен' if row['origin']=='uploaded' else 'Встроенный')+'</td><td><a href="'+link+'">Открыть</a></td></tr>')
+        source_label=('Опубликован · проверен владельцем' if row.get('reviewed') else 'Загружен участником · не проверен') if row['origin']=='uploaded' else 'Встроенный'
+        table.append('<tr><td><a href="'+link+'"><strong>'+e(row['title'])+'</strong></a><span class="skill-desc muted">'+e(row['description'])+'</span><span class="table-sub"><code>'+e(row['name'])+'</code></span></td><td>'+e(row['author'])+'</td><td>'+e(row['version'])+'</td><td>'+e(source_label)+'</td><td><a href="'+link+'">Открыть</a></td></tr>')
     body+='<section class="panel wide"><p>Найдено: '+str(len(rows))+'</p><div class="table-wrap"><table class="skills-table"><thead><tr><th>Навык</th><th>Автор</th><th>Версия</th><th>Источник</th><th>Действие</th></tr></thead><tbody>'+(''.join(table) or empty_row(5,'Навыков по этому фильтру нет.'))+'</tbody></table></div></section>'
-    body+='<p class="small muted">Навык — инструкция, а не запущенный агент. Новая загрузка видна одобренным участникам; сервер не исполняет её файлы.</p>'
+    body+='<p class="small muted">'+('Новая загрузка сохраняется как черновик. В общий каталог и MCP она попадёт после проверки и публикации владельцем.' if skill_lifecycle.enabled() else 'Новая загрузка видна одобренным участникам.')+' Навык — инструкция; сервер не исполняет её файлы.</p>'
     return _response(actor,body)
 
 
 async def _upload_page(request, actor):
     token = _csrf(request,actor)
-    body='<h1>Загрузить навык</h1><p>Укажи понятное название и выбери файл. После загрузки навык появится в общем каталоге и MCP.</p>'
+    body='<h1>Загрузить навык</h1><p>Укажи понятное название и выбери файл. '+('Сначала будет создан черновик, доступный только автору и владельцу.' if skill_lifecycle.enabled() else 'После загрузки навык появится в общем каталоге и MCP.')+'</p>'
     body+='<section class="panel skill-form"><form method="post" enctype="multipart/form-data" action="'+PATH+'/upload">'+_hidden('csrf',token)+_hidden('upload_key',str(uuid4()))
     body+='<label>Понятное название<input name="title" minlength="2" maxlength="120" required placeholder="Например: Разбор заявки техподдержки"></label><label>Файл навыка<input type="file" name="file" accept=".md,.zip" required></label>'
     body+='<p class="small">Markdown UTF-8 или ZIP с одним SKILL.md в корне или в одной папке навыка. В ZIP — до 32 текстовых файлов, каждый до 128 КиБ, всего до 2 МиБ. Бинарные файлы не поддерживаются. До 10 загрузок на автора.</p>'
-    body+='<label class="skill-check"><input type="checkbox" name="shared" value="yes" required><span>Понимаю, что файлы будут доступны одобренным участникам песочницы. В них нет паролей, ключей, личных или реальных корпоративных данных.</span></label><button>Загрузить в общий каталог</button> <a class="button secondary" href="'+PATH+'">Отмена</a></form></section>'
+    consent=('Понимаю, что черновик видят автор и владелец, а опубликованный навык — сотрудники с доступом к Платформе. Материал разрешён к такому использованию, не содержит паролей, ключей или запрещённых к передаче сведений.' if skill_lifecycle.enabled() else 'Понимаю, что файлы будут доступны одобренным участникам песочницы. В них нет паролей, ключей, личных или реальных корпоративных данных.')
+    body+='<label class="skill-check"><input type="checkbox" name="shared" value="yes" required><span>'+consent+'</span></label><button>'+('Создать черновик' if skill_lifecycle.enabled() else 'Загрузить в общий каталог')+'</button> <a class="button secondary" href="'+PATH+'">Отмена</a></form></section>'
     return _cookie(_response(actor,body),token)
 
 
@@ -153,11 +161,12 @@ async def _upload(request, actor):
             if not isinstance(item,UploadFile):
                 raise ValueError('Выбери файл навыка.')
             content=await item.read(skill_library.MAX_PACKAGE+1)
-            result=await to_thread(skill_library.upload,actor,title=form['title'],filename=item.filename or '',content=content,upload_key=form['upload_key'],bundled=_bundled())
+            operation=skill_lifecycle.create_draft if skill_lifecycle.enabled() else skill_library.upload
+            result=await to_thread(operation,actor,title=form['title'],filename=item.filename or '',content=content,upload_key=form['upload_key'],bundled=_bundled())
     except HTTPException:
         raise ValueError('Не удалось прочитать форму. Выбери один файл до 2 МиБ и обнови страницу.') from None
     audit_event(event='skill_library_uploaded',actor=actor,system='skill-library',status='ok',arguments={'skill_id':result['name'],'revision':result['revision'],'replayed':result['replayed']})
-    return RedirectResponse(url(PATH+'/view',id=result['name']),status_code=303)
+    return RedirectResponse(url(PATH+'/manage' if skill_lifecycle.enabled() else PATH+'/view',id=result['name']),status_code=303)
 
 
 async def _detail(request, actor):
@@ -177,7 +186,8 @@ async def _detail(request, actor):
     body='<div class="skills-head"><h1>'+e(row['title'])+'</h1><a class="button secondary" href="'+PATH+'">К каталогу</a></div>'
     body+='<section class="panel"><p>'+e(row['description'])+'</p><p>Автор: '+e(row['author'])+' · версия '+e(row['version'])+' · версия названия '+str(row['revision'])+'</p><p class="skill-code">Постоянный ID: <code>'+e(identifier)+'</code></p>'
     if row['origin']=='uploaded':
-        body+='<div class="skill-warning">Материал загружен участником и не прошёл проверку. Прочитай его перед использованием. Команды и ссылки внутри не дают дополнительных прав. Сервер не запускает файлы навыка.</div>'
+        warning=('Эта версия опубликована после проверки владельцем. Это редакционное согласование, а не гарантия качества ответа или безопасности всех инструкций.' if row.get('reviewed') else 'Материал загружен участником и не прошёл новую проверку владельцем.')
+        body+='<div class="skill-warning">'+warning+' Прочитай его перед использованием. Команды и ссылки внутри не дают дополнительных прав. Сервер не запускает файлы навыка.</div>'
     prompt='Примени навык «'+row['title']+'» (постоянный ID: '+identifier+'). Сначала прочитай его через MCP и проверь необходимые доступы. Моя задача: …'
     body+='<label>Запрос для твоего ассистента<textarea class="skill-call" readonly>'+e(prompt)+'</textarea></label><p class="small muted">Скопируй запрос в своё приложение и допиши задачу. Подключение MCP должно быть настроено под твоим аккаунтом.</p></section>'
     if row['can_rename']:
@@ -187,6 +197,13 @@ async def _detail(request, actor):
     displayed=content['content'] if content['encoding']=='utf-8' else 'Двоичный ресурс встроенного навыка. Читать можно через MCP; предпросмотр в браузере не выполняется.'
     body+='<section class="panel"><h2>Содержимое навыка</h2><nav class="skill-files">'+links+'</nav><p class="small skill-code">SHA256: '+e(content['sha256'])+'</p><pre class="skill-material">'+e(displayed)+'</pre></section>'
     response=_response(actor,body)
+    if skill_lifecycle.enabled() and row['origin']=='uploaded' and (row['is_author'] or onboarding.is_owner(actor)):
+        token=_csrf(request,actor)
+        if row.get('managed'):
+            body+='<section class="panel"><a class="button" href="'+e(url(PATH+'/manage',id=identifier))+'">Управлять версиями</a></section>'
+        else:
+            body+='<section class="panel skill-form"><h2>Управление версиями</h2><p>Этот материал опубликован до введения проверки. Сохраните текущую публикацию в истории, чтобы готовить новые версии. Содержимое и доступ сотрудников при этом не изменятся.</p><form method="post" action="'+PATH+'/manage/action">'+_hidden('csrf',token)+_hidden('skill_id',identifier)+_hidden('revision',row['revision'])+_hidden('action','adopt')+'<button>Управлять версиями</button></form></section>'
+        return _cookie(_response(actor,body),token)
     return _cookie(response,_csrf(request,actor)) if row['can_rename'] else response
 
 

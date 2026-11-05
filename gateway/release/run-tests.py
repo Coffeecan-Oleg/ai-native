@@ -4,7 +4,7 @@ from pathlib import Path
 import gateway_mcp
 
 source=Path(__file__).resolve().parents[1]
-names=['test_frame_sdk_delivery','test_corporate_stability','test_bitrix_embed','test_bitrix_identity','test_bitrix_auth_flow','test_knowledge_result_contract','test_corporate_core','test_platforma_clients','test_skill_library_validation','test_unisender_readonly','test_admin_role_authority','test_platforma_sandbox_telemetry']
+names=['test_frame_sdk_delivery','test_corporate_stability','test_bitrix_embed','test_bitrix_identity','test_bitrix_auth_flow','test_knowledge_result_contract','test_corporate_core','test_platforma_clients','test_skill_library_validation','test_unisender_readonly','test_admin_role_authority','test_platforma_sandbox_telemetry','test_connection_diagnostics','test_evening_release']
 with tempfile.TemporaryDirectory() as temp:
     root=Path(temp)
     shutil.copytree(source/'tests',root/'tests',ignore=shutil.ignore_patterns('__pycache__'))
@@ -16,7 +16,9 @@ with tempfile.TemporaryDirectory() as temp:
     env['GATEWAY_AUTH_ENABLED']='false' # Test fixtures patch their own auth; never a deployment setting.
     env['GATEWAY_AUDIT_LOG']=str(root/'audit.jsonl')
     report=[]
-    for cohort in [names,['test_metrics_access']]:
+    # Legacy fixtures replace imports globally. Keep the real diagnostic tests
+    # independent, using the same installed package in each fresh process.
+    for cohort in [[name] for name in names+['test_metrics_access']]:
         program="""import io,json,logging,sys,unittest
 logging.disable(logging.CRITICAL)
 sys.path.insert(0,'tests')

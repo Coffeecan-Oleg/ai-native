@@ -22,6 +22,7 @@ from gateway_mcp.routes.notifications import register_notification_routes
 from gateway_mcp.routes.platforma_onboarding import register_platforma_onboarding_routes
 from gateway_mcp.routes.platforma_requests import register_platforma_request_routes
 from gateway_mcp.routes.platforma_skills import register_platforma_skill_routes
+from gateway_mcp.routes.skill_lifecycle import register_skill_lifecycle_routes
 from gateway_mcp.routes.platforma_guide import register_platforma_guide_routes
 from gateway_mcp.routes.telemetry import register_telemetry_routes
 from gateway_mcp.services.auth import mcp_auth_settings, token_verifier
@@ -72,6 +73,7 @@ def create_mcp():
     if not corporate_access.enabled():
         register_platforma_request_routes(server)
     register_platforma_skill_routes(server)
+    register_skill_lifecycle_routes(server)
     register_platforma_guide_routes(server)
     register_company_tools(server)
     register_memory_tools(server)

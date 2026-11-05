@@ -160,7 +160,8 @@ def parse_upload(filename, blob):
             raise ValueError('После заголовка должна быть инструкция.')
     elif not main.strip():
         raise ValueError('Инструкция пуста.')
-    description = metadata.get('description', 'Навык участника учебной песочницы.')
+    from gateway_mcp.services import corporate_access
+    description = metadata.get('description', 'Инструкция сотрудника Платформы.' if corporate_access.enabled() else 'Навык участника учебной песочницы.')
     if len(description) > 1000:
         raise ValueError('Описание в SKILL.md должно быть не длиннее 1000 символов.')
     version = metadata.get('version', '1.0.0')
@@ -207,6 +208,8 @@ def catalogue(actor, bundled):
     authorize(actor)
     with _db() as conn, conn.cursor() as cur:
         rows = _rows(cur)
+        from gateway_mcp.services import skill_lifecycle
+        lifecycle = skill_lifecycle.states(cur)
     overrides = {r['skill_id']:r for r in rows if r['origin']=='bundled'}
     result = []
     for item in bundled:
@@ -216,8 +219,15 @@ def catalogue(actor, bundled):
                              'can_rename':onboarding.is_owner(actor), 'is_author':False})
     for row in rows:
         if row['origin']=='uploaded':
-            result.append(_summary(row) | {'can_rename':onboarding.is_owner(actor) or row['author_subject']==actor.subject,
-                                          'is_author':row['author_subject']==actor.subject})
+            state = lifecycle.get(row['skill_id'])
+            if state and state['stage']=='archived':
+                continue
+            summary = _summary(row) | {'can_rename':onboarding.is_owner(actor) or row['author_subject']==actor.subject,
+                                      'is_author':row['author_subject']==actor.subject}
+            if state:
+                summary |= {'managed':True,'publication_state':'published',
+                            'published_revision':state['published_revision'],'reviewed':state['reviewed'],'can_rename':False}
+            result.append(summary)
     return result
 
 
@@ -263,6 +273,9 @@ def rename(actor, *, skill_id, title, expected_revision, bundled):
     authorize(actor)
     if actor.tool_allowlist is not None:
         raise PermissionError('Rename requires a personal browser session')
+    from gateway_mcp.services import skill_lifecycle
+    if skill_lifecycle.is_managed(skill_id):
+        raise ValueError('Для управляемого навыка измените название в новой версии черновика.')
     title = clean_title(title)
     if type(expected_revision) is not int or expected_revision < 0:
         raise ValueError('Обнови карточку перед переименованием.')
@@ -300,6 +313,8 @@ def read_resource(actor, row, path, offset=0, limit=16384):
     if type(offset) is not int or offset != 0 or type(limit) is not int or not 1 <= limit <= 24576:
         raise ValueError('Текст читается целиком; offset должен быть 0.')
     with _db() as conn, conn.cursor() as cur:
+        from gateway_mcp.services import skill_lifecycle
+        skill_lifecycle.readable(cur,row['name'])
         cur.execute('select content,sha256 from platforma_shared_skill_files where skill_id=%s and path=%s', (row['name'],path))
         item = cur.fetchone()
     if not item:

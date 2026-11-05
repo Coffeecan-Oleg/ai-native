@@ -11,6 +11,8 @@ assert not list(Path('/app').glob('*.py'))
 assert os.getuid()==os.getgid()==10001
 assert sys.platform=='linux' and platform.machine()=='x86_64'
 assert sys.version.split()[0]==baseline['python_version']
+image_revision=Path('/usr/local/share/gateway-release/source-revision').read_text().strip()
+assert re.fullmatch('[0-9a-f]{40}',image_revision), 'Missing immutable image revision'
 for name,expected in baseline['live_source_fingerprints'].items():
     data=(root/name).read_bytes();digest=hashlib.sha256(data).hexdigest()
     if digest!=expected['sha256']:
@@ -23,4 +25,4 @@ assert actual==expected, 'Installed package set differs from accepted runtime'
 assert len(migration_files())==baseline['migration_count']
 assert hashlib.sha256((root/'help_assets/bitrix24-sdk-v1.js').read_bytes()).hexdigest()==baseline['sdk_sha256']
 assert all((Path('/app')/name).is_file() for name in baseline['root_configs'])
-print(json.dumps({'verified':True,'runtime_root':str(root),'uid':os.getuid(),'source_files':len(baseline['live_source_fingerprints']),'packages':len(actual),'migrations':len(migration_files()),'duplicate_app_source':False}))
+print(json.dumps({'verified':True,'runtime_root':str(root),'uid':os.getuid(),'source_files':len(baseline['live_source_fingerprints']),'packages':len(actual),'migrations':len(migration_files()),'duplicate_app_source':False,'source_revision':image_revision}))

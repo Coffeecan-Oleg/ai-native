@@ -35,6 +35,8 @@ class CopyChecks(unittest.TestCase):
         value = ''
         if args[1:3] == ['exec', self.copy.prefix+'-app']:
             value = json.dumps(MIGRATIONS if 'migrate' in args else HTTP)
+        elif args[1]=='run' and args[-1].endswith('check-lifecycle-upgrade.py'):
+            value=json.dumps({'successful':True})
         elif args[1] == 'inspect':
             value = json.dumps([{'Config': {'Labels': {'akmetron.ci.check': self.copy.nonce}},
                                  'State': {'Running': True}}])
@@ -72,18 +74,21 @@ class CopyChecks(unittest.TestCase):
         network = next(c for c in self.calls if c[1:3] == ['network', 'create'])
         self.assertIn('--internal', network)
         starts = [c for c in self.calls if c[1] == 'run']
-        self.assertEqual(len(starts), 2)
+        self.assertEqual(len(starts), 3)
         app = next(c for c in starts if c[c.index('--name') + 1].endswith('-app'))
         env = dict(value.split('=', 1) for i, value in enumerate(app) if i and app[i - 1] == '-e')
         self.assertEqual(env.get('GATEWAY_BITRIX_EMBED_ENABLED'), 'true')
         for args in starts:
             self.assertNotIn('-p', args)
             self.assertNotIn('--publish', args)
-            self.assertNotIn('-v', args)
+            if args[-1].endswith('check-lifecycle-upgrade.py'):
+                self.assertTrue(args[args.index('-v')+1].endswith(':/checks:ro'))
+                self.assertIn('-e',args)
+            else:self.assertNotIn('-v', args)
             self.assertNotIn('--volume', args)
             self.assertEqual(args[args.index('--network')+1], self.copy.network)
         deletes = [c for c in self.calls if c[1] == 'rm']
-        self.assertEqual(len(deletes), 2)
+        self.assertEqual(len(deletes), 3)
         self.assertTrue(all(c[-1].startswith(self.copy.prefix) for c in deletes))
         text = (self.reports/'fresh-database-startup.json').read_text()
         for secret in ['synthetic-copy-password', 'synthetic-application-secret', 'GATEWAY_JWT_SECRET']:
@@ -98,7 +103,7 @@ class CopyChecks(unittest.TestCase):
                     self.copy.startup()
         finally:
             HTTP.clear(); HTTP.update(original)
-        self.assertEqual(len([c for c in self.calls if c[1] == 'rm']), 2)
+        self.assertEqual(len([c for c in self.calls if c[1] == 'rm']), 3)
         self.assertFalse((self.reports/'fresh-database-startup.json').exists())
         probe = json.loads((self.reports/'startup-probe.json').read_text())
         self.assertEqual(probe['http']['/metrics']['status'], 200)

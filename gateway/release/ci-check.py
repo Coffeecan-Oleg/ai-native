@@ -139,6 +139,20 @@ class CopyRun:
                 time.sleep(1)
             else:
                 raise CheckFailure('copy_database_not_ready')
+            command(['docker','exec',pg,'psql','-U','copy','-d','copy','-c',
+                     'create database platforma_upgrade_test'])
+            upgrade=self.prefix+'-upgrade';self.containers.append(upgrade)
+            checked=command(['docker','run','--name',upgrade,'--label',self.label,
+                '--network',self.network,'--read-only','--memory','384m','--pids-limit','96',
+                '--cap-drop','ALL','--security-opt','no-new-privileges:true',
+                '--tmpfs','/tmp:rw,nosuid,nodev,size=64m','-v',str(SOURCE)+':/checks:ro',
+                '-e','GATEWAY_TEST_ISOLATED=true',
+                '-e','GATEWAY_DATABASE_URL=postgresql://copy:synthetic-copy-password@db:5432/platforma_upgrade_test',
+                self.image,'python','/checks/release/check-lifecycle-upgrade.py'],timeout=90)
+            upgrade_result=json.loads(checked.stdout.strip().splitlines()[-1])
+            if upgrade_result.get('successful') is not True:
+                raise CheckFailure('lifecycle_upgrade_failed')
+            write_report(self.reports,'lifecycle-upgrade.json',upgrade_result)
             env = {
                 'GATEWAY_DATABASE_URL': 'postgresql://copy:synthetic-copy-password@db:5432/copy',
                 'GATEWAY_AUTH_ENABLED': 'true', 'GATEWAY_LOGIN_PROVIDER': 'bitrix24',

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,22 @@ def public_url() -> str:
     return os.getenv(
         "GATEWAY_PUBLIC_URL", os.getenv("GATEWAY_ISSUER_URL", "http://localhost:8000")
     ).rstrip("/")
+
+
+IMAGE_REVISION_FILE = Path('/usr/local/share/gateway-release/source-revision')
+
+
+def release_sha() -> str:
+    """New images identify themselves; an old compose value cannot mask rollout."""
+    if IMAGE_REVISION_FILE.exists():
+        try:
+            with IMAGE_REVISION_FILE.open(encoding='ascii') as handle:
+                value=handle.read(81).strip()
+        except (OSError,UnicodeError):
+            return 'unknown'
+        return value if re.fullmatch('[0-9a-f]{40}',value) else 'unknown'
+    value=os.getenv('GATEWAY_RELEASE_SHA','dev')
+    return value if re.fullmatch(r'[A-Za-z0-9+._-]{1,512}',value) else 'dev'
 
 
 def resolve_configured_path(env_name: str, default: str) -> Path:

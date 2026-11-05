@@ -11,6 +11,7 @@ from starlette.responses import JSONResponse, Response
 from gateway_mcp.services.auth import auth_enabled
 from gateway_mcp.services.observability import metrics_response
 from gateway_mcp.services.storage import health as storage_health
+from gateway_mcp.config import release_sha
 
 
 def _metrics_token() -> str | None:
@@ -41,7 +42,7 @@ def register_health_routes(mcp):
             {
                 "ok": ok,
                 "service": "gateway-mcp",
-                "release_sha": os.getenv("GATEWAY_RELEASE_SHA", "dev"),
+                "release_sha": release_sha(),
                 "auth_enabled": auth_enabled(),
                 "postgres": db,
             },

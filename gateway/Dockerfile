@@ -42,6 +42,9 @@ RUN python -m pip install --no-cache-dir --no-index --no-deps --require-hashes -
     && rm -rf /wheels
 COPY release/baseline.json /usr/local/share/gateway-release/baseline.json
 COPY release/verify-image.py /usr/local/share/gateway-release/verify-image.py
+ARG SOURCE_GIT_SHA
+RUN test "${#SOURCE_GIT_SHA}" -eq 40 \
+    && printf '%s\n' "$SOURCE_GIT_SHA" > /usr/local/share/gateway-release/source-revision
 WORKDIR /app
 COPY gateway-tools.json gateway-policy.json gateway-company-indexes.json gateway-factory-projects.json gateway-platforma-tools.json ./
 COPY ops/gateway-entrypoint.sh /usr/local/bin/gateway-private-entrypoint

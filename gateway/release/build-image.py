@@ -155,6 +155,7 @@ def main():
         print('Invalid source revision', file=sys.stderr)
         return 64
     command = ['docker','build','--platform','linux/amd64','--pull=false',
+               '--build-arg','SOURCE_GIT_SHA='+sha,
                '--label','org.opencontainers.image.revision='+sha,
                '-t','gateway-corporate-ci','.']
     return supervise(command,args.reports,sha,seconds=int(raw),
