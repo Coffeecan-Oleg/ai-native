@@ -2,6 +2,7 @@
 """Cross-platform client. Never transmits SSH private keys or app credentials."""
 import argparse,hashlib,json,re,shlex,subprocess,sys,tarfile
 from pathlib import Path,PurePosixPath
+from handoff import ReceiptError,parse_receipt,read_file,read_remote
 
 def verify_delivery(archive,report):
     data=json.loads(report.read_text(encoding='utf-8'))
@@ -47,11 +48,19 @@ def main():
     parser=argparse.ArgumentParser(description='Platforma workflow: verify CI image or call a scoped release command')
     sub=parser.add_subparsers(dest='action',required=True)
     check=sub.add_parser('verify-delivery');check.add_argument('--archive',type=Path,required=True);check.add_argument('--report',type=Path,required=True)
+    handoff=sub.add_parser('handoff',help='Read an operator receipt; no server changes')
+    source=handoff.add_mutually_exclusive_group(required=True)
+    source.add_argument('--receipt',type=Path);source.add_argument('--ssh-config',type=Path)
+    handoff.add_argument('--expected-package-sha256',required=True)
     release=sub.add_parser('release');release.add_argument('--environment',choices=['dev','production'],required=True)
     release.add_argument('--ssh-config',type=Path,required=True);release.add_argument('--production-approved',action='store_true')
     release.add_argument('command',nargs=argparse.REMAINDER)
     args=parser.parse_args()
     if args.action=='verify-delivery':print(json.dumps(verify_delivery(args.archive,args.report)));return
+    if args.action=='handoff':
+        if not re.fullmatch('[a-f0-9]{64}',args.expected_package_sha256):raise ReceiptError('handoff_expected_digest_invalid')
+        raw=read_file(args.receipt) if args.receipt else read_remote(args.ssh_config)
+        print(json.dumps(parse_receipt(raw,args.expected_package_sha256)));return
     if args.environment=='production' and args.command and args.command[0] in ['apply','resume','accept','recover','reopen-previous'] and not args.production_approved:
         raise ValueError('production_change_requires_explicit_release_approval')
     host,command=remote_command(args.environment,args.command)

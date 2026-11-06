@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "prepared",
+  "package_sha256": "9c0491c9281e2ece92916d2a82d55ccfb2a43c8b116136d896e8af59bf8f1b6b",
+  "development": {
+    "public_url": "https://platforma-dev.akmetron.ru",
+    "https_route_verified": false
+  },
+  "production": {
+    "release_commands_installed": false,
+    "legacy_mutators_guarded": false,
+    "pinned_image_validator_checked": false,
+    "caddy_probes_verified": false
+  },
+  "source_copies": [],
+  "notes": []
+}
