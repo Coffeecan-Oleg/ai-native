@@ -938,9 +938,9 @@
       "size": 5685
     },
     "routes/skill_lifecycle.py": {
-      "sha256": "e62c6b80b932631264612a72d4ee1e80bcdfddf038d9ca6f105274deb24979ae",
-      "lf_sha256": "e62c6b80b932631264612a72d4ee1e80bcdfddf038d9ca6f105274deb24979ae",
-      "size": 21856
+      "sha256": "f73b1f6aa41c62e73b52756bcccb0eb5918ad0cc2add97a6d49776a0d761764c",
+      "lf_sha256": "f73b1f6aa41c62e73b52756bcccb0eb5918ad0cc2add97a6d49776a0d761764c",
+      "size": 21952
     },
     "services/skill_lifecycle.py": {
       "sha256": "be1da8016e9e79e92de3c45470aa89f967dd04de4ba406a4625ed050b7a1fc8d",
