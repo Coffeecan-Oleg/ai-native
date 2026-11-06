@@ -1,0 +1,1 @@
+"""Platforma operator release controller."""

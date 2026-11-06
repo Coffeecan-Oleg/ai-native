@@ -1,4 +1,4 @@
-"""Explicit one-off source-only image delivery. No production files or credentials."""
+"""Export an accepted source-only image artifact. Never deploys to a server."""
 import argparse,gzip,hashlib,json,os,re,shutil,subprocess,tarfile
 from pathlib import Path
 
@@ -38,7 +38,7 @@ def main():
     report={'source_sha':sha,'image_id':acceptance['image'],'tag':tag,'archive_sha256':digest,
         'archive_bytes':archive.stat().st_size,'schema_migrations':installed['migrations'],
         'runtime_uid':installed['uid'],'production_configuration_included':False,'database_included':False,
-        'private_skill_mount_included':False,'retention_days':1,'deployment':False}
+        'private_skill_mount_included':False,'retention_days':7,'deployment':False}
     (args.out/'delivery.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report))
 
