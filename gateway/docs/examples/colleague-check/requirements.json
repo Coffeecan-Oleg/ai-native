@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "operations": [
+    {
+      "id": "card",
+      "title": "Составить карточку из текста пользователя",
+      "kind": "assistant"
+    }
+  ]
+}

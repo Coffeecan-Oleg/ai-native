@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "release_status": "prepared_not_deployed",
+  "migration_count": 26,
+  "active_documents": [
+    "docs/corporate-documentation-index.md",
+    "docs/knowledge-base/01-corporate-entry.md",
+    "docs/knowledge-base/02-operations-and-development.md",
+    "docs/knowledge-base/03-source-and-release.md",
+    "docs/knowledge-base/04-connection-check.md",
+    "docs/knowledge-base/05-skill-versions.md",
+    "docs/knowledge-base/06-skill-acceptance.md",
+    "docs/knowledge-base/07-skill-capabilities.md",
+    "docs/knowledge-base/08-skill-evidence.md"
+  ],
+  "legacy_documents": [
+    "docs/platforma-sandbox-writes.md",
+    "docs/platforma-how-it-works.md",
+    "docs/platforma-open-clients.md",
+    "docs/training-admin.md",
+    "docs/unisender-demo.md",
+    "docs/platforma-skill-library.md"
+  ],
+  "protected_mounts_not_changed": [
+    "market-*",
+    "awareness/install.md"
+  ]
+}

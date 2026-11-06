@@ -121,7 +121,15 @@ def check_call(actor, name, arguments):
     elif name.startswith("gateway_telemetry_skill_") and name != "gateway_telemetry_skill_stats":
         limits = profile.get("skill_telemetry", {})
         skill = arguments.get("skill_id", "")
-        expected = limits.get("skills", {}).get(skill)
+        metadata=json.loads(arguments.get('metadata_json','{}'))
+        from gateway_mcp.services import corporate_access
+        linked=corporate_access.enabled() and isinstance(metadata,dict) and set(metadata)=={'skill_read_id'}
+        if metadata!={} and not linked:raise PermissionError('addon_telemetry_metadata_denied')
+        evidence=None
+        if linked:
+            from gateway_mcp.services.skill_activity import receipt
+            evidence=receipt(actor,metadata['skill_read_id'],skill,arguments.get('skill_pack',''),arguments.get('skill_version',''))
+        expected = {'pack':evidence['skill_pack'],'version':evidence['skill_version']} if evidence else limits.get("skills", {}).get(skill)
         if expected is None:
             from gateway_mcp.services.skill_library import telemetry_descriptor
             expected = telemetry_descriptor(actor, skill)
@@ -131,13 +139,14 @@ def check_call(actor, name, arguments):
             raise PermissionError("addon_telemetry_version_denied")
         if arguments.get("agent", "") not in limits.get("agents", []):
             raise PermissionError("addon_telemetry_agent_denied")
-        if json.loads(arguments.get("metadata_json", "{}")) != {}:
-            raise PermissionError("addon_telemetry_metadata_denied")
         if arguments.get("client", "") not in ["", *limits.get("clients", ["codex-desktop"])]:
             raise PermissionError("addon_telemetry_client_denied")
         routes = json.loads(arguments.get("mcp_routes_json", "[]"))
         missing = json.loads(arguments.get("missing_scopes_json", "[]"))
-        if not isinstance(routes, list) or len(routes) > len(ROUTES | set(WRITE_ROUTES)) or not all(isinstance(r, str) and r in ROUTES | set(WRITE_ROUTES) for r in routes):
+        allowed_routes=ROUTES | set(WRITE_ROUTES)
+        if corporate_access.enabled():
+            allowed_routes={r['id'] for r in profile.get('resources',[]) if r.get('kind')=='backend_route'}
+        if not isinstance(routes, list) or len(routes) > len(allowed_routes) or not all(isinstance(r, str) and r in allowed_routes for r in routes):
             raise PermissionError("addon_telemetry_routes_denied")
         if not isinstance(missing, list) or len(missing) > 9 or not all(isinstance(r, str) and r in limits.get("scopes", []) for r in missing):
             raise PermissionError("addon_telemetry_scopes_denied")

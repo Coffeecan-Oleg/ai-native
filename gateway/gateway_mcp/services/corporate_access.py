@@ -23,6 +23,7 @@ WEB_PATHS = frozenset({'/admin','/admin/audit','/admin/telemetry/skills',
     '/platforma/skills','/platforma/skills/upload',
     '/platforma/skills/view','/platforma/skills/rename','/platforma/how-it-works',
     '/platforma/skills/manage','/platforma/skills/manage/action','/platforma/skills/manage/edit',
+    '/platforma/skills/activity',
     '/platforma/how-it-works/download','/platforma/connection','/join','/auth/logout'})
 
 

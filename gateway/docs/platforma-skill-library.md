@@ -1,3 +1,5 @@
+> Исторический учебный материал. Не является инструкцией для рабочего корпоративного сервера. Актуальные источники: [корпоративный указатель](corporate-documentation-index.md).
+
 # Shared skill library for the Platforma sandbox
 
 This opt-in feature adds `/platforma/skills` to the existing human browser panel.

@@ -123,6 +123,9 @@ async def _catalog(request, actor):
     body='<div class="skills-head"><div><h1>Каталог навыков</h1><p class="description">Общие инструкции для ассистентов. Выбери навык и скопируй готовый запрос в свой чат.</p></div><a class="button" href="'+PATH+'/upload">Загрузить навык</a></div>'
     if skill_lifecycle.enabled():
         body+='<p><a class="button secondary" href="'+PATH+'/manage">Мои черновики и версии'+(' · очередь проверки' if onboarding.is_owner(actor) else '')+'</a></p>'
+    from gateway_mcp.services import skill_activity
+    if skill_activity.enabled():
+        body+='<p><a href="'+PATH+'/activity">Мои чтения и запуски навыков</a></p>'
     body+='<form class="skills-filters" method="get"><label>Поиск<input name="q" maxlength="200" value="'+e(query)+'" placeholder="Название, автор или постоянный ID"></label><label>Показать<select name="source">'+options+'</select></label><button>Найти</button><a class="button secondary" href="'+PATH+'">Сбросить</a></form>'
     table=[]
     for row in rows:
@@ -184,6 +187,11 @@ async def _detail(request, actor):
         raise ValueError('Файл не найден.')
     content=await to_thread(corporate_skills.read_skill,identifier,path,0,16384,actor=actor)
     body='<div class="skills-head"><h1>'+e(row['title'])+'</h1><a class="button secondary" href="'+PATH+'">К каталогу</a></div>'
+    from gateway_mcp.services import skill_activity,skill_capabilities
+    if skill_activity.enabled():
+        from gateway_mcp.routes.skill_activity import capability_panel
+        body+=capability_panel(await to_thread(skill_capabilities.check,actor,identifier))
+        body+='<p><a href="'+url(PATH+'/activity',skill=identifier)+'">Мои чтения и запуски этого навыка</a></p>'
     body+='<section class="panel"><p>'+e(row['description'])+'</p><p>Автор: '+e(row['author'])+' · версия '+e(row['version'])+' · версия названия '+str(row['revision'])+'</p><p class="skill-code">Постоянный ID: <code>'+e(identifier)+'</code></p>'
     if row['origin']=='uploaded':
         warning=('Эта версия опубликована после проверки владельцем. Это редакционное согласование, а не гарантия качества ответа или безопасности всех инструкций.' if row.get('reviewed') else 'Материал загружен участником и не прошёл новую проверку владельцем.')

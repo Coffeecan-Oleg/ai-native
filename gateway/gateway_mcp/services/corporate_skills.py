@@ -46,7 +46,7 @@ def read_skill(skill, path='SKILL.md', offset=0, limit=16384, *, actor=None):
         raise PermissionError('Unknown corporate skill')
     skill = row['name']
     if row.get('origin') == 'uploaded':
-        return skill_library.read_resource(actor, row, path, offset, limit)
+        return skill_library.read_resource(actor, row, path, offset, limit) | _version(row,catalog['pack'])
     if not isinstance(path, str) or not path or '\\' in path or ':' in path:
         raise PermissionError('Resource path is not allowed')
     relative = PurePosixPath(path)
@@ -67,7 +67,7 @@ def read_skill(skill, path='SKILL.md', offset=0, limit=16384, *, actor=None):
     if offset > len(blob):
         raise ValueError('Offset exceeds resource length')
     result = {'ok': True, 'skill': skill, 'path': path, 'total_bytes': len(blob),
-              'sha256': spec['sha256'], 'read_only': True}
+              'sha256': spec['sha256'], 'read_only': True} | _version(row,catalog['pack'])
     if target.suffix in {'.md', '.yaml', '.css', '.html', '.js', '.py', '.svg'} or path == 'LICENSE':
         if offset or len(blob) > 131072:
             raise ValueError('Text resources must be read in full and within 128 KiB')
@@ -76,3 +76,9 @@ def read_skill(skill, path='SKILL.md', offset=0, limit=16384, *, actor=None):
     end = offset + len(chunk)
     return result | {'encoding': 'base64', 'offset': offset, 'content': base64.b64encode(chunk).decode('ascii'),
                      'next_offset': end if end < len(blob) else None}
+
+
+def _version(row,pack):
+    from gateway_mcp.services.skill_capabilities import manifest_hash
+    return {'skill_version':row['version'],'skill_pack':'platforma-shared' if row.get('origin')=='uploaded' else pack,
+            'manifest_sha256':manifest_hash(row)}
