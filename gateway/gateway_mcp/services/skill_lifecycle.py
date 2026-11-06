@@ -284,5 +284,11 @@ def detail(actor,skill_id,version_revision=None):
         payload=_snapshot(cur,skill_id,revision)
         cur.execute('select revision,title,version,created_at from platforma_skill_versions where skill_id=%s order by revision desc',(skill_id,))
         versions=cur.fetchall()
+        earlier=[item['revision'] for item in versions if item['revision']<revision]
+        published=row['published_revision']
+        baseline=published if published is not None and published<revision else max(earlier,default=None)
+        comparison_base=_snapshot(cur,skill_id,baseline) if baseline is not None else None
+        comparison_kind=('published' if baseline==published else 'previous_saved') if baseline is not None else None
         cur.execute('select revision,action,created_at from platforma_skill_workflow_events where skill_id=%s order by id desc limit 100',(skill_id,))
-        return {'workflow':row,'payload':payload,'versions':versions,'events':cur.fetchall()}
+        return {'workflow':row,'payload':payload,'versions':versions,'events':cur.fetchall(),
+                'comparison_base':comparison_base,'comparison_kind':comparison_kind}

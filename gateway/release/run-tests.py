@@ -4,7 +4,7 @@ from pathlib import Path
 import gateway_mcp
 
 source=Path(__file__).resolve().parents[1]
-names=['test_frame_sdk_delivery','test_corporate_stability','test_bitrix_embed','test_bitrix_identity','test_bitrix_auth_flow','test_knowledge_result_contract','test_corporate_core','test_platforma_clients','test_skill_library_validation','test_unisender_readonly','test_admin_role_authority','test_platforma_sandbox_telemetry','test_connection_diagnostics','test_evening_release','test_skill_capabilities']
+names=['test_frame_sdk_delivery','test_corporate_stability','test_bitrix_embed','test_bitrix_identity','test_bitrix_auth_flow','test_knowledge_result_contract','test_corporate_core','test_platforma_clients','test_skill_library_validation','test_unisender_readonly','test_admin_role_authority','test_platforma_sandbox_telemetry','test_connection_diagnostics','test_evening_release','test_skill_capabilities','test_skill_review','test_skill_comparison']
 with tempfile.TemporaryDirectory() as temp:
     root=Path(temp)
     shutil.copytree(source/'tests',root/'tests',ignore=shutil.ignore_patterns('__pycache__'))

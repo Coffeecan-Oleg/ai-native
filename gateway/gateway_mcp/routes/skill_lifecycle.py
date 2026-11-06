@@ -11,6 +11,7 @@ from gateway_mcp.routes.connection_diagnostics import _time
 from gateway_mcp.routes.platforma_onboarding import _csrf,_hidden,_cookie
 from gateway_mcp.services import skill_lifecycle as service
 from gateway_mcp.services import platforma_onboarding as onboarding,skill_library
+from gateway_mcp.services import skill_review,skill_comparison
 from gateway_mcp.services.observability import audit_event
 
 PATH=ui.PATH+'/manage'
@@ -25,6 +26,78 @@ def _form(actor,request,row,action,label,*,review=False):
     if review:
         text+='<label class="skill-check"><input type="checkbox" name="review_ack" value="yes" required><span>Я проверил эту версию: назначение, разрешённые данные, инструменты и ссылки. Публикую её для сотрудников.</span></label>'
     return text+'<button>'+ui.e(label)+'</button></form>'
+
+
+def _review_panel(report,skill_id):
+    messages={
+        'version_mismatch':'Версия в заголовке SKILL.md отличается от версии в карточке. Проверьте обе метки.',
+        'header_invalid':'Не удалось разобрать заголовок SKILL.md. Проверьте YAML и поля версии.',
+        'requirements_invalid':'Исправьте формат requirements.json: схема 1, от 1 до 10 операций. Содержимое файла можно открыть ниже.',
+        'legacy_address':'Указан прежний адрес Платформы. Проверьте, нужна ли замена на platforma.akmetron.ru.',
+        'reference_missing':'Для ссылки [текст][метка] не найдено определение метки в этом Markdown-файле.',
+        'file_missing':'Ссылка указывает на файл, которого нет в этой редакции архива. Проверьте имя, регистр и комплект файлов.',
+        'link_outside_package':'Ссылка выходит за пределы архива или содержит недопустимый путь. Добавьте ресурс в пакет и исправьте путь.',
+        'link_invalid':'Не удалось разобрать адрес ссылки. Проверьте синтаксис.',
+        'link_scheme_unchecked':'Это не обычная веб-ссылка. Её назначение нужно проверить вручную.',
+        'server_path_unchecked':'Абсолютный серверный путь проверяется вручную, а не как файл архива.',
+        'html_links_unchecked':'HTML-ссылки в этой строке не проверяются автоматически.',
+        'scan_limit':'Достигнут лимит проверки. Просмотрите остальные материалы вручную.'}
+    body='<section class="panel"><h2>Проверка файлов и ссылок</h2><p>Проверена сохранённая редакция '+ui.e(report['snapshot_revision'])+', версия '+ui.e(report['version'])+'. Файлов: '+str(report['files'])+'.</p>'
+    body+='<p>Требуют внимания: '+str(report['attention_count'])+'. Всего замечаний и сведений: '+str(report['issue_count'])+'.</p>'
+    if not report['scan_complete']:body+='<p role="status"><strong>Проверка выполнена частично.</strong> Достигнут лимит ссылок, строк или длины строки. Остальные материалы проверьте вручную.</p>'
+    if not report['issue_count']:body+='<p>В пределах этой проверки замечаний не найдено. Это не автоматическое разрешение на публикацию.</p>'
+    if report['issues']:
+        body+='<div class="table-wrap"><table style="min-width:600px"><thead><tr><th>Файл / строка</th><th>Что проверить</th></tr></thead><tbody>'
+        for item in report['issues']:
+            link=_url(id=skill_id,version=report['snapshot_revision'],path=item['path'])
+            body+='<tr><td><a href="'+ui.e(link)+'"><code style="overflow-wrap:anywhere">'+ui.e(item['path'])+'</code></a><br>Строка '+str(item['line'])+'</td><td>'+ui.e(messages[item['code']])+'</td></tr>'
+        body+='</tbody></table></div>'
+    if report['issues_truncated']:body+='<p>Показаны первые 50 замечаний. Общий счётчик учитывает остальные найденные замечания.</p>'
+    if report['requirements']=='missing':body+='<p>Необязательный requirements.json не приложен. Заявленный набор операций здесь не определён.</p>'
+    elif report['requirements']=='valid':
+        kinds={'assistant':'Текстовая задача ассистента','route':'Серверный маршрут, заявленный автором','unavailable':'Автор отметил как неподключённую операцию'}
+        body+='<h3>Декларация автора</h3><ul>'
+        for op in report['operations']:
+            body+='<li>'+ui.e(op['title'])+' — '+ui.e(kinds[op['kind']])+(' · <code>'+ui.e(op['route'])+'</code>' if 'route' in op else '')+'</li>'
+        body+='</ul><p>Корректный формат декларации не подтверждает подключение сервиса или права пользователей.</p>'
+    body+='<p>Проверено ссылок на файлы: '+str(report['local_file_links_checked'])+'. Внешних ссылок без проверки: '+str(report['external_links_unchecked'])+'. Якорей без проверки: '+str(report['anchors_unchecked'])+'.</p>'
+    body+='<p class="small">'+ui.e(report['notice'])+'</p><p class="small">Отпечаток сохранённого материала: <code class="skill-code">'+ui.e(report['fingerprint'])+'</code>. После правок сохраните новую редакцию и откройте её снова.</p></section>'
+    return body
+
+
+def _comparison_panel(report,skill_id):
+    body='<section class="panel"><h2>Что изменилось в этой редакции</h2>'
+    if report['previous_revision'] is None:
+        return body+'<p>Это первая сохранённая редакция: сравнивать пока не с чем. Перед публикацией проверьте все файлы.</p></section>'
+    basis='Опубликованная редакция' if report['basis']=='published' else 'Предыдущая сохранённая редакция (могла быть черновиком)'
+    body+='<p>'+basis+': '+str(report['previous_revision'])+' · версия '+ui.e(report['previous_version'])+'. Сравнивается с редакцией '+str(report['current_revision'])+' · версия '+ui.e(report['current_version'])+'.</p>'
+    counts=report['counts']
+    body+='<p>Добавлено файлов: '+str(counts['added'])+'. Изменено: '+str(counts['changed'])+'. Удалено: '+str(counts['removed'])+'. Без изменений: '+str(counts['unchanged'])+'.</p>'
+    if report['omitted_content']:body+='<p role="status"><strong>Показаны не все строки.</strong> Для больших файлов или при достижении лимита откройте обе сохранённые редакции по ссылкам ниже. Список изменённых файлов и их SHA256 показан полностью.</p>'
+    labels={'title':'Название','description':'Описание','version':'Версия в каталоге'}
+    if report['metadata']:
+        body+='<h3>Изменения карточки</h3><div class="table-wrap"><table style="min-width:600px"><thead><tr><th>Поле</th><th>Было</th><th>Стало</th></tr></thead><tbody>'
+        for item in report['metadata']:body+='<tr><td>'+labels[item['field']]+'</td><td style="overflow-wrap:anywhere">'+ui.e(item['before'])+'</td><td style="overflow-wrap:anywhere">'+ui.e(item['after'])+'</td></tr>'
+        body+='</tbody></table></div>'
+    if not report['files']:body+='<p>Содержимое файлов не изменилось.</p>'
+    kinds={'added':'Добавлен','removed':'Удалён','changed':'Изменён'}
+    colors={'added':'background:#e6f5ed;color:#14573b','removed':'background:#fdeceb;color:#842927','hunk':'color:#445b80','context':''}
+    for item in report['files']:
+        body+='<h3>'+kinds[item['change']]+': <code class="skill-code">'+ui.e(item['path'])+'</code></h3><p>'
+        for key,label,revision in [('before_sha256','Было',report['previous_revision']),('after_sha256','Стало',report['current_revision'])]:
+            if item[key]:
+                url=_url(id=skill_id,version=revision,path=item['path'])
+                body+='<a href="'+ui.e(url)+'">'+label+' · редакция '+str(revision)+'</a> · SHA256: <code class="skill-code">'+ui.e(item[key])+'</code><br>'
+        body+='</p>'
+        if item['diff']:
+            body+='<details><summary>Показать строки: − удалено, + добавлено</summary><pre class="skill-material">'
+            for line in item['diff']:body+='<span style="display:block;'+colors[line['kind']]+'">'+ui.e(line['text'])+'</span>'
+            body+='</pre></details>'
+        if item['diff_status']=='input_limit':body+='<p>Файл превышает лимит построчного сравнения. Откройте материалы по ссылкам.</p>'
+        elif item['diff_status']=='output_limit':body+='<p>Вывод строк сокращён по общему лимиту. Откройте материалы по ссылкам.</p>'
+        elif item['diff_status']=='line_endings_only':body+='<p>Текст строк совпадает; изменились разделители строк или завершающий перенос.</p>'
+    body+='<p class="small">Показаны различия сохранённых материалов. Это не оценка безопасности инструкции, прав или качества ответа ИИ. Сравнение не изменяет публикацию.</p></section>'
+    return body
 
 
 async def _dashboard(request,actor):
@@ -56,6 +129,10 @@ async def _detail(request,actor):
         body+='<p>В MCP остаётся прежняя опубликованная версия. Этот черновик видят только автор и владелец.</p>'
     if historical:body+='<p>Вы читаете сохранённую версию. Она не изменяется при редактировании нового черновика.</p>'
     body+='<p>Проверка владельцем — редакционное согласование, а не гарантия безопасности или правильности ответа ИИ. Сервер не запускает файлы.</p></section>'
+    report=await to_thread(skill_review.inspect_snapshot,version)
+    body+=_review_panel(report,skill_id)
+    comparison=await to_thread(skill_comparison.compare,version,data['comparison_base'],basis=data['comparison_kind'])
+    body+=_comparison_panel(comparison,skill_id)
     if not historical and row['stage']!='archived':
         body+='<section class="panel skill-form"><h2>Новая редакция</h2><p>При сохранении публикация остаётся прежней до новой проверки. Для изменения опубликованного материала укажите новую версию, например 1.0.1.</p><form method="post" enctype="multipart/form-data" action="'+PATH+'/edit">'+_hidden('csrf',_csrf(request,actor))+_hidden('skill_id',skill_id)+_hidden('revision',row['revision'])
         body+='<label>Название<input name="title" value="'+ui.e(version['title'])+'" minlength="2" maxlength="120" required></label><label>Версия в каталоге<input name="version" value="'+ui.e(version['version'])+'" maxlength="64" required></label><label>Новый Markdown или ZIP, если меняются файлы<input type="file" name="file" accept=".md,.zip"></label><p>Без файла сохранятся прежние ресурсы. До 20 редакций, история не удаляется автоматически.</p><button>Сохранить черновик</button></form></section>'
