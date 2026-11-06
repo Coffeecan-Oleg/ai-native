@@ -20,8 +20,8 @@ PATH=ui.PATH+'/manage'
 def _url(**params):return ui.url(PATH,**params)
 
 
-def _form(actor,request,row,action,label,*,review=False):
-    text='<form method="post" action="'+PATH+'/action">'+_hidden('csrf',_csrf(request,actor))
+def _form(token,row,action,label,*,review=False):
+    text='<form method="post" action="'+PATH+'/action">'+_hidden('csrf',token)
     text+=_hidden('skill_id',row['skill_id'])+_hidden('revision',row['revision'])+_hidden('action',action)
     if review:
         text+='<label class="skill-check"><input type="checkbox" name="review_ack" value="yes" required><span>Я проверил эту версию: назначение, разрешённые данные, инструменты и ссылки. Публикую её для сотрудников.</span></label>'
@@ -122,6 +122,9 @@ async def _detail(request,actor):
     row=data['workflow'];version=data['payload'];path=request.query_params.get('path','SKILL.md')
     if path not in version['files']:raise ValueError('Файл версии не найден.')
     owner=onboarding.is_owner(actor)
+    # A new or another actor's cookie causes _csrf() to mint a nonce. Reuse
+    # that one value for every form and the response cookie on this page.
+    token=_csrf(request,actor)
     historical=version['revision']!=row['candidate_revision']
     body='<h1>'+ui.e(version['title'])+'</h1><p><a href="'+PATH+'">Черновики и проверка</a> · <a href="'+ui.PATH+'">Общий каталог</a></p>'
     body+='<section class="panel"><p>Состояние: <strong>'+ui.e(service.LABELS[row['stage']])+'</strong>. Версия материала: '+ui.e(version['version'])+'.</p><p>Постоянный ID: <code>'+ui.e(skill_id)+'</code></p>'
@@ -134,16 +137,16 @@ async def _detail(request,actor):
     comparison=await to_thread(skill_comparison.compare,version,data['comparison_base'],basis=data['comparison_kind'])
     body+=_comparison_panel(comparison,skill_id)
     if not historical and row['stage']!='archived':
-        body+='<section class="panel skill-form"><h2>Новая редакция</h2><p>При сохранении публикация остаётся прежней до новой проверки. Для изменения опубликованного материала укажите новую версию, например 1.0.1.</p><form method="post" enctype="multipart/form-data" action="'+PATH+'/edit">'+_hidden('csrf',_csrf(request,actor))+_hidden('skill_id',skill_id)+_hidden('revision',row['revision'])
+        body+='<section class="panel skill-form"><h2>Новая редакция</h2><p>При сохранении публикация остаётся прежней до новой проверки. Для изменения опубликованного материала укажите новую версию, например 1.0.1.</p><form method="post" enctype="multipart/form-data" action="'+PATH+'/edit">'+_hidden('csrf',token)+_hidden('skill_id',skill_id)+_hidden('revision',row['revision'])
         body+='<label>Название<input name="title" value="'+ui.e(version['title'])+'" minlength="2" maxlength="120" required></label><label>Версия в каталоге<input name="version" value="'+ui.e(version['version'])+'" maxlength="64" required></label><label>Новый Markdown или ZIP, если меняются файлы<input type="file" name="file" accept=".md,.zip"></label><p>Без файла сохранятся прежние ресурсы. До 20 редакций, история не удаляется автоматически.</p><button>Сохранить черновик</button></form></section>'
     if not historical:
         body+='<section class="panel skill-form"><h2>Действия</h2>'
-        if row['stage']=='draft':body+=_form(actor,request,row,'submit','Отправить на проверку владельцу')
+        if row['stage']=='draft':body+=_form(token,row,'submit','Отправить на проверку владельцу')
         if row['stage']=='review' and owner:
-            body+=_form(actor,request,row,'publish','Опубликовать проверенную версию',review=True)
-            body+=_form(actor,request,row,'request_changes','Вернуть в черновик')
+            body+=_form(token,row,'publish','Опубликовать проверенную версию',review=True)
+            body+=_form(token,row,'request_changes','Вернуть в черновик')
         if owner:
-            body+=_form(actor,request,row,'restore' if row['stage']=='archived' else 'archive','Восстановить из архива' if row['stage']=='archived' else 'Перевести в архив')
+            body+=_form(token,row,'restore' if row['stage']=='archived' else 'archive','Восстановить из архива' if row['stage']=='archived' else 'Перевести в архив')
         body+='</section>'
     body+='<section class="panel"><h2>Содержимое версии</h2><p>'
     for name in version['files']:
@@ -157,7 +160,7 @@ async def _detail(request,actor):
     labels={'draft_created':'Создан черновик','legacy_adopted':'Сохранена прежняя публикация','draft_updated':'Сохранена новая редакция','submitted':'Отправлен на проверку','changes_requested':'Возвращён в черновик','published':'Опубликован владельцем','archived':'Переведён в архив','restored':'Восстановлен из архива'}
     for item in data['events']:body+='<li>'+ui.e(labels[item['action']])+' · '+ui.e(_time(item['created_at']))+'</li>'
     body+='</ul></section>'
-    return _cookie(ui._response(actor,body),_csrf(request,actor))
+    return _cookie(ui._response(actor,body),token)
 
 
 async def _action(request,actor):

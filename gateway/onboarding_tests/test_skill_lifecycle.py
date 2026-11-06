@@ -252,3 +252,36 @@ class LifecycleWebTests(LifecycleFixture):
         self.assertEqual(self.http.get('/platforma/skills/manage',params={'id':sid,'version':'1'}).status_code,403)
         self.login(self.owner)
         self.assertIn(sid,self.http.get('/platforma/skills/manage').text)
+
+    def _first_publish_form(self,skill_id):
+        page=self.http.get('/platforma/skills/manage',params={'id':skill_id})
+        self.assertEqual(page.status_code,200)
+        forms=re.findall(r'<form\b.*?</form>',page.text,re.S)
+        form=next(v for v in forms if 'name="action" value="publish"' in v)
+        fields=dict(re.findall(r'<input type="hidden" name="([^"]+)" value="([^"]*)">',form))
+        return fields|{'review_ack':'yes'}
+
+    def test_first_owner_review_page_can_publish_without_csrf_warmup(self):
+        from gateway_mcp.routes.platforma_onboarding import COOKIE
+        for previous in ['missing','another_actor']:
+            with self.subTest(previous_cookie=previous):
+                if COOKIE in self.http.cookies:self.http.cookies.delete(COOKIE)
+                if previous=='another_actor':
+                    self.login(self.reader);self.http.get('/platforma/skills/upload')
+                sid=self.draft(title='Первая проверка '+previous)['name']
+                self.action(sid,'submit',self.reader)
+                self.login(self.owner)
+                # Use the real first rendered publish form. No extra GET or
+                # csrf() call may warm up or replace its cookie before POST.
+                form=self._first_publish_form(sid)
+                response=self.http.post('/platforma/skills/manage/action',data=form,follow_redirects=False)
+                self.assertEqual(response.status_code,303)
+                self.assertEqual(self.row(sid)['stage'],'published')
+
+    def test_owner_first_page_still_rejects_wrong_csrf_and_foreign_origin(self):
+        sid=self.draft()['name'];self.action(sid,'submit',self.reader);self.login(self.owner)
+        form=self._first_publish_form(sid)
+        for data,headers in [(form|{'csrf':'invalid'},{}),(form,{'origin':'https://foreign.example.invalid'})]:
+            response=self.http.post('/platforma/skills/manage/action',data=data,headers=headers,follow_redirects=False)
+            self.assertEqual(response.status_code,403)
+            self.assertEqual(self.row(sid)['stage'],'review')
