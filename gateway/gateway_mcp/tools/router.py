@@ -126,6 +126,7 @@ def register_router_tools(mcp):
         arguments["gateway_request_id"] = gateway_request_id
         idempotency_claimed = False
         idempotency_actor = ""
+        admission = None
         run = ToolRun.start(
             tool=tool, system="gateway", scope=base_scope, arguments=arguments
         )
@@ -294,3 +295,10 @@ def register_router_tools(mcp):
             run.system = "gateway"
             run.error(exc)
             raise
+        finally:
+            if admission is not None:
+                try:
+                    await to_thread(external_limits.release_unused,admission)
+                except Exception:
+                    # Keep the original outcome; an abandoned lease expires without a background retry.
+                    record_upstream_error('gateway','external_lease_cleanup_failed')

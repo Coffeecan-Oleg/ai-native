@@ -8,6 +8,7 @@ import httpx
 from gateway_mcp.backends.common import BackendConfigError, BackendRouteError
 from gateway_mcp.services import unisender_readonly as boundary
 from gateway_mcp.services.external_limits import LimitError,retry_after
+from gateway_mcp.services.external_safety import TransientFailure
 
 API_ROOT = 'https://api.unisender.com/ru/api/'
 MAX_RESPONSE = 1024 * 1024
@@ -40,6 +41,8 @@ async def _post_api(method, parameters):
                     raise LimitError('EXTERNAL_UPSTREAM_RATE_LIMITED',retry_after(response.headers.get('Retry-After')),
                         level='integration',contacted=True)
                 if response.status_code != 200:
+                    if 500<=response.status_code<=599:
+                        raise TransientFailure('UNISENDER_UPSTREAM_UNAVAILABLE')
                     raise BackendRouteError('UNISENDER_UPSTREAM_HTTP_ERROR')
                 chunks, size = [], 0
                 async for chunk in response.aiter_bytes():
@@ -50,6 +53,8 @@ async def _post_api(method, parameters):
                 payload = json.loads(b''.join(chunks))
     except BackendRouteError:
         raise
+    except httpx.TransportError:
+        raise TransientFailure('UNISENDER_UPSTREAM_UNAVAILABLE') from None
     except Exception:
         # Never include request bodies, response bodies, credentials or raw errors.
         raise BackendRouteError('UNISENDER_UPSTREAM_UNAVAILABLE') from None

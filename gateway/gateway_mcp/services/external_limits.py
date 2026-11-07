@@ -16,6 +16,7 @@ class _Permit:
     subject: str
     used: bool=False
     lock: object=field(default_factory=Lock)
+    lease: object=None
 
 def consume(permit,route,actor):
     if type(permit) is not _Permit:raise LimitError('EXTERNAL_LIMITER_UNAVAILABLE',5,level='service')
@@ -98,6 +99,8 @@ def require(route,actor):
             user_wait,user_tat=advance(now,own['tat'],rules['USER_PER_MINUTE'],rules['USER_BURST'])
             if shared_wait or user_wait:
                 raise LimitError(retry=max(shared_wait,user_wait),level='integration' if shared_wait>=user_wait else 'employee')
+            from gateway_mcp.services import external_safety
+            lease=external_safety.reserve(cur,integration,subject,now) if external_safety.enabled(route) else None
             for name,tat in [('global',shared_tat),(subject,user_tat)]:
                 cur.execute('update gateway_external_limits set tat=%s,updated_at=%s where integration=%s and bucket=%s',
                     (tat,now,integration,name))
@@ -105,7 +108,7 @@ def require(route,actor):
             cur.execute("""delete from gateway_external_limits where integration=%s and bucket in
                 (select bucket from gateway_external_limits where integration=%s and bucket<>'global'
                  and updated_at<%s and tat<=%s order by updated_at limit 100)""",(integration,integration,now-timedelta(days=7),now))
-        return _Permit(route,actor.subject)
+        return _Permit(route,actor.subject,lease=lease)
     except LimitError:raise
     except Exception:raise LimitError('EXTERNAL_LIMITER_UNAVAILABLE',5,level='service') from None
 
@@ -122,3 +125,12 @@ def cooldown(route,seconds):
 
 def retry_after(value):
     return max(1,min(3600,int(value))) if isinstance(value,str) and re.fullmatch('[0-9]{1,6}',value) else 60
+
+def release_unused(permit):
+    if type(permit) is not _Permit:return
+    with permit.lock:
+        if permit.used:return
+        permit.used=True
+    if permit.lease is not None:
+        from gateway_mcp.services.external_safety import finish
+        finish(permit.lease,'neutral')

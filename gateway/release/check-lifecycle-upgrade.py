@@ -1,4 +1,4 @@
-"""25 -> 26 -> 27 with synthetic state, on an explicitly isolated test DB."""
+"""25 -> 26 -> 27 -> 28 with synthetic state on an explicitly isolated test DB."""
 import hashlib,json,os,shutil,tempfile
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -12,7 +12,7 @@ def main():
     if os.getenv('GATEWAY_TEST_ISOLATED')!='true' or urlsplit(migrations.database_url()).path!='/platforma_upgrade_test':
         raise RuntimeError('Refuse a non-isolated upgrade database')
     files=migrations.migration_files()
-    if len(files)!=27 or files[-1].stem!='0027_external_limits':
+    if len(files)!=28 or files[-1].stem!='0028_external_safety':
         raise RuntimeError('Unexpected schema boundary')
     with tempfile.TemporaryDirectory() as temp:
         for path in files[:25]:shutil.copyfile(path,Path(temp)/path.name)
@@ -59,12 +59,25 @@ def main():
         conn.execute("""insert into platforma_skill_workflow_events(skill_id,revision,actor_subject,action)
             values (%s,1,'copy-author','draft_created')""",(sid,))
         tables=[r['tablename'] for r in conn.execute("select tablename from pg_tables where schemaname='public' and tablename<>'schema_migrations' order by tablename")]
-    before27=snapshot();last=migrations.migrate_up();after27=snapshot()
+    before27=snapshot()
+    with tempfile.TemporaryDirectory() as temp:
+        for path in files[:27]:shutil.copyfile(path,Path(temp)/path.name)
+        with patch.dict(os.environ,{'GATEWAY_MIGRATIONS_DIR':temp}):last=migrations.migrate_up()
+    after27=snapshot()
     assert last['applied']==['0027_external_limits'] and before27==after27
-    assert migrations.migrate_up()['applied']==[]
     with migrations.connect() as conn:assert conn.execute('select count(*) n from gateway_external_limits').fetchone()['n']==0
-    print(json.dumps({'successful':True,'from_migrations':25,'to_migrations':27,'dev_upgrade_from':26,
-        'dev_upgrade_to':27,'schema26_tables_unchanged':len(tables),'private_draft_retained':True,
+    with migrations.connect() as conn:
+        conn.execute("""insert into gateway_external_limits(integration,bucket,tat,blocked_until,updated_at)
+            values ('unisender-readonly','global',clock_timestamp()+interval '1 minute',clock_timestamp()+interval '2 minutes',clock_timestamp())""")
+        tables=[r['tablename'] for r in conn.execute("select tablename from pg_tables where schemaname='public' and tablename<>'schema_migrations' order by tablename")]
+    before28=snapshot();last=migrations.migrate_up();after28=snapshot()
+    assert last['applied']==['0028_external_safety'] and before28==after28
+    assert migrations.migrate_up()['applied']==[]
+    with migrations.connect() as conn:
+        assert conn.execute('select count(*) n from gateway_external_calls').fetchone()['n']==0
+        assert conn.execute('select count(*) n from gateway_external_circuits').fetchone()['n']==0
+    print(json.dumps({'successful':True,'from_migrations':25,'to_migrations':28,'dev_upgrade_from':27,
+        'dev_upgrade_to':28,'schema27_tables_unchanged':len(tables),'rate_state_retained':True,'private_draft_retained':True,
         'old_tables_unchanged':len(tables),'synthetic_publications_retained':3,
         'legacy_workflows_created':0,'idempotent':True,'production_data':False}))
 

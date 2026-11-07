@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "release_status": "prepared_not_deployed",
-  "migration_count": 27,
+  "migration_count": 28,
   "active_documents": [
     "docs/corporate-documentation-index.md",
     "docs/knowledge-base/01-corporate-entry.md",
@@ -14,7 +14,8 @@
     "docs/knowledge-base/08-skill-evidence.md",
     "docs/knowledge-base/09-skill-file-review.md",
     "docs/knowledge-base/10-skill-comparison.md",
-    "docs/knowledge-base/12-external-service-limits.md"
+    "docs/knowledge-base/12-external-service-limits.md",
+    "docs/knowledge-base/13-external-service-safety.md"
   ],
   "legacy_documents": [
     "docs/platforma-sandbox-writes.md",

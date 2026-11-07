@@ -42,8 +42,12 @@ async def call_backend(route: dict[str, Any], arguments: dict[str, Any], *, admi
             if admission is None:admission=await to_thread(external_limits.require,route,actor)
             external_limits.consume(admission,route,actor)
         try:
+            from gateway_mcp.services import external_safety
+            if external_safety.enabled(route):
+                return await external_safety.invoke(admission,lambda:_backend_callable(str(transport))(route,arguments))
             return await _backend_callable(str(transport))(route, arguments)
         except external_limits.LimitError as exc:
-            if exc.contacted:await to_thread(external_limits.cooldown,route,exc.retry)
+            if exc.contacted and exc.code=='EXTERNAL_UPSTREAM_RATE_LIMITED':
+                await to_thread(external_limits.cooldown,route,exc.retry)
             raise
     raise BackendRouteError(f"Unsupported backend transport: {transport or '<missing>'}")
