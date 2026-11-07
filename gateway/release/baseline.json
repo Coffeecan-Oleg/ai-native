@@ -1,5 +1,5 @@
 {
-  "release_id": "corporate-2026.11.06-rc.4-skill-comparison",
+  "release_id": "corporate-2026.11.07-authorization-read-session",
   "accepted_runtime_image": "sha256:daf4dad646b2a6c3bac88b40b149c3f63d5395869074e70becce8f5e8e59e138",
   "accepted_source_git_base": "8e5df74acb332c8af1f69ae4e6036a1db11eefaa",
   "python_base_image": "python@sha256:cb33f7f771ecec2ef1225cf39b159591a040391bd73e4c01f00fdfc4c47611d2",
@@ -583,9 +583,9 @@
       "size": 6595
     },
     "services/storage_access.py": {
-      "sha256": "723d5fdf340220b3da85f99056dc63e7e7b3b710fa9bba0281342dacada49f6a",
-      "lf_sha256": "723d5fdf340220b3da85f99056dc63e7e7b3b710fa9bba0281342dacada49f6a",
-      "size": 17944
+      "sha256": "0c1186a5c01b137514d4221dc9d93cf101d7e418c57c184822bd6be4656c2471",
+      "lf_sha256": "0c1186a5c01b137514d4221dc9d93cf101d7e418c57c184822bd6be4656c2471",
+      "size": 18542
     },
     "services/storage_access_requests.py": {
       "sha256": "0f7477efdc9db653b899258eeeefe7787dee1925126aa6d84cf42aa34291d8d4",
@@ -663,9 +663,9 @@
       "size": 22927
     },
     "services/storage_oauth.py": {
-      "sha256": "9601107ca3e8f6f754a34729e129aea0d311b340af599b6ea351ed0de308c170",
-      "lf_sha256": "9601107ca3e8f6f754a34729e129aea0d311b340af599b6ea351ed0de308c170",
-      "size": 4215
+      "sha256": "b052182b06aacaff1eb26aea7dd81a8c55225f42de48d0aea5fd25f06eb87f0c",
+      "lf_sha256": "b052182b06aacaff1eb26aea7dd81a8c55225f42de48d0aea5fd25f06eb87f0c",
+      "size": 4621
     },
     "services/storage_service_connections.py": {
       "sha256": "dc14ae9a6fdc177acb81df6f693742153c27f7a2eef0a8fb6cf3872242a8da8d",
@@ -1006,6 +1006,11 @@
       "sha256": "d30937c751445b4434b6d83a67c2a3790ff7e8c8eee03680d4af32280f7dafaa",
       "lf_sha256": "d30937c751445b4434b6d83a67c2a3790ff7e8c8eee03680d4af32280f7dafaa",
       "size": 8992
+    },
+    "services/authorization_reader.py": {
+      "sha256": "c6b5865913930ae309a9dc1b1e361349655b603ba7d553230866fdbbe55cbc49",
+      "lf_sha256": "c6b5865913930ae309a9dc1b1e361349655b603ba7d553230866fdbbe55cbc49",
+      "size": 2436
     }
   },
   "private_mounts_excluded": [
