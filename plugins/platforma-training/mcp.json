@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "gateway": {
+      "type": "streamable-http",
+      "url": "https://195-133-14-140.sslip.io/mcp"
+    }
+  }
+}

@@ -14,6 +14,14 @@
       "version": "0.3.0",
       "category": "AI",
       "platformRelease": "2026.09.11"
+    },
+    {
+      "name": "platforma-training",
+      "source": "./plugins/platforma-training",
+      "description": "Чтение вымышленных сервисов и заявок Платформы через личный OAuth, с указанием источников и без изменения бизнес-данных.",
+      "version": "0.1.0",
+      "category": "Productivity",
+      "platformRelease": "2026.09.11"
     }
   ]
 }

@@ -10,7 +10,10 @@ def infer_route_access(route: dict[str, Any], arguments: dict[str, Any]) -> dict
     resource = "*"
 
     route_name = str(route.get("name") or "")
-    if system == "yandex_disk":
+    if system == "platforma" and route_name in {"platforma.requests.create", "platforma.requests.update"}:
+        resource_type = "sandbox_requests"
+        resource = "sandbox"
+    elif system == "yandex_disk":
         resource_type = "path"
         resource = _first_arg(arguments, "path", "from", "to", "src_path", "dst_path") or "*"
     elif system == "google_sheets":

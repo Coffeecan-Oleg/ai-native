@@ -128,6 +128,14 @@ def gateway_oauth_access_token_revoked(jti: str) -> bool:
         return False
 
     ensure_schema()
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        from gateway_mcp.services.storage_core import database_url
+        from gateway_mcp.services.authorization_reader import fetch
+        return bool(fetch(database_url(),"""
+            select 1 from gateway_oauth_revoked_access_tokens
+            where jti = %s and expires_at > now()
+            """,(jti,)))
     with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(

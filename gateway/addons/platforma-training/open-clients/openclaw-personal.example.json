@@ -1,0 +1,16 @@
+{
+  "mcp": {
+    "servers": {
+      "platforma": {
+        "url": "https://kromin.axion-test.akmetron.ru/mcp",
+        "transport": "streamable-http",
+        "auth": "oauth",
+        "connectionTimeoutMs": 15000,
+        "requestTimeoutMs": 30000,
+        "oauth": {
+          "scope": "access:request memory:read platforma:read platforma:write skills:read telemetry:read telemetry:write tools:call tools:read"
+        }
+      }
+    }
+  }
+}

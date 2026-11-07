@@ -25,6 +25,9 @@ def register_admin_telemetry_routes(mcp) -> None:
         actor = web_actor(request)
         if actor is None:
             return login_redirect("/admin/telemetry/skills")
+        from gateway_mcp.routes.training_admin import is_training_visitor, skill_response
+        if is_training_visitor(actor):
+            return await skill_response(request, actor)
         if not has_scope(actor, "access:admin"):
             return PlainTextResponse("access:admin is required.", status_code=403)
 

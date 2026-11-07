@@ -19,7 +19,7 @@ def pack_plugin_manifest(pack: dict[str, Any], platform_release: str = "") -> di
         "name": pack["name"],
         "version": pack_version(pack),
         "description": pack["description"],
-        "author": {
+        "author": pack.get("author") or {
             "name": "coMind",
             "email": "team@comind.space",
             "url": "https://comind.space",
@@ -34,9 +34,9 @@ def pack_plugin_manifest(pack: dict[str, Any], platform_release: str = "") -> di
         "metadata": platform_metadata(platform_release),
         "interface": {
             "displayName": pack["displayName"],
-            "shortDescription": pack["description"],
+            "shortDescription": pack.get("shortDescription") or pack["description"],
             "longDescription": pack["description"],
-            "developerName": "coMind",
+            "developerName": (pack.get("author") or {}).get("name", "coMind"),
             "category": pack["category"],
             "capabilities": ["Skills"],
             "defaultPrompt": [f"Use {pack['displayName']} for this work."],
@@ -51,7 +51,7 @@ def write_claude_manifest(plugin_root: Path, pack: dict[str, Any], platform_rele
             "name": pack["name"],
             "version": pack_version(pack),
             "description": pack["description"],
-            "author": {
+            "author": pack.get("author") or {
                 "name": "coMind",
                 "email": "team@comind.space",
                 "url": "https://comind.space",
@@ -70,9 +70,9 @@ def write_cursor_manifest(plugin_root: Path, pack: dict[str, Any], platform_rele
             "displayName": pack["displayName"],
             "version": pack_version(pack),
             "description": pack["description"],
-            "author": {"name": "coMind", "email": "team@comind.space"},
+            "author": pack.get("author") or {"name": "coMind", "email": "team@comind.space"},
             "homepage": "https://comind.space",
-            "repository": "https://github.com/comindspace/ai-native",
+            "repository": pack.get("repository") or "https://github.com/comindspace/ai-native",
             "license": "UNLICENSED",
             "keywords": ["agents", "skills", "ai-native", category],
             "category": category,
@@ -97,7 +97,7 @@ def write_zcode_manifest(plugin_root: Path, pack: dict[str, Any], platform_relea
             "name": pack["name"],
             "version": pack_version(pack),
             "description": pack["description"],
-            "author": {
+            "author": pack.get("author") or {
                 "name": "coMind",
                 "email": "team@comind.space",
                 "url": "https://comind.space",

@@ -1,0 +1,10 @@
+# Training addons; use after docker-compose.yml and docker-compose.platforma.yml.
+services:
+  gateway:
+    environment:
+      GATEWAY_ADDON_PROFILES_FILE: /app/gateway-addon-profiles.json
+      GATEWAY_MCP_OAUTH_SCOPES: skills:read access:request tools:read tools:call platforma:read telemetry:write telemetry:read memory:read memory:write
+      GATEWAY_SUPPORTED_SCOPES: skills:read access:request tools:read tools:call platforma:read telemetry:write telemetry:read memory:read memory:write
+      GATEWAY_MCP_OAUTH_TOOLS: gateway_access_profile gateway_call_tool gateway_knowledge_document_get gateway_knowledge_document_put gateway_knowledge_search gateway_knowledge_space_create gateway_knowledge_space_get gateway_knowledge_space_list gateway_memory_search gateway_memory_write gateway_search_tools gateway_telemetry_skill_completed gateway_telemetry_skill_failed gateway_telemetry_skill_started gateway_usage_dashboard gateway_usage_import platforma.context.get platforma.services.list platforma.services.get platforma.requests.list platforma.requests.get
+    volumes:
+      - /opt/gateway-mcp/profiles/platforma-addons.json:/app/gateway-addon-profiles.json:ro

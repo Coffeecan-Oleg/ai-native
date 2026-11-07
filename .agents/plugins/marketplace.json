@@ -18,6 +18,18 @@
       "category": "AI"
     },
     {
+      "name": "platforma-training",
+      "source": {
+        "source": "local",
+        "path": "./plugins/platforma-training"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "gateway-mcp",
       "source": {
         "source": "local",

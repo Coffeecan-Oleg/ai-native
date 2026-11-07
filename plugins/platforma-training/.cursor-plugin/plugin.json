@@ -1,0 +1,29 @@
+{
+  "name": "platforma-training",
+  "displayName": "Платформа — учебный помощник",
+  "version": "0.2.0",
+  "description": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "homepage": "https://comind.space",
+  "repository": "https://github.com/Coffeecan-Oleg/ai-native",
+  "license": "UNLICENSED",
+  "keywords": [
+    "agents",
+    "skills",
+    "ai-native",
+    "productivity"
+  ],
+  "category": "productivity",
+  "tags": [
+    "productivity",
+    "skills",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "metadata": {
+    "platformRelease": "2026.09.11"
+  }
+}

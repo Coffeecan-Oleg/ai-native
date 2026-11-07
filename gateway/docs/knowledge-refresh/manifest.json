@@ -1,0 +1,66 @@
+{
+  "status": "prepared_not_applied",
+  "documents": [
+    {
+      "path": "awareness/start.md",
+      "id": "app11-2d97b0364fa97b9d",
+      "before_sha256": "e53f5dc7901788a815045865276a3c399c8e77e16704c9ebbcde6e0c629f43e2",
+      "after_sha256": "ee19c249c0a2d315173cb148175cbf2047252e48d3eadc5fde8db6f1ba348bfa"
+    },
+    {
+      "path": "awareness/project-profile.md",
+      "id": "app11-a64060bf90ba6a39",
+      "before_sha256": "8715246ef728f385da76df41ff710ed204e5ef188205a5269b6f765129f3de41",
+      "after_sha256": "be11aef4ce7177505d1bf95a057e9dd9fbdf9b6f2ab5241e5f24cf2a6b5e0f0a"
+    },
+    {
+      "path": "awareness/projects.md",
+      "id": "app11-b65a67e4cd66b2a5",
+      "before_sha256": "20f5486ea79c37a2d89095abc412ee9e6a1e85586c40a6a2ce6e6cd6bad18a0f",
+      "after_sha256": "90e62645228c6e66b16bd6dd501ab762796c02a3b77774a97a54aab2f7f7888d"
+    },
+    {
+      "path": "awareness/resources.md",
+      "id": "app11-61383e54acdb8941",
+      "before_sha256": "0cad835adf69e5087a78db041a325d8b583a45360a60f3f8d81379f4096980f3",
+      "after_sha256": "dfdc1d2971b93e4b1eb0cb7e0956d57860a568f2f9e85845008b20d5251c663c"
+    },
+    {
+      "path": "awareness/refresh.md",
+      "id": "app11-ff40e20f60aa0886",
+      "before_sha256": "329eea69282c86e47e8cd25f780267c23bec54376586b6ce60b606f3ef7ba05d",
+      "after_sha256": "171ff5b4e9ee2f85464f5616d0e9f518dd90df7ccf1f0243ea598ad358532d5c"
+    },
+    {
+      "path": "awareness/capabilities.md",
+      "id": "app11-196d97e91ba2605b",
+      "before_sha256": "eff884cfe672844fa4010835303895be3faa6d8971d99b0640766b9f721aa0e0",
+      "after_sha256": "cf3304dd13b3d6dbb3c1a53749efbbb1df12b163b63703be635e4bf4c3db360f"
+    },
+    {
+      "path": "awareness/install.md",
+      "id": "app11-bf51f822fbc69f32",
+      "before_sha256": "533b70d72687b42f2224ca85a4decbe35635b938d5d95e572343af5f09125521",
+      "after_sha256": "536e6406e933d25208671ec40856b5a5d389161e27d64864e2fc9eb9f7c79379"
+    },
+    {
+      "path": "decisions/awareness-installed.md",
+      "id": "app11-fadf8fdaa4ef9e99",
+      "before_sha256": "3d3a34beb01daddc145ab54c3bbf6d368753f3128ee00625226872586991031d",
+      "after_sha256": "9ce9c9b5aa81a2c8efed2f4b79e96f24e7c0b222e74a06d6d14ffeaff83d8e53"
+    },
+    {
+      "path": "skills/organizational-awareness/SKILL.md",
+      "id": "app11-09264afc0bcdaa7d",
+      "before_sha256": "69603a945a692593c6714784ac4589ef9669a09d1e287f91d5c71db6d06d3a40",
+      "after_sha256": "650740162edf7768ef7e69184f0abd07d50e4fab3ed9b4e7f3ae2be8bfd87991"
+    },
+    {
+      "path": "skills/organizational-awareness/references/repository-examples.md",
+      "id": "app11-4074df46a5087aed",
+      "before_sha256": "d1a31623c0f18507059f6030c298add0723b8a7c4643d89fddc47460ff3ae7c4",
+      "after_sha256": "964667c3efeb77ba7967df95fb1a61b4cbf34f956573b207d4ba7b6e249eb4ad"
+    }
+  ],
+  "notice": "Text candidates only. Current MCP vault and metadata index are unchanged. Apply through an approved administrator and refresh the same document IDs/titles; no arbitrary mount writes or access expansion."
+}

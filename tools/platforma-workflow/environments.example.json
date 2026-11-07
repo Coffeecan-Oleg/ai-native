@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "development": {
+    "ssh_alias": "aiport",
+    "expected_hostname": "kromin",
+    "base_path": "/opt/platforma-dev",
+    "compose_project": "platformadev",
+    "database": "gateway_mcp_dev",
+    "private_endpoint": "http://127.0.0.1:18081",
+    "planned_public_url": "https://platforma-dev.akmetron.ru",
+    "public_url_status": "requires_dns_and_infrastructure_route",
+    "identity_status": "requires_separate_bitrix24_application",
+    "credentials": "generated_on_server_or_entered_in_server_tty; no production copies",
+    "memory_limit_mib_total": 640,
+    "gateway_cpus": 1.0,
+    "postgres_cpus": 0.5,
+    "edge_cpus": 0.3
+  },
+  "production": {
+    "ssh_alias": "platforma-production",
+    "public_url": "https://platforma.akmetron.ru",
+    "access_type": "restricted_ssh_commands",
+    "release_controller_status": "prepared_not_installed",
+    "caddy_and_dispatcher_paths": "operator_receipt_required",
+    "operator_receipt_read_command": "files get runtime/workflow-handoff.json"
+  },
+  "release_rules": {
+    "same_accepted_image_after_development": true,
+    "production_window_requires_owner_approval": true,
+    "open_access_is_separate_action": true,
+    "restore_after_possible_user_writes": false,
+    "corporate_data_in_development": false,
+    "ssh_private_key_in_github_actions": false
+  }
+}

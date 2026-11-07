@@ -13,20 +13,36 @@ except ImportError:
     MCP_SDK_V2 = False
 
 
+def _frame_app(app):
+    from gateway_mcp.services.bitrix_embed import BitrixFrameMiddleware, enabled
+    return BitrixFrameMiddleware(app) if enabled() else app
+
+
+class BrowserMCPServer(MCPServer):
+    def streamable_http_app(self,*args,**kwargs):
+        return _frame_app(super().streamable_http_app(*args,**kwargs))
+
+    def sse_app(self,*args,**kwargs):
+        return _frame_app(super().sse_app(*args,**kwargs))
+
+
 def create_server(*, name: str, token_verifier: Any, auth: Any) -> Any:
     """Create an MCP server with the constructor expected by the installed SDK."""
+    from gateway_mcp.services.bitrix_embed import enabled as frame_enabled
+    if MCP_SDK_V2 and frame_enabled():
+        raise RuntimeError('Bitrix embedded HTTP adapter requires verification before an SDK v2 upgrade')
     common = {
         "token_verifier": token_verifier,
         "auth": auth,
     }
     if MCP_SDK_V2:
-        return MCPServer(
+        return BrowserMCPServer(
             name,
             version=os.getenv("GATEWAY_SERVER_VERSION", "0.1.0"),
             cache_hints=_cache_hints(),
             **common,
         )
-    return MCPServer(
+    return BrowserMCPServer(
         name,
         host=_host(),
         port=_port(),

@@ -32,6 +32,7 @@ def finish_tool(
         scope=scope,
         arguments=arguments,
         error=error,
+        channel="mcp",
     )
 
 

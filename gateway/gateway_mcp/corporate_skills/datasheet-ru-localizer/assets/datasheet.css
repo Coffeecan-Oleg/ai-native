@@ -1,0 +1,712 @@
+/* ===========================================================================
+   Акметрон Design System — global entry point
+   Consumers link THIS file only. It is an @import manifest; no rules live here.
+   =========================================================================== */
+
+/* ===========================================================================
+   Акметрон — Webfonts
+   Montserrat (headings) + Inter (body), per brand spec, loaded from Google
+   Fonts. The /* ===========================================================================
+   Акметрон — Webfonts (локальные, с полной кириллицей во всех весах)
+   Montserrat — заголовки, Inter — текст. Latin + Cyrillic субсеты.
+   =========================================================================== */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/inter-latin-400.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/inter-cyr-400.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fonts/inter-latin-500.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fonts/inter-cyr-500.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/inter-latin-600.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/inter-cyr-600.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/inter-latin-700.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/inter-cyr-700.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/mont-latin-600.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/mont-cyr-600.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/mont-latin-700.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/mont-cyr-700.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("fonts/mont-latin-800.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("fonts/mont-cyr-800.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("fonts/mont-latin-900.woff2") format('woff2');
+  unicode-range: U+0000-03FF, U+0530-FFFF;
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("fonts/mont-cyr-900.woff2") format('woff2');
+  unicode-range: U+0400-045F, U+0460-052F, U+1C80-1C8A, U+20B4, U+2116, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+
+
+
+/* ===========================================================================
+   Акметрон — Color tokens
+   Color is functional, not decorative. Blue = "look here". Rose = "warning".
+   Greys = secondary information. Never colorize for variety.
+   =========================================================================== */
+
+:root {
+  /* --- Surfaces (dark) ------------------------------------------------- */
+  --field-deep: #0A1226;        /* deepest field, behind everything */
+  --bg-main: #15233F;           /* main background */
+  --bg-main-2: #101B36;         /* main background gradient end */
+  --panel-top: #1B2A52;         /* card / panel gradient top */
+  --panel-bottom: #16233F;      /* card / panel gradient bottom */
+
+  /* --- Brand ----------------------------------------------------------- */
+  --brand-blue: #004180;        /* THE Акметрон blue — logo, deep fills */
+  --brand-blue-deep: #00305E;   /* darker brand blue for depth */
+
+  /* --- Accents (blue) -------------------------------------------------- */
+  --blue: #4B9FD5;              /* primary — actions, links, highlights */
+  --blue-light: #62B4EC;        /* hover, active, numbers, headlines on dark */
+  --blue-deep: #2E6FA8;         /* bottom of gradients, depth */
+  --blue-glow: rgba(75, 159, 213, 0.45);
+
+  /* --- Text on dark ---------------------------------------------------- */
+  --text-1: #EAF0FA;            /* primary text */
+  --text-2: #9DAAC9;            /* secondary — captions, labels */
+  --text-3: #6E7CA0;            /* tertiary — footnotes */
+  --white: #FFFFFF;             /* spotlight, sparingly */
+
+  /* --- Hairlines / borders --------------------------------------------- */
+  --hairline: rgba(122, 150, 200, 0.18);
+  --hairline-strong: rgba(122, 150, 200, 0.32);
+
+  /* --- Alert / pain / warning (risks, problems, negatives ONLY) -------- */
+  --alert-top: #22203A;
+  --alert-bottom: #171F37;
+  --alert-stripe: #C97A8E;
+  --alert-text: #F0D4DC;
+
+  /* --- Fills ----------------------------------------------------------- */
+  --fill-faint: rgba(255, 255, 255, 0.03);   /* pill / chip fill */
+  --fill-blue: rgba(75, 159, 213, 0.12);     /* callout strip fill */
+
+  /* ====================================================================
+     Semantic aliases — reference these in components
+     ==================================================================== */
+  --surface-app: var(--bg-main);
+  --surface-app-deep: var(--field-deep);
+  --surface-card: var(--panel-top);
+  --surface-pill: var(--fill-faint);
+
+  --text-body: var(--text-1);
+  --text-muted: var(--text-2);
+  --text-faint: var(--text-3);
+  --text-accent: var(--blue-light);
+
+  --border-default: var(--hairline);
+  --border-active: var(--blue);
+
+  --action: var(--blue);
+  --action-hover: var(--blue-light);
+  --link: var(--blue-light);
+}
+
+/* ===========================================================================
+   Акметрон — Typography tokens
+   Headings: Montserrat (700/800/900). Body: Inter (400/500/600).
+   Uppercase eyebrow labels: Montserrat 700, wide letter-spacing.
+   =========================================================================== */
+
+:root {
+  /* --- Families -------------------------------------------------------- */
+  --font-display: "Montserrat", system-ui, sans-serif;  /* headings */
+  --font-body: "Inter", system-ui, sans-serif;          /* body */
+
+  /* --- Weights --------------------------------------------------------- */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+  --weight-black: 900;
+
+  /* --- Type scale (px) ------------------------------------------------- */
+  --size-hero: 72px;
+  --size-display: 56px;
+  --size-title: 40px;
+  --size-subtitle: 24px;
+  --size-lead: 20px;
+  --size-body: 16px;
+  --size-label: 13px;
+  --size-micro: 12px;
+  --size-numeric: 88px;       /* oversized metrics */
+
+  /* --- Line heights ---------------------------------------------------- */
+  --leading-tight: 1.05;      /* hero / display */
+  --leading-snug: 1.2;        /* titles */
+  --leading-normal: 1.5;      /* body */
+
+  /* --- Letter spacing -------------------------------------------------- */
+  --tracking-hero: -0.03em;   /* tight on big headlines */
+  --tracking-title: -0.02em;
+  --tracking-normal: 0;
+  --tracking-label: 0.27em;   /* ~3.5px at 13px — uppercase eyebrows */
+
+  /* ====================================================================
+     Semantic role aliases
+     ==================================================================== */
+  --text-hero-font: var(--weight-black) var(--size-hero) / var(--leading-tight) var(--font-display);
+  --text-title-font: var(--weight-extrabold) var(--size-title) / var(--leading-snug) var(--font-display);
+  --text-body-font: var(--weight-regular) var(--size-body) / var(--leading-normal) var(--font-body);
+  --text-label-font: var(--weight-bold) var(--size-label) / 1.2 var(--font-display);
+}
+
+/* ===========================================================================
+   Акметрон — Spacing, radii, layout tokens
+   Spacing scale: 4 / 8 / 16 / 24 / 32 / 48 / 64. No arbitrary values.
+   Outer padding always larger than inner padding. ~60% breathing room.
+   =========================================================================== */
+
+:root {
+  /* --- Spacing scale --------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+  --space-7: 64px;
+  --space-8: 96px;
+  --space-9: 128px;
+
+  /* --- Radii ----------------------------------------------------------- */
+  --radius-sm: 8px;       /* small surfaces, inputs */
+  --radius-md: 12px;      /* default cards */
+  --radius-lg: 18px;      /* large panels */
+  --radius-pill: 999px;   /* tags, chips, pills */
+
+  /* --- Layout ---------------------------------------------------------- */
+  --content-max: 1200px;
+  --gutter: var(--space-6);
+
+  /* --- Border widths --------------------------------------------------- */
+  --border-thin: 1px;
+  --border-active-w: 1.5px;
+}
+
+/* ===========================================================================
+   Акметрон — Effects: gradients, shadows, glows, motion
+   Shadows are soft, low-contrast, large blur — they lift, not divide.
+   Large panels carry a subtle vertical gradient for matte-metal depth.
+   =========================================================================== */
+
+:root {
+  /* --- Gradients ------------------------------------------------------- */
+  --gradient-app: linear-gradient(135deg, #15233F 0%, #101B36 100%); /* @kind color */
+  --gradient-panel: linear-gradient(160deg, #1B2A52 0%, #16233F 100%); /* @kind color */
+  --gradient-panel-active: linear-gradient(160deg, #213467 0%, #18284A 100%); /* @kind color */
+  --gradient-blue: linear-gradient(180deg, #62B4EC 0%, #2E6FA8 100%); /* @kind color */
+  --gradient-alert: linear-gradient(160deg, #22203A 0%, #171F37 100%); /* @kind color */
+
+  /* --- Shadows (soft, lifting) ----------------------------------------- */
+  --shadow-sm: 0 4px 16px rgba(7, 14, 30, 0.35);
+  --shadow-md: 0 12px 40px rgba(7, 14, 30, 0.45);
+  --shadow-lg: 0 24px 70px rgba(7, 14, 30, 0.55);
+
+  /* --- Glows ----------------------------------------------------------- */
+  --glow-blue: 0 0 0 1px var(--blue), 0 0 28px var(--blue-glow);
+  --glow-soft: 0 0 60px rgba(75, 159, 213, 0.25);
+
+  /* --- Motion ---------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --duration-fast: 160ms; /* @kind other */
+  --duration-base: 280ms; /* @kind other */
+  --duration-enter: 600ms; /* @kind other */
+
+  /* --- Blur ------------------------------------------------------------ */
+  --blur-panel: 12px;
+}
+
+/* Gentle content entrance — opacity + small upward translate, eased. */
+@keyframes akm-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Slow ambient breathing for decorative glows. */
+@keyframes akm-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 0.9; transform: scale(1.06); }
+}
+
+/* ===========================================================================
+   Акметрон — Base element styles + a few brand utilities
+   =========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: var(--text-body-font);
+  color: var(--text-body);
+  background: var(--gradient-app);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings default to display family, declarative (no trailing periods). */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--text-1);
+  margin: 0;
+  letter-spacing: var(--tracking-title);
+  text-wrap: balance;
+}
+
+p { margin: 0; text-wrap: pretty; }
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+a:hover { color: var(--blue-light); }
+
+/* --- Eyebrow label: uppercase, wide tracking ------------------------- */
+.akm-eyebrow {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--size-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+
+/* --- Oversized metric numeral ---------------------------------------- */
+.akm-numeric {
+  font-family: var(--font-display);
+  font-weight: var(--weight-extrabold);
+  font-size: var(--size-numeric);
+  line-height: 1;
+  color: var(--blue-light);
+  letter-spacing: var(--tracking-hero);
+}
+
+/* --- Logo lockup: real mark + Montserrat wordmark -------------------- */
+.akm-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  font-size: 32px;            /* drives mark size + wordmark size */
+  line-height: 1;
+}
+.akm-logo img { height: 1em; width: auto; display: block; }
+.akm-logo span {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.82em;
+  letter-spacing: 0.02em;
+  color: var(--text-1);
+  white-space: nowrap;
+}
+
+/* --- Signature puzzle texture (decorative, edge-anchored) ------------
+   Geometric stand-in for Акметрон's puzzle-pattern SVG. Low opacity,
+   masked so it fades toward the center. Apply to a positioned ::before. */
+.akm-puzzle-bg { position: relative; isolation: isolate; }
+.akm-puzzle-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: url("assets/puzzle-pattern.svg");
+  background-size: 320px;
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(120% 120% at 100% 0%, #000 0%, transparent 60%);
+          mask-image: radial-gradient(120% 120% at 100% 0%, #000 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* --- Soft radial glow, placed off-center ----------------------------- */
+.akm-glow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--blue-glow) 0%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 0;
+  animation: akm-breathe 9s var(--ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .akm-glow { animation: none; }
+}
+
+
+
+/* ===========================================================================
+   Акметрон — Даташит (локализация). Светлый табличный макет 1:1 с оригиналом
+   Keysight: те же таблицы и читаемость. Все элементы Keysight заменены
+   на элементы Акметрона (логотип, синий бренда, шрифты, akmetron.ru).
+   Загружается ПОСЛЕ styles.css дизайн-системы (берёт --brand-blue / --blue / шрифты).
+   =========================================================================== */
+
+:root {
+  --ds-page-w: 794px;
+  --ds-page-h: 1123px;
+  --ds-pad-x: 54px;
+
+  /* light datasheet palette (бренд Акметрон на светлом носителе) */
+  --lt-bg:    #E6E9F1;   /* стол под листами */
+  --lt-page:  #FFFFFF;
+  --lt-ink:   #14223D;   /* заголовки и значения — фирменный navy */
+  --lt-body:  #33405C;   /* текст параметров */
+  --lt-muted: #6E7CA0;   /* подписи, квалификаторы */
+  --lt-rule:  #DCE1EB;   /* линии таблицы */
+  --lt-zebra: #F4F7FB;   /* чётные строки */
+  --lt-grp:   #E7EFFA;   /* фон строки-группы */
+  --lt-bar:   var(--brand-blue);   /* #004180 — синяя шапка раздела */
+  --lt-accent:#2E6FA8;
+}
+
+body.ds-doc {
+  margin: 0;
+  background: var(--lt-bg);
+  padding: 40px 0 64px;
+  font-family: var(--font-body);
+  color: var(--lt-body);
+}
+
+.ds-stack { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+
+/* ---- Page sheet --------------------------------------------------------- */
+.ds-page {
+  position: relative;
+  width: var(--ds-page-w);
+  min-height: var(--ds-page-h);
+  background: var(--lt-page);
+  box-shadow: 0 2px 14px rgba(20,34,61,0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* ---- Running header (заменяет «Find us at www.keysight.com») ------------ */
+.ds-runhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px var(--ds-pad-x) 12px;
+  border-bottom: 2px solid var(--brand-blue);
+  position: relative;
+  z-index: 2;
+  background: var(--lt-page);
+}
+.ds-runhead .akm-logo { font-size: 17px; }
+.ds-runhead .akm-logo span { color: var(--lt-ink); }
+.ds-runhead .ds-site {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--lt-accent);
+  letter-spacing: 0.02em;
+}
+
+/* ---- Footer ------------------------------------------------------------- */
+.ds-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px var(--ds-pad-x) 18px;
+  border-top: 1px solid var(--lt-rule);
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--lt-muted);
+}
+.ds-foot .ds-pageno { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.08em; color: var(--lt-body); }
+
+/* ---- Body --------------------------------------------------------------- */
+.ds-body { flex: 1; padding: 20px var(--ds-pad-x) 20px; }
+
+/* ---- Section title ------------------------------------------------------ */
+.ds-section-head { margin-bottom: 12px; }
+.ds-section-head h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 21px;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--lt-ink);
+  margin: 0 0 8px;
+}
+.ds-section-head h1 .ds-cont { font-weight: 500; font-size: 14px; color: var(--lt-muted); }
+.ds-section-head::after {
+  content: "";
+  display: block;
+  height: 2px;
+  background: var(--brand-blue);
+  width: 100%;
+}
+
+/* ---- Spec table --------------------------------------------------------- */
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 10px;
+  font-family: var(--font-body);
+}
+.ds-table:last-child { margin-bottom: 0; }
+
+/* sub-section header bar (h2) — синяя шапка */
+.ds-table .h2bar td {
+  background: var(--lt-bar);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  padding: 7px 14px;
+}
+
+/* group label row */
+.ds-table .grp td {
+  background: var(--lt-grp);
+  color: var(--lt-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 5px 14px;
+  border-top: 1px solid var(--lt-rule);
+}
+
+/* condition sub-row */
+.ds-table .cond td {
+  color: var(--lt-accent);
+  font-size: 10.5px;
+  font-style: italic;
+  padding: 4px 14px 2px 22px;
+}
+
+/* parameter → value row */
+.ds-table .row td {
+  font-size: 10.5px;
+  line-height: 1.3;
+  padding: 2px 14px;
+  border-bottom: 1px solid var(--lt-rule);
+  vertical-align: top;
+}
+.ds-table .row.alt td { background: var(--lt-zebra); }
+.ds-table .row .param { color: var(--lt-body); padding-left: 22px; width: 58%; }
+.ds-table .row .val { color: var(--lt-ink); font-weight: 600; text-align: right; white-space: normal; }
+
+/* qualifiers: тип. / ном. / гарант. */
+.qual {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-left: 7px;
+}
+.qual-typ { color: var(--lt-muted); font-style: italic; }
+.qual-nom { color: var(--lt-muted); }
+.qual-war { color: var(--lt-accent); }
+.qual-meas { color: var(--lt-muted); font-style: italic; }
+.qual-ntrc { color: var(--lt-muted); }
+
+/* ---- Multi-column table (заказ / опции / прошивки) ---------------------- */
+.ds-mtable { table-layout: fixed; }
+.ds-mtable .mhead td {
+  background: var(--lt-grp);
+  color: var(--lt-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.02em;
+  padding: 5px 10px;
+  border-bottom: 1.5px solid var(--brand-blue);
+  vertical-align: bottom;
+}
+.ds-mtable .mrow td {
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--lt-body);
+  padding: 3px 10px;
+  border-bottom: 1px solid var(--lt-rule);
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+.ds-mtable .mrow.alt td { background: var(--lt-zebra); }
+.ds-mtable .mrow td:first-child { color: var(--lt-ink); }
+
+/* list inside a group (standards / safety) */
+.ds-table .row .lst { margin: 2px 0; padding: 0; list-style: none; }
+.ds-table .row .lst li { position: relative; padding: 2px 0 2px 14px; color: var(--lt-body); font-size: 11.5px; line-height: 1.4; }
+.ds-table .row .lst li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 4px; height: 4px; border-radius: 50%; background: var(--brand-blue); }
+
+/* ---- Note / definition block (page 2, closing) ------------------------- */
+.ds-note { margin: 0 0 14px; break-inside: avoid; }
+.ds-note .ds-note-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--brand-blue);
+  margin-bottom: 5px;
+}
+.ds-note p { font-family: var(--font-body); font-size: 12.5px; line-height: 1.55; color: var(--lt-body); margin: 0; }
+
+/* standalone list (prose, page 2) */
+.ds-proselist { margin: 0 0 14px; }
+.ds-proselist .ds-note-label { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--brand-blue); margin-bottom: 6px; }
+.ds-proselist ul { margin: 0; padding: 0; list-style: none; }
+.ds-proselist li { position: relative; padding: 4px 0 4px 18px; color: var(--lt-body); font-size: 12.5px; line-height: 1.5; }
+.ds-proselist li::before { content: ""; position: absolute; left: 3px; top: 11px; width: 5px; height: 5px; border-radius: 50%; background: var(--brand-blue); }
+
+/* ---- Cover -------------------------------------------------------------- */
+/* Фирменный пазл-мотив: целые элементы, выровненные от верхнего-правого угла,
+   чёткая решётка, плавно растворяющаяся к центру (перекликается с лого). */
+.ds-cover .ds-puzzle {
+  position: absolute; top: 0; right: 0;
+  width: 360px; height: 360px;
+  background-image: url("puzzle-pattern.svg");
+  background-size: 480px 480px;
+  background-repeat: repeat;
+  background-position: right top;
+  opacity: 0.55;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(125% 125% at 100% 0%, #000 0%, #000 30%, transparent 72%);
+          mask-image: radial-gradient(125% 125% at 100% 0%, #000 0%, #000 30%, transparent 72%);
+}
+/* лёгкий синий блик в самом углу — мотив читается как намеренный акцент */
+.ds-cover .ds-puzzle::before {
+  content: "";
+  position: absolute; top: 0; right: 0;
+  width: 200px; height: 200px;
+  background: radial-gradient(120% 120% at 100% 0%, rgba(0,65,128,0.07) 0%, transparent 70%);
+}
+.ds-cover .ds-body { display: flex; flex-direction: column; padding: 36px var(--ds-pad-x) 28px; position: relative; z-index: 1; }
+.ds-cover .ds-eyebrow { font-family: var(--font-display); font-weight: 700; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--lt-accent); margin-top: 6px; }
+.ds-cover .ds-model { font-family: var(--font-display); font-weight: 900; font-size: 82px; line-height: 0.95; letter-spacing: -0.035em; color: var(--lt-ink); margin: 16px 0 0; }
+.ds-cover .ds-prodname { font-family: var(--font-display); font-weight: 700; font-size: 23px; line-height: 1.2; color: var(--lt-accent); margin: 12px 0 0; max-width: 560px; }
+.ds-cover .ds-lede { font-family: var(--font-body); font-size: 14.5px; line-height: 1.55; color: var(--lt-body); margin: 16px 0 0; max-width: 580px; }
+.ds-cover image-slot { display: none; }
+.ds-cover .ds-hero { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; margin: 26px 0 2px; min-height: 300px; border-radius: 10px; background: var(--lt-zebra); border: 1px solid var(--lt-rule); overflow: hidden; }
+.ds-cover .ds-hero-img { max-width: 100%; max-height: 460px; width: auto; height: auto; object-fit: contain; display: block; }
+.ds-cover .ds-highlights { display: grid; grid-template-columns: repeat(3,1fr); column-gap: 20px; row-gap: 6px; margin: 22px 0 0; padding-top: 20px; border-top: 2px solid var(--brand-blue); align-items: end; }
+.ds-cover .ds-highlights .v { font-family: var(--font-display); font-weight: 800; font-size: 25px; line-height: 1.05; letter-spacing: -0.02em; color: var(--lt-accent); align-self: end; }
+.ds-cover .ds-highlights .l { font-family: var(--font-body); font-size: 12px; color: var(--lt-muted); line-height: 1.35; }
+.ds-cover .ds-attrib { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--lt-rule); display: flex; justify-content: space-between; gap: 20px; font-family: var(--font-body); font-size: 11.5px; color: var(--lt-muted); }
+.ds-cover .ds-attrib b { color: var(--lt-ink); font-weight: 700; }
+
+/* ---- Print -------------------------------------------------------------- */
+@media print {
+  body.ds-doc { background: #fff; padding: 0; }
+  .ds-stack { gap: 0; }
+  .ds-page { width: 100%; min-height: 100vh; box-shadow: none; border-radius: 0; break-after: page; }
+  .ds-page:last-child { break-after: auto; }
+  .ds-table .row, .ds-table .grp, .ds-table .h2bar, .ds-mtable .mrow, .ds-mtable .mhead, .ds-note, .ds-proselist li { break-inside: avoid; }
+}
+@page { size: A4; margin: 0; }
