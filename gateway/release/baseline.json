@@ -348,9 +348,9 @@
       "size": 18827
     },
     "routes/platforma_skills.py": {
-      "sha256": "7fe07d4ee91def5a6febfe9ce40282bea03b3e0425c543b29396e584ed6fcb43",
-      "lf_sha256": "7fe07d4ee91def5a6febfe9ce40282bea03b3e0425c543b29396e584ed6fcb43",
-      "size": 21925
+      "sha256": "ef957dd92ef85c584abc50cbc4c69aa8eea17740266e4614a9dfacdd1974bafa",
+      "lf_sha256": "ef957dd92ef85c584abc50cbc4c69aa8eea17740266e4614a9dfacdd1974bafa",
+      "size": 22689
     },
     "routes/training_admin.py": {
       "sha256": "6bcbca7d1082e729714d756f7c3fb6ddec81bcb909ba0fdc404d125f58e54b37",
@@ -938,9 +938,9 @@
       "size": 5685
     },
     "routes/skill_lifecycle.py": {
-      "sha256": "f73b1f6aa41c62e73b52756bcccb0eb5918ad0cc2add97a6d49776a0d761764c",
-      "lf_sha256": "f73b1f6aa41c62e73b52756bcccb0eb5918ad0cc2add97a6d49776a0d761764c",
-      "size": 21952
+      "sha256": "360cf05383d89c63350197df98232bc26f1c63c4e613a5644ac9b2cfa65858aa",
+      "lf_sha256": "360cf05383d89c63350197df98232bc26f1c63c4e613a5644ac9b2cfa65858aa",
+      "size": 22311
     },
     "services/skill_lifecycle.py": {
       "sha256": "be1da8016e9e79e92de3c45470aa89f967dd04de4ba406a4625ed050b7a1fc8d",
@@ -976,6 +976,16 @@
       "sha256": "3a077826d0430c90b37ead3d2372a26c6bab124bb72cf5b2c3af630459fc8d48",
       "lf_sha256": "3a077826d0430c90b37ead3d2372a26c6bab124bb72cf5b2c3af630459fc8d48",
       "size": 7856
+    },
+    "services/skill_acceptance.py": {
+      "sha256": "68c56b1d50a045d18a358936f05cb1420527501b1b241134965c0775a2ba646e",
+      "lf_sha256": "68c56b1d50a045d18a358936f05cb1420527501b1b241134965c0775a2ba646e",
+      "size": 4327
+    },
+    "routes/skill_acceptance.py": {
+      "sha256": "9916a045b7a8ede600029f32bdf410a6f74e03ddaa89b7a07ad9f55c654e00ed",
+      "lf_sha256": "9916a045b7a8ede600029f32bdf410a6f74e03ddaa89b7a07ad9f55c654e00ed",
+      "size": 3582
     }
   },
   "private_mounts_excluded": [

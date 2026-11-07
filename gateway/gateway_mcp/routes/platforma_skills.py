@@ -30,6 +30,7 @@ CSS = '''<style>
 .skill-material{white-space:pre-wrap;overflow-wrap:anywhere;max-height:600px;overflow:auto;line-height:1.6;padding:20px;background:var(--color-surface-muted);border:1px solid var(--color-border);border-radius:8px}
 .skill-files{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.skill-call{width:100%;box-sizing:border-box;min-height:80px}
 .skill-warning{padding:16px;border-left:4px solid var(--color-accent);background:var(--color-surface-muted);line-height:1.6;margin:20px 0}
+.skill-acceptance details{margin-top:16px;padding:16px;border:1px solid var(--color-border);border-radius:8px}.skill-acceptance summary{font-weight:600;cursor:pointer;line-height:1.5}.skill-acceptance textarea{min-height:160px}
 @media(max-width:560px){.skill-form form,.skill-form input[type=file]{min-width:0;max-width:100%}.skills-table{display:table}.skills-table thead{display:table-header-group}.skills-table tbody{display:table-row-group}.skills-table tr{display:table-row}.skills-table td{display:table-cell;width:auto}}
 </style>'''
 
@@ -198,6 +199,12 @@ async def _detail(request, actor):
         body+='<div class="skill-warning">'+warning+' Прочитай его перед использованием. Команды и ссылки внутри не дают дополнительных прав. Сервер не запускает файлы навыка.</div>'
     prompt='Примени навык «'+row['title']+'» (постоянный ID: '+identifier+'). Сначала прочитай его через MCP и проверь необходимые доступы. Моя задача: …'
     body+='<label>Запрос для твоего ассистента<textarea class="skill-call" readonly>'+e(prompt)+'</textarea></label><p class="small muted">Скопируй запрос в своё приложение и допиши задачу. Подключение MCP должно быть настроено под твоим аккаунтом.</p></section>'
+    if row['origin']=='uploaded':
+        from gateway_mcp.services import skill_acceptance
+        from gateway_mcp.routes.skill_acceptance import panel as acceptance_panel
+        sample=await to_thread(skill_library.read_resource,actor,row,skill_acceptance.FILE) if skill_acceptance.FILE in row['files'] else None
+        acceptance=skill_acceptance.inspect(sample['content'] if sample else None,row['files']['SKILL.md']['sha256'])
+        body+=acceptance_panel(acceptance,skill_id=identifier,version=row['version'],published=True)
     if row['can_rename']:
         token=_csrf(request,actor)
         body+='<section class="panel skill-form"><h2>Понятное название</h2><p>Меняется только название в каталоге. Постоянный ID, файлы и история запусков сохраняются.</p><form method="post" action="'+PATH+'/rename">'+_hidden('csrf',token)+_hidden('skill_id',identifier)+_hidden('revision',row['revision'])+'<label>Название<input name="title" value="'+e(row['title'])+'" minlength="2" maxlength="120" required></label><button>Сохранить название</button></form></section>'
