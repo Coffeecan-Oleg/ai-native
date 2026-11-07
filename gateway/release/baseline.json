@@ -213,9 +213,9 @@
       "size": 31874
     },
     "routes/admin_audit.py": {
-      "sha256": "af880015520ae7c846b64cf5a6f3dbc170000009c2ab347a288b38523ba80fbb",
-      "lf_sha256": "af880015520ae7c846b64cf5a6f3dbc170000009c2ab347a288b38523ba80fbb",
-      "size": 10710
+      "sha256": "d04b179906fdc318f4def78e30bb46713a3c15f6c9c9770b4938cdf0eae835be",
+      "lf_sha256": "d04b179906fdc318f4def78e30bb46713a3c15f6c9c9770b4938cdf0eae835be",
+      "size": 11872
     },
     "routes/admin_factory_connections.py": {
       "sha256": "ad92d1d33977191e93db5a661b5a5a56c59d19cbef715387cd88b508152c21bd",
@@ -593,9 +593,9 @@
       "size": 7640
     },
     "services/storage_admin_console.py": {
-      "sha256": "07466cc1f73cc25859f89d8a63e292872f72259a2aa6635fcf8cf26d9ae4f1cd",
-      "lf_sha256": "f5ba8ef835399c4e0ce94611259943862b739bf0d11e0a1e0f4f5e9f483947cd",
-      "size": 6514
+      "sha256": "5aef64d589d596ff2fe292d1974ed52c860dd13ed984a2446426b9771c2e8eb9",
+      "lf_sha256": "5aef64d589d596ff2fe292d1974ed52c860dd13ed984a2446426b9771c2e8eb9",
+      "size": 7285
     },
     "services/storage_admin_roles.py": {
       "sha256": "6214a4d3cc7eba140ddafa12c13a1962d0cb055baa6f48ea57bf9bfc306c6ac0",

@@ -124,6 +124,25 @@ def admin_user_get(subject: str) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
+def admin_audit_user_names(subjects: list[str]) -> dict[str, str]:
+    """Bounded display lookup for already visible events, without token decryption."""
+    from gateway_mcp.services import corporate_access
+    if not corporate_access.enabled():
+        return {}
+    member = os.getenv('GATEWAY_BITRIX_MEMBER_ID', '')
+    if not re.fullmatch(r'[a-f0-9]{32}', member):
+        return {}
+    pattern = re.compile(r'bitrix24:' + member + r':[1-9][0-9]{0,18}')
+    selected = sorted({value for value in subjects[:50]
+                       if isinstance(value, str) and pattern.fullmatch(value)})
+    if not selected:
+        return {}
+    rows = _rows(_users_cte() +
+                 'select subject, login from known_users where subject = any(%s)', (selected,))
+    return {row['subject']: str(row.get('login') or '').strip()[:160]
+            for row in rows if row.get('subject') in selected and str(row.get('login') or '').strip()}
+
+
 def _user_columns():
     from gateway_mcp.services import corporate_access
     columns = 'subject, email, login, yandex_id, updated_at'

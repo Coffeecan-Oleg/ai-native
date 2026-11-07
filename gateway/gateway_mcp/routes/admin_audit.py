@@ -8,6 +8,7 @@ from starlette.responses import HTMLResponse, PlainTextResponse, Response
 from gateway_mcp.routes.admin_ui import admin_shell, empty_row, fmt_time
 from gateway_mcp.services.policy import has_scope
 from gateway_mcp.services.storage import list_audit_events
+from gateway_mcp.services.storage_admin_console import admin_audit_user_names
 from gateway_mcp.web import login_redirect, web_actor
 
 
@@ -64,6 +65,11 @@ def register_admin_audit_routes(mcp) -> None:
 
         has_next = len(rows) > PAGE_SIZE
         visible_rows = rows[:PAGE_SIZE]
+        try:
+            names = admin_audit_user_names([row.get('actor_subject') for row in visible_rows])
+        except Exception:
+            # Display metadata failure must never hide or rewrite audit events.
+            names = {}
         body = f"""
         <div class="page-head">
           <div>
@@ -82,7 +88,7 @@ def register_admin_audit_routes(mcp) -> None:
           </div>
           <div class="table-wrap"><table>
             <thead><tr><th>Время</th><th>Пользователь</th><th>Система</th><th>Событие</th><th>Решение</th><th>Scope</th><th>Запрос</th></tr></thead>
-            <tbody>{_event_rows(visible_rows)}</tbody>
+            <tbody>{_event_rows(visible_rows, names)}</tbody>
           </table></div>
           {_pager(filters, page=page, has_next=has_next)}
         </section>
@@ -118,7 +124,7 @@ def _filter_form(filters: dict[str, Any]) -> str:
       <label>Период
         <select name="days">{_period_options(int(filters["days"]))}</select>
       </label>
-      {_text_field("Пользователь", "actor_subject", filters["actor_subject"], "yandex:...")}
+      {_text_field("ID пользователя", "actor_subject", filters["actor_subject"], "bitrix24:...")}
       {_text_field("Система", "system", filters["system"], "1c, gitlab, gateway")}
       {_text_field("Событие", "event", filters["event"], "resource_access")}
       {_text_field("Инструмент", "tool", filters["tool"], "1c.odata.query")}
@@ -137,14 +143,34 @@ def _filter_form(filters: dict[str, Any]) -> str:
     """
 
 
-def _event_rows(rows: list[dict[str, Any]]) -> str:
+def _compact_name(value: str) -> str:
+    parts = value.split()
+    # Stored Bitrix name order is NAME LAST_NAME. Longer compound names stay
+    # complete: guessing a surname could misidentify a person in an audit.
+    if len(parts) == 2:
+        return parts[1] + ' ' + parts[0][0].upper() + '.'
+    return ' '.join(parts)
+
+
+def _event_user(subject: object, names: dict[str, str]) -> str:
+    key = str(subject or '')
+    full_name = names.get(key, '')
+    if not full_name:
+        return escape(key or '—')
+    display = _compact_name(full_name)
+    return ('<span title="' + escape(full_name, quote=True) + '">' + escape(display) + '</span>'
+            '<details class="small muted"><summary>Технический ID</summary><code>'
+            + escape(key) + '</code></details>')
+
+
+def _event_rows(rows: list[dict[str, Any]], names: dict[str, str] | None = None) -> str:
     if not rows:
         return empty_row(7, "События по выбранным условиям не найдены")
     return "".join(
         f"""
         <tr>
           <td>{escape(fmt_time(row.get("created_at")))}</td>
-          <td>{escape(str(row.get("actor_subject") or "—"))}</td>
+          <td>{_event_user(row.get("actor_subject"), names or {})}</td>
           <td>{escape(str(row.get("system") or "—"))}</td>
           <td><strong>{escape(str(row.get("event") or "—"))}</strong>{_subvalue(row.get("tool"))}</td>
           <td>{_decision_badges(row.get("decision"), row.get("status"))}</td>
