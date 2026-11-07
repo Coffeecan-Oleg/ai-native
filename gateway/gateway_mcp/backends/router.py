@@ -1,4 +1,5 @@
 from importlib import import_module
+from asyncio import to_thread
 from typing import Any
 
 from gateway_mcp.backends.common import BackendRouteError, _apply_argument_aliases
@@ -30,9 +31,19 @@ def _backend_callable(transport: str):
     return getattr(import_module(module_name), function_name)
 
 
-async def call_backend(route: dict[str, Any], arguments: dict[str, Any]) -> dict[str, Any]:
+async def call_backend(route: dict[str, Any], arguments: dict[str, Any], *, admission=None) -> dict[str, Any]:
     arguments = _apply_argument_aliases(route, arguments)
     transport = route.get("transport")
     if transport in BACKEND_DISPATCH:
-        return await _backend_callable(str(transport))(route, arguments)
+        from gateway_mcp.services import external_limits
+        if external_limits.enabled(route):
+            from gateway_mcp.services.auth import current_actor
+            actor=current_actor()
+            if admission is None:admission=await to_thread(external_limits.require,route,actor)
+            external_limits.consume(admission,route,actor)
+        try:
+            return await _backend_callable(str(transport))(route, arguments)
+        except external_limits.LimitError as exc:
+            if exc.contacted:await to_thread(external_limits.cooldown,route,exc.retry)
+            raise
     raise BackendRouteError(f"Unsupported backend transport: {transport or '<missing>'}")

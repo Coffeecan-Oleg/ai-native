@@ -24,6 +24,7 @@ STATUSES = (
     ("allowed", "Разрешено"),
     ("denied", "Отказано"),
     ("blocked", "Заблокировано"),
+    ("rate_limited", "Частота ограничена"),
     ("failed", "Не выполнено"),
     ("error", "Ошибка"),
     ("shadow_denied", "Теневой запрет"),
@@ -194,7 +195,7 @@ def _decision_badges(decision: object, status: object) -> str:
     if status_value and status_value != decision_value:
         css = (
             "missing"
-            if status_value in {"denied", "blocked", "failed", "error", "shadow_denied"}
+            if status_value in {"denied", "blocked", "failed", "error", "shadow_denied", "rate_limited"}
             else "ok"
         )
         parts.append(

@@ -1,4 +1,5 @@
 import json
+from asyncio import to_thread
 from typing import Annotated, Any
 from uuid import uuid4
 
@@ -18,6 +19,7 @@ from gateway_mcp.services.storage import (
     request_fingerprint,
 )
 from gateway_mcp.tools.runtime import ToolRun
+from gateway_mcp.services import external_limits
 
 MUTATING_HTTP_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 _AGENT_HIDDEN_RESPONSE_FIELDS = {
@@ -191,6 +193,10 @@ def register_router_tools(mcp):
                     )
                 idempotency_claimed = bool(claim.get("claimed"))
 
+            admission=None
+            if external_limits.enabled(route):
+                admission=await to_thread(external_limits.require,route,actor)
+
             if route.get("requires_approval_ref"):
                 validate_and_consume_approval(
                     actor=actor,
@@ -203,7 +209,7 @@ def register_router_tools(mcp):
 
             backend_arguments = dict(parsed_arguments)
             backend_arguments.pop("approval_ref", None)
-            result = await call_backend(route, backend_arguments)
+            result = await call_backend(route, backend_arguments,admission=admission) if admission is not None else await call_backend(route, backend_arguments)
             result["tool_name"] = tool_name
             result["route"] = {
                 "name": route.get("name"),
@@ -251,6 +257,22 @@ def register_router_tools(mcp):
                 ensure_ascii=False,
                 separators=(",", ":"),
             )
+        except external_limits.LimitError as exc:
+            cleanup_pending=False
+            if idempotency_claimed:
+                try:
+                    fail_idempotency(actor_subject=idempotency_actor,tool_name=tool_name,idempotency_key=idempotency_key)
+                except Exception:
+                    cleanup_pending=True
+                    exc=external_limits.LimitError('EXTERNAL_LIMITER_UNAVAILABLE',5,level='service',contacted=exc.contacted)
+                idempotency_claimed=False
+            run.system=str((route or {}).get('backend') or 'gateway')
+            run.finish(status='rate_limited' if exc.response()['status']==429 else 'error',
+                scope=route_scope or base_scope,error=exc.code)
+            response=exc.response()
+            if cleanup_pending:
+                response.update(retryable=False,idempotency_state='pending',message='Состояние запроса требует проверки перед повтором.')
+            return json.dumps(_compact_agent_response(response,gateway_request_id=gateway_request_id),ensure_ascii=False,separators=(',',':'))
         except PermissionError as exc:
             run.system = "gateway"
             run.denied(exc, deny_tool=tool_name or tool)

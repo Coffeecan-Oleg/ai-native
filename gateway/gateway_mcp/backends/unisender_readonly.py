@@ -7,6 +7,7 @@ import httpx
 
 from gateway_mcp.backends.common import BackendConfigError, BackendRouteError
 from gateway_mcp.services import unisender_readonly as boundary
+from gateway_mcp.services.external_limits import LimitError,retry_after
 
 API_ROOT = 'https://api.unisender.com/ru/api/'
 MAX_RESPONSE = 1024 * 1024
@@ -35,6 +36,9 @@ async def _post_api(method, parameters):
     try:
         async with httpx.AsyncClient(timeout=15, follow_redirects=False, trust_env=False) as client:
             async with client.stream('POST', API_ROOT + method, data=body) as response:
+                if response.status_code == 429:
+                    raise LimitError('EXTERNAL_UPSTREAM_RATE_LIMITED',retry_after(response.headers.get('Retry-After')),
+                        level='integration',contacted=True)
                 if response.status_code != 200:
                     raise BackendRouteError('UNISENDER_UPSTREAM_HTTP_ERROR')
                 chunks, size = [], 0

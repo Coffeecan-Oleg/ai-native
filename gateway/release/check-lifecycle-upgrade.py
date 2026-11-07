@@ -1,4 +1,4 @@
-"""25 -> 26 with synthetic published skills, on an explicitly isolated test DB."""
+"""25 -> 26 -> 27 with synthetic state, on an explicitly isolated test DB."""
 import hashlib,json,os,shutil,tempfile
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -12,10 +12,10 @@ def main():
     if os.getenv('GATEWAY_TEST_ISOLATED')!='true' or urlsplit(migrations.database_url()).path!='/platforma_upgrade_test':
         raise RuntimeError('Refuse a non-isolated upgrade database')
     files=migrations.migration_files()
-    if len(files)!=26 or files[-1].stem!='0026_skill_lifecycle':
+    if len(files)!=27 or files[-1].stem!='0027_external_limits':
         raise RuntimeError('Unexpected schema boundary')
     with tempfile.TemporaryDirectory() as temp:
-        for path in files[:-1]:shutil.copyfile(path,Path(temp)/path.name)
+        for path in files[:25]:shutil.copyfile(path,Path(temp)/path.name)
         with patch.dict(os.environ,{'GATEWAY_MIGRATIONS_DIR':temp}):
             initial=migrations.migrate_up()
             assert len(initial['status']['applied'])==25 and not initial['status']['pending']
@@ -38,14 +38,33 @@ def main():
                 data='\n'.join(sorted(r['data'] for r in rows)).encode()
                 result[table]={'count':len(rows),'sha256':hashlib.sha256(data).hexdigest()}
         return result
-    before=snapshot();upgraded=migrations.migrate_up();after=snapshot()
+    before=snapshot()
+    with tempfile.TemporaryDirectory() as temp:
+        for path in files[:26]:shutil.copyfile(path,Path(temp)/path.name)
+        with patch.dict(os.environ,{'GATEWAY_MIGRATIONS_DIR':temp}):upgraded=migrations.migrate_up()
+    after=snapshot()
     assert upgraded['applied']==['0026_skill_lifecycle'] and before==after
-    assert migrations.migrate_up()['applied']==[]
     with migrations.connect() as conn:
         assert conn.execute('select count(*) n from platforma_skill_workflows').fetchone()['n']==0
         # A legacy reader still sees exactly the old three publications.
         assert conn.execute("select count(*) n from platforma_shared_skills where origin='uploaded'").fetchone()['n']==3
-    print(json.dumps({'successful':True,'from_migrations':25,'to_migrations':26,
+        sid='shared-'+format(4,'032x');content='Synthetic private draft';raw=content.encode()
+        manifest={'SKILL.md':{'sha256':hashlib.sha256(raw).hexdigest(),'bytes':len(raw)}}
+        conn.execute("""insert into platforma_skill_workflows(skill_id,author_subject,author_label,stage,candidate_revision)
+            values (%s,'copy-author','Copy author','draft',1)""",(sid,))
+        conn.execute("""insert into platforma_skill_versions
+            (skill_id,revision,title,title_key,description,version,manifest,files,fingerprint,created_by)
+            values (%s,1,'Copy draft','copy draft','Synthetic only','1.0.0',%s::jsonb,%s::jsonb,%s,'copy-author')""",
+            (sid,json.dumps(manifest),json.dumps({'SKILL.md':content}),hashlib.sha256(raw).hexdigest()))
+        conn.execute("""insert into platforma_skill_workflow_events(skill_id,revision,actor_subject,action)
+            values (%s,1,'copy-author','draft_created')""",(sid,))
+        tables=[r['tablename'] for r in conn.execute("select tablename from pg_tables where schemaname='public' and tablename<>'schema_migrations' order by tablename")]
+    before27=snapshot();last=migrations.migrate_up();after27=snapshot()
+    assert last['applied']==['0027_external_limits'] and before27==after27
+    assert migrations.migrate_up()['applied']==[]
+    with migrations.connect() as conn:assert conn.execute('select count(*) n from gateway_external_limits').fetchone()['n']==0
+    print(json.dumps({'successful':True,'from_migrations':25,'to_migrations':27,'dev_upgrade_from':26,
+        'dev_upgrade_to':27,'schema26_tables_unchanged':len(tables),'private_draft_retained':True,
         'old_tables_unchanged':len(tables),'synthetic_publications_retained':3,
         'legacy_workflows_created':0,'idempotent':True,'production_data':False}))
 

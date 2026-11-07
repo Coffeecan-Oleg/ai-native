@@ -133,9 +133,9 @@
       "size": 6705965
     },
     "backends/router.py": {
-      "sha256": "43d8c606b6875eafccc2411472feb4fe78fdd29c7721bcdf56d23ba6891f6e73",
-      "lf_sha256": "43d8c606b6875eafccc2411472feb4fe78fdd29c7721bcdf56d23ba6891f6e73",
-      "size": 2031
+      "sha256": "b705074a349b52791ef0c42a8fdab53eaaaf454507314f41011bc9a9d3b991b5",
+      "lf_sha256": "b705074a349b52791ef0c42a8fdab53eaaaf454507314f41011bc9a9d3b991b5",
+      "size": 2605
     },
     "backends/telegram.py": {
       "sha256": "f9241bb232035570c16aac261d008710ce47e60967e0b3e3b49cf87d2f4e9c99",
@@ -183,9 +183,9 @@
       "size": 1360
     },
     "backends/unisender_readonly.py": {
-      "sha256": "827f597fca56aaa49249f36b0df2ae8616f3f5fece758945de7dc5b8769e9ed5",
-      "lf_sha256": "827f597fca56aaa49249f36b0df2ae8616f3f5fece758945de7dc5b8769e9ed5",
-      "size": 5938
+      "sha256": "3cbe0c191c067c0f0722d49d072b5908ae00dfe7f9da14f79112689a543f599e",
+      "lf_sha256": "3cbe0c191c067c0f0722d49d072b5908ae00dfe7f9da14f79112689a543f599e",
+      "size": 6238
     },
     "branding_assets/akmetron.css": {
       "sha256": "b9720b5f0acab0a938e4e6383d283a5a5c89eb42ec44d6c582fbf1681d36f444",
@@ -213,9 +213,9 @@
       "size": 31874
     },
     "routes/admin_audit.py": {
-      "sha256": "d04b179906fdc318f4def78e30bb46713a3c15f6c9c9770b4938cdf0eae835be",
-      "lf_sha256": "d04b179906fdc318f4def78e30bb46713a3c15f6c9c9770b4938cdf0eae835be",
-      "size": 11872
+      "sha256": "e3c4a9639b82907c2ddfccaab980bbb54bbad89c7aa44232c8641ecdc441387b",
+      "lf_sha256": "e3c4a9639b82907c2ddfccaab980bbb54bbad89c7aa44232c8641ecdc441387b",
+      "size": 11949
     },
     "routes/admin_factory_connections.py": {
       "sha256": "ad92d1d33977191e93db5a661b5a5a56c59d19cbef715387cd88b508152c21bd",
@@ -808,9 +808,9 @@
       "size": 11771
     },
     "tools/router.py": {
-      "sha256": "89c512596ba96c8a3cf39de29319c9ecc849062ec6e5ee4c6cc312efc14ba6c2",
-      "lf_sha256": "89c512596ba96c8a3cf39de29319c9ecc849062ec6e5ee4c6cc312efc14ba6c2",
-      "size": 11131
+      "sha256": "d96effa1aedc9175764190714568f5813b58a2643eff95863afc2891dda5fac1",
+      "lf_sha256": "d96effa1aedc9175764190714568f5813b58a2643eff95863afc2891dda5fac1",
+      "size": 12583
     },
     "tools/runtime.py": {
       "sha256": "88f81e082864a4677c567922296ffc4c8f265ff4130fe540818d42bb93a40d30",
@@ -986,6 +986,11 @@
       "sha256": "9916a045b7a8ede600029f32bdf410a6f74e03ddaa89b7a07ad9f55c654e00ed",
       "lf_sha256": "9916a045b7a8ede600029f32bdf410a6f74e03ddaa89b7a07ad9f55c654e00ed",
       "size": 3582
+    },
+    "services/external_limits.py": {
+      "sha256": "ba4e78f7126978036db38a6b5669ee0b5b615d80e36703ea45c373eb611fb0b3",
+      "lf_sha256": "ba4e78f7126978036db38a6b5669ee0b5b615d80e36703ea45c373eb611fb0b3",
+      "size": 6949
     }
   },
   "private_mounts_excluded": [
@@ -1071,7 +1076,7 @@
     "x-wr-timezone": "2.0.1",
     "yarl": "1.24.5"
   },
-  "migration_count": 26,
+  "migration_count": 27,
   "root_configs": [
     "gateway-tools.json",
     "gateway-policy.json",
