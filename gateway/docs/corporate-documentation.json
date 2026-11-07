@@ -15,7 +15,8 @@
     "docs/knowledge-base/09-skill-file-review.md",
     "docs/knowledge-base/10-skill-comparison.md",
     "docs/knowledge-base/12-external-service-limits.md",
-    "docs/knowledge-base/13-external-service-safety.md"
+    "docs/knowledge-base/13-external-service-safety.md",
+    "docs/knowledge-base/14-integration-status.md"
   ],
   "legacy_documents": [
     "docs/platforma-sandbox-writes.md",

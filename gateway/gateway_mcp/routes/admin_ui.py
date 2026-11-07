@@ -280,7 +280,8 @@ def _navigation(*, active: str, is_admin: bool, training_enabled: bool = False, 
                       ('showcase', 'Использование AI', '/admin/showcase'),
                       ('people', 'Люди и AI', '/admin/people'),
                       ('agents', 'Автономные агенты', '/admin/agents'),
-                      ('metrics', 'Состояние шлюза', '/admin/metrics')]
+                      ('metrics', 'Состояние шлюза', '/admin/metrics'),
+                      ('integration-status', 'Интеграции', '/admin/integrations/status')]
         items += [('reader-status', 'Мой доступ', '/join'), ('logout', 'Выйти', '/auth/logout')]
         return '<div class="nav-group"><div class="nav-label">Платформа Акметрон</div>' + ''.join(
             _nav_link(key, label, href, active) for key, label, href in items) + '</div>'
