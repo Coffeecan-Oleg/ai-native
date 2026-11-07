@@ -16,11 +16,13 @@ def verify_delivery(archive,report):
     if any(data.get(k) is not False for k in ['production_configuration_included','database_included','private_skill_mount_included']):
         raise ValueError('delivery_isolation_not_declared')
     with tarfile.open(archive,'r:gz') as tar:
-        total=0
-        for item in tar.getmembers():
-            p=PurePosixPath(item.name);total+=item.size
-            if p.is_absolute() or '..' in p.parts or '\\' in item.name or not(item.isfile() or item.isdir()) or total>4*1024**3:
+        total=10240;seen=set()
+        for item in tar:
+            p=PurePosixPath(item.name);total+=512+((item.size+511)//512)*512
+            if (p.is_absolute() or '..' in p.parts or '\\' in item.name or item.name in seen or item.issparse()
+                    or not(item.isfile() or item.isdir()) or item.size<0 or total>4*1024**3 or len(seen)>=4096):
                 raise ValueError('delivery_archive_structure_invalid')
+            seen.add(item.name)
         member=tar.getmember('manifest.json')
         if member.size>65536:raise ValueError('delivery_manifest_oversized')
         value=json.load(tar.extractfile(member))
@@ -31,7 +33,35 @@ def verify_delivery(archive,report):
         if 'sha256:'+hashlib.sha256(raw).hexdigest()!=data['image_id']:raise ValueError('delivery_config_digest_mismatch')
         if config['config'].get('User')!='10001:10001' or config['config'].get('Labels',{}).get('org.opencontainers.image.revision')!=data['source_sha']:
             raise ValueError('delivery_installed_source_mismatch')
-    return {'verified':True,**{k:data[k] for k in required},'deployment_performed':False}
+    return {'verified':True,**{k:data[k] for k in required},'deployment_performed':False,
+            'expanded_archive_bytes':total,'import_required_bytes':2*total+64*1024**2,
+            'import_estimate':'two_uncompressed_copies_plus_metadata; reserve checked on host'}
+
+def storage_command(required):
+    if type(required) is not int or not 0<required<=9*1024**3:raise ValueError('storage_budget_invalid')
+    return ['ssh','-T'],shlex.join(['sudo','-n','/usr/bin/python3','-I',
+        '/opt/platforma-dev/code/storage_preflight.py','import',str(required)])
+
+def read_storage(ssh_config,required):
+    prefix,command=storage_command(required)
+    try:
+        p=subprocess.run([*prefix,'-F',str(ssh_config),'aiport',command],capture_output=True,timeout=30)
+    except (OSError,subprocess.TimeoutExpired):raise ValueError('storage_report_unavailable') from None
+    if len(p.stdout)>16384:raise ValueError('storage_report_oversized')
+    try:result=json.loads(p.stdout)
+    except (ValueError,UnicodeError):raise ValueError('storage_report_unavailable') from None
+    if not isinstance(result,dict):raise ValueError('storage_report_invalid')
+    cap=result.get('capacity')
+    if (result.get('environment')!='dev' or result.get('operation')!='image_import'
+            or result.get('docker_load_performed') is not False or result.get('production_changed') is not False
+            or not isinstance(cap,dict) or cap.get('writes_performed') is not False
+            or type(cap.get('sufficient')) is not bool or cap.get('status') not in ['sufficient','insufficient','unknown']
+            or (cap['sufficient'] is True)!=(cap['status']=='sufficient')):
+        raise ValueError('storage_report_invalid')
+    if cap['status']!='unknown' and (cap.get('required_bytes')!=required or cap.get('reserve_bytes')!=128*1024**2
+            or cap.get('path')!='/var/lib/docker'):
+        raise ValueError('storage_report_budget_mismatch')
+    return result,p.returncode
 
 def remote_command(environment,args):
     sizes={'plan':2,'apply':3,'current':1,'resume':2,'status':2,'report':2,'accept':2,'recover':2,'reopen-previous':2}
@@ -48,6 +78,9 @@ def main():
     parser=argparse.ArgumentParser(description='Platforma workflow: verify CI image or call a scoped release command')
     sub=parser.add_subparsers(dest='action',required=True)
     check=sub.add_parser('verify-delivery');check.add_argument('--archive',type=Path,required=True);check.add_argument('--report',type=Path,required=True)
+    storage=sub.add_parser('storage-check',help='Verify archive and read dev disk/quota capacity; never loads or deploys')
+    storage.add_argument('--archive',type=Path,required=True);storage.add_argument('--report',type=Path,required=True)
+    storage.add_argument('--ssh-config',type=Path,required=True)
     handoff=sub.add_parser('handoff',help='Read an operator receipt; no server changes')
     source=handoff.add_mutually_exclusive_group(required=True)
     source.add_argument('--receipt',type=Path);source.add_argument('--ssh-config',type=Path)
@@ -57,6 +90,12 @@ def main():
     release.add_argument('command',nargs=argparse.REMAINDER)
     args=parser.parse_args()
     if args.action=='verify-delivery':print(json.dumps(verify_delivery(args.archive,args.report)));return
+    if args.action=='storage-check':
+        delivery=verify_delivery(args.archive,args.report)
+        # Fixed dev host/path, no server-supplied URL and no archive or secret upload.
+        result,code=read_storage(args.ssh_config,delivery['import_required_bytes'])
+        print(json.dumps({'delivery':delivery,'server_report':result}))
+        raise SystemExit(0 if code==0 and result['capacity']['sufficient'] is True else 1)
     if args.action=='handoff':
         if not re.fullmatch('[a-f0-9]{64}',args.expected_package_sha256):raise ReceiptError('handoff_expected_digest_invalid')
         raw=read_file(args.receipt) if args.receipt else read_remote(args.ssh_config)

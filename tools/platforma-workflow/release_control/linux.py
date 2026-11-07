@@ -3,6 +3,7 @@ import hashlib,json,os,re,shutil,stat,subprocess,tarfile,time,urllib.request,url
 from urllib.parse import urlsplit
 from pathlib import Path,PurePosixPath
 from .core import Refused,atomic,read,sha
+from .storage import require as require_storage
 
 ENV={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin','HOME':'/root','LANG':'C.UTF-8',
      'DOCKER_HOST':'unix:///var/run/docker.sock'}
@@ -201,6 +202,9 @@ print(json.dumps({'status':status,'body':base64.b64encode(body).decode()}))
         p.parent.mkdir(mode=0o700,exist_ok=True);p.mkdir(mode=0o700,exist_ok=True)
         return trusted(p,True)
     def inspect(self,tag):
+        # Rechecked at plan/apply/worker, before an inventory container or window.
+        # Do not add changing counters to the immutable baseline view.
+        for location in [self.base,self.state]:require_storage(location,self.c['minimum_disk_bytes'])
         current=self.container(self.c['gateway_service']);pg=self.container(self.c['postgres_service'])
         resolved=self.resolved();gw=resolved['services'][self.c['gateway_service']]
         if gw.get('user')!='10001:10001' or not gw.get('read_only') or gw.get('privileged') or gw.get('network_mode')=='host':
@@ -222,7 +226,6 @@ print(json.dumps({'status':status,'body':base64.b64encode(body).decode()}))
         versions=self.versions();health=self.health()
         old_status=json.loads(self.docker('exec',current['Id'],'gateway-mcp','migrate','status',timeout=60))
         if not isinstance(old_status.get('pending'),list):raise Refused('baseline_migration_status_invalid')
-        if shutil.disk_usage(self.base).free<self.c['minimum_disk_bytes']:raise Refused('insufficient_disk')
         inventory=self.inventory(im['Id'])
         if not set(versions)<=set(inventory):raise Refused('candidate_schema_older')
         pending=sorted(set(inventory)-set(versions))

@@ -134,7 +134,14 @@ class Controller:
             op=self.s.load_op(oid)
             if op['phase']!='queued':raise Refused('worker_already_started')
             view=op['plan']['view']
-            if self.b.inspect(op['plan']['tag'])!=view:
+            try:fresh=self.b.inspect(op['plan']['tag'])
+            except Refused as ex:
+                # No window or application write began. Make a capacity/guard
+                # refusal visible and leave no permanently queued operation.
+                op['phase']='aborted';op['error']=str(ex);self.s.save(op,'preflight_refused_no_window')
+                atomic(self.s.root/'active.json',{'operation_id':None})
+                return self.public(op)
+            if fresh!=view:
                 op['phase']='aborted';op['error']='baseline_changed';self.s.save(op,'no_window_started')
                 atomic(self.s.root/'active.json',{'operation_id':None})
                 return self.public(op)

@@ -4,6 +4,7 @@ from base64 import urlsafe_b64encode
 from pathlib import Path
 from release_control.core import Controller,Store,Refused,atomic,encoded,read,sha
 from release_control.linux import Linux,ENV,trusted,write_bytes
+from release_control.storage import require as require_storage
 
 PROJECT='platformadev'
 PUBLIC_URL='https://platforma-dev.akmetron.ru'
@@ -26,7 +27,7 @@ def require_host():
     if os.geteuid()!=0 or os.uname().nodename!='kromin':raise Refused('development_host_or_operator_required')
 
 def source_files(source):
-    paths=[source/n for n in ['main.py','dev_main.py','development.py','dev_bootstrap.py']]
+    paths=[source/n for n in ['main.py','dev_main.py','development.py','dev_bootstrap.py','storage_preflight.py']]
     paths+=sorted((source/'release_control').glob('*.py'))
     return {p.relative_to(source).as_posix():sha(p.read_bytes()) for p in paths}
 
@@ -149,7 +150,7 @@ def plan(source,base=Path('/opt/platforma-dev'),rehearsal=False):
     with socket.socket() as sock:
         try:sock.bind(('127.0.0.1',18081))
         except OSError:raise Refused('development_port_in_use') from None
-    if shutil.disk_usage(base.parent).free<2*1024**3:raise Refused('development_disk_low')
+    require_storage(base.parent,2*1024**3)
     mem=dict(x.split(':',1) for x in Path('/proc/meminfo').read_text().splitlines())
     if int(mem['MemAvailable'].split()[0])<800*1024:raise Refused('development_memory_low')
     images={}

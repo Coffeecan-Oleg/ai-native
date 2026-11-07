@@ -35,5 +35,21 @@ class WorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             a,p,d=self.fixture(Path(td));d['database_included']=True;p.write_text(json.dumps(d))
             with self.assertRaisesRegex(ValueError,'isolation'):workflow.verify_delivery(a,p)
+    def test_import_budget_counts_expansion_not_just_gzip_size(self):
+        with tempfile.TemporaryDirectory() as td:
+            archive,path,data=self.fixture(Path(td));result=workflow.verify_delivery(archive,path)
+        self.assertGreater(result['expanded_archive_bytes'],data['archive_bytes'])
+        self.assertEqual(result['import_required_bytes'],2*result['expanded_archive_bytes']+64*1024**2)
+        self.assertFalse(result['deployment_performed'])
+    def test_duplicate_tar_members_are_not_double_meaning_size(self):
+        with tempfile.TemporaryDirectory() as td:
+            archive,path,data=self.fixture(Path(td))
+            with tarfile.open(archive,'r:gz') as original:
+                items=[(member,original.extractfile(member).read()) for member in original if member.isfile()]
+            with tarfile.open(archive,'w:gz') as duplicate:
+                for member,body in items+[items[0]]:duplicate.addfile(member,io.BytesIO(body))
+            data.update(archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest(),archive_bytes=archive.stat().st_size)
+            path.write_text(json.dumps(data))
+            with self.assertRaisesRegex(ValueError,'structure_invalid'):workflow.verify_delivery(archive,path)
 
 if __name__=='__main__':unittest.main()

@@ -65,6 +65,17 @@ Config digest и OCI manifest digest — разные значения. Вали
 Для загрузки проверенного образа в dev используется существующий sudo docker load по SSH
 с двоичным stdin из Python/Git Bash. В PowerShell 5.1 двоичный архив не пропускать через текстовый pipeline.
 
+Перед импортом после установки нового пакета инструментов:
+
+    python workflow.py storage-check --archive image.tar.gz --report delivery.json --ssh-config SSH_CONFIG
+
+Это проверка только чтением: локальная валидация артефакта и фиксированная команда
+на dev. Учитываются распаковка, копии слоёв, остаток Btrfs-квоты и резерв. Команда
+ничего не загружает, не запускает и не удаляет. Ненулевой код блокирует продолжение
+процесса; ручной docker load сам по себе эту проверку не вызывает. Контроллер также
+заново проверяет место до окна. Статус установки и пределы поддержки:
+[проверка квоты](../../gateway/docs/knowledge-base/18-storage-preflight.md).
+
 ## Выпуск в dev
 
     python workflow.py release --environment dev --ssh-config SSH_CONFIG plan IMAGE_TAG
