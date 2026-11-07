@@ -23,6 +23,21 @@ ERRORS={
 }
 class StatusUnavailable(RuntimeError):pass
 
+TIMING_SAMPLE_LIMIT=1000
+OUTCOMES=('success','errors','limited','denied','other')
+
+
+def _timing_projection(rows):
+    groups=[]
+    for outcome in OUTCOMES:
+        item=next((row for row in rows if row['outcome']==outcome),{})
+        groups.append({'outcome':outcome,'observed':int(item.get('observed') or 0),
+            'timed':int(item.get('timed') or 0),
+            **{key:int(item[key]) if item.get(key) is not None else None
+               for key in ('p50_ms','p95_ms','max_ms')}})
+    return {'sample_limit':TIMING_SAMPLE_LIMIT,'events_considered':sum(g['observed'] for g in groups),
+        'timed_events':sum(g['timed'] for g in groups),'groups':groups}
+
 def _registry():
     rows=read_json(tools_file(),{'tools':[]}).get('tools')
     if not isinstance(rows,list) or len(rows)>2000:raise ValueError('invalid_status_catalogue')
@@ -41,7 +56,7 @@ def _registry():
 def _iso(value):
     return value.isoformat() if isinstance(value,datetime) else None
 
-def _project(transport,names,now,rate,circuit,calls,observations,last,rate_rules,safety_rules):
+def _project(transport,names,now,rate,circuit,calls,observations,last,rate_rules,safety_rules,timings=None):
     rate_on=limits.enabled({'transport':transport});safety_on=safety.enabled({'transport':transport})
     active=[row for row in calls if row['integration']==transport and row['expires_at']>now]
     paused=[];next_seconds=0
@@ -89,7 +104,8 @@ def _project(transport,names,now,rate,circuit,calls,observations,last,rate_rules
         'safety_enabled':safety_on,'rate_policy':rate_rules if rate_on else None,'safety_policy':safety_rules if safety_on else None,
         'phase':phase,'pauses':paused,'shared_burst_available':available,'shared_next_seconds':next_seconds,
         'active_calls':len(active) if safety_on else None,'totals':totals,
-        'last_success_at':_iso(max(successes)) if successes else None,'latest_problem':problem}
+        'last_success_at':_iso(max(successes)) if successes else None,'latest_problem':problem,
+        'timing':_timing_projection((timings or {}).get(transport,[]))}
 
 def snapshot(actor):
     # Live authority precedes the catalogue and all global observations. No new access grant.
@@ -118,9 +134,42 @@ def snapshot(actor):
                 from audit_events where created_at>=%s-interval '24 hours' and created_at<=%s
                 and event='tool_call' and tool='gateway_call_tool' and status in ('error','failed','upstream_error','rate_limited','denied','blocked')
                 and payload #>> '{arguments,tool_name}'=any(%s) order by 1,created_at desc,id desc''',(now,now,names)).fetchall()
+            # Limit the recent sample BEFORE validating timings. Missing old measurements
+            # remain in coverage counts, never become zero milliseconds. No raw rows leave SQL.
+            timing_rows=cur.execute('''with catalogue as (
+                select * from unnest(%s::text[],%s::text[]) as c(route,transport)
+            ), adapters as (
+                select transport,array_agg(route) as names from catalogue group by transport
+            ), recent as (
+                select a.transport,e.status,e.decision,e.payload from adapters a cross join lateral (
+                    select status,decision,payload from audit_events
+                    where created_at>=%s-interval '24 hours' and created_at<=%s
+                    and event='tool_call' and tool='gateway_call_tool'
+                    and payload #>> '{arguments,tool_name}'=any(a.names)
+                    order by created_at desc,id desc limit %s
+                ) e
+            ), measured as (
+                select transport,case
+                    when status in ('denied','blocked') or decision='deny' then 'denied'
+                    when status='ok' and decision='allow' then 'success'
+                    when status='rate_limited' then 'limited'
+                    when status in ('error','failed','upstream_error') then 'errors'
+                    else 'other' end as outcome,
+                    case when payload #>> '{arguments,gateway_timing_kind}'='tool_run_v1'
+                    and jsonb_typeof(payload #> '{arguments,gateway_duration_ms}')='number'
+                    and (payload #>> '{arguments,gateway_duration_ms}') ~ '^[0-9]{1,8}$'
+                    then case when (payload #>> '{arguments,gateway_duration_ms}')::bigint<=86400000
+                        then (payload #>> '{arguments,gateway_duration_ms}')::bigint end end as ms
+                from recent
+            ) select transport,outcome,count(*) as observed,count(ms) as timed,
+                percentile_disc(0.5) within group(order by ms) filter(where ms is not null) as p50_ms,
+                percentile_disc(0.95) within group(order by ms) filter(where ms is not null) as p95_ms,
+                max(ms) as max_ms from measured group by transport,outcome''',
+                (names,[registry[n] for n in names],now,now,TIMING_SAMPLE_LIMIT)).fetchall()
         rate_map={r['integration']:r for r in rates};circuit_map={r['integration']:r for r in circuits}
         obs_map={r['route']:r for r in observed};last_map={r['route']:r for r in latest}
+        timing_map={t:[r for r in timing_rows if r['transport']==t] for t in transports}
         rows=[_project(t,[n for n in names if registry[n]==t],now,rate_map.get(t),circuit_map.get(t),calls,obs_map,last_map,
-            rate_rules,safety_rules) for t in transports]
+            rate_rules,safety_rules,timing_map) for t in transports]
         return {'observed_at':_iso(now),'period_hours':24,'rows':rows,'provider_probed':False,'state_written':False}
     except Exception:raise StatusUnavailable('integration_status_unavailable') from None

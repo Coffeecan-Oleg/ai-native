@@ -16,10 +16,29 @@ CSS='''<style>
 .protection-grid h3{font-size:15px;margin:0 0 8px}.protection-grid p{margin:6px 0}
 .protection-notice{padding:12px 16px;background:var(--color-surface-muted);border-radius:var(--radius-control)}
 .protection-card code{overflow-wrap:anywhere}.protection-card li{margin:6px 0}
+.protection-timing{margin-top:20px;overflow-x:auto}.protection-timing table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.protection-timing th,.protection-timing td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--color-border);white-space:nowrap}
 @media(max-width:700px){.protection-summary,.protection-grid{grid-template-columns:1fr}.protection-card{padding:18px}}
 </style>'''
 PHASE={'ready':'Готова к допуску','not_enabled':'Защита сбоев не включена','paused':'Пауза после сбоев',
     'probing':'Выполняется проверочный запрос','awaiting_probe':'Ожидает проверочный запрос','busy':'Все общие места заняты'}
+OUTCOME={'success':'Успешные','errors':'Ошибки','limited':'Ограничения','denied':'Отказы доступа','other':'Другие результаты'}
+
+
+def _timing(data):
+    if not data['timed_events']:
+        return f'''<section class="protection-timing"><h3>Длительность обработки Gateway</h3>
+            <p>Замеров нет. Рассмотрено завершённых событий: {data['events_considered']}; старые события без замера не считаются нулевой задержкой.</p>
+            <p class="muted">Показатели появятся после новых обращений. Обновление страницы их не создаёт.</p></section>'''
+    def ms(value):return 'Нет замеров' if value is None else str(value)+' мс'
+    rows=''.join('<tr><th scope="row">'+OUTCOME[g['outcome']]+'</th><td>'+str(g['timed'])+' / '+str(g['observed'])+'</td>'+
+        ''.join('<td>'+ms(g[k])+'</td>' for k in ['p50_ms','p95_ms','max_ms'])+'</tr>' for g in data['groups'] if g['observed'])
+    return f'''<section class="protection-timing"><h3>Длительность обработки Gateway</h3>
+        <p>Выборка: последние до {data['sample_limit']} завершённых событий этого адаптера за 24 часа; сейчас {data['events_considered']}, с замером {data['timed_events']}.</p>
+        <table aria-label="Длительность обработки Gateway"><thead><tr><th scope="col">Результат</th><th scope="col">Замерено / событий</th>
+        <th scope="col">p50</th><th scope="col">p95</th><th scope="col">Максимум</th></tr></thead><tbody>{rows}</tbody></table>
+        <p class="muted">p50 и p95 — время, в которое уложились не менее 50% и 95% измеренных обращений этой группы. Группы не смешиваются: быстрый отказ не улучшает задержку успешных вызовов. При малой выборке это отдельные наблюдения, а не обещание скорости.</p>
+        <p class="muted">Измеряется обработка инструмента до фиксации результата в аудите: включая проверки допуска и ожидание внешнего ответа, без последующей записи аудита, отправки ответа клиенту и заключительной очистки. Это не время только API и не полное время ожидания в приложении.</p></section>'''
 
 def _time(value):
     # Only projection timestamps, never untrusted provider strings.
@@ -52,7 +71,7 @@ def _card(row):
       <section><h3>Наблюдения Gateway за 24 часа</h3><p>Всего: {totals['total']}. Успешно: {totals['success']}. Ошибки: {totals['errors']}.
       Ограничения: {totals['limited']}. Отказы доступа: {totals['denied']}.</p>
       <p>Последний успешный вызов Gateway: {escape(_time(row['last_success_at']))}.</p>
-      <p class="muted">Это записи журнала за период, а не проверка доступности сервиса прямо сейчас.</p><h3>Последняя причина отказа или ошибки</h3>{last}</section></div></article>'''
+      <p class="muted">Это записи журнала за период, а не проверка доступности сервиса прямо сейчас.</p><h3>Последняя причина отказа или ошибки</h3>{last}</section></div>{_timing(row['timing'])}</article>'''
 
 def render(actor,data=None,unavailable=False):
     if unavailable:

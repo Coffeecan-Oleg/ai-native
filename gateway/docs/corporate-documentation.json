@@ -18,7 +18,8 @@
     "docs/knowledge-base/13-external-service-safety.md",
     "docs/knowledge-base/14-integration-status.md",
     "docs/knowledge-base/15-load-check.md",
-    "docs/knowledge-base/16-authorization-read-session.md"
+    "docs/knowledge-base/16-authorization-read-session.md",
+    "docs/knowledge-base/17-integration-timings.md"
   ],
   "legacy_documents": [
     "docs/platforma-sandbox-writes.md",
