@@ -12,6 +12,9 @@ from gateway_mcp.services.policy import has_scope
 from gateway_mcp.web import login_redirect, web_actor
 
 PATH = '/platforma/connection'
+REPORT_PATH = PATH + '/report'
+REPORT_HEADERS = {'Cache-Control':'no-store', 'Referrer-Policy':'no-referrer',
+                  'X-Content-Type-Options':'nosniff'}
 
 
 def _time(value):
@@ -30,6 +33,39 @@ def _response(actor, body, status=200):
                         'X-Content-Type-Options':'nosniff'})
 
 
+def _report_text(mark, result):
+    # Only the subject-bound, sanitized read_probe result belongs in this file.
+    lines = ['Платформа Акметрон — проверка подключения',
+             'Файл сформирован: '+_time(datetime.now(timezone.utc)),
+             'Метка проверки: '+mark, '']
+    if result is None:
+        lines += ['Результат: вызов MCP с этой меткой от вашей учётной записи пока не найден.',
+                  'Это не подтверждает неисправность сервера. Запрос мог не отправиться,',
+                  'быть отклонён до вызова инструмента или прийти под другой учётной записью.',
+                  'Дождитесь ответа ассистента, обновите результат и скачайте файл ещё раз.']
+    else:
+        client = result['client']
+        label = client['name'] if client['name'] != 'unknown' else 'Не определено'
+        if client['version']:
+            label += ' '+client['version']
+        lines += ['Результат: вызов MCP получен от вашей учётной записи.',
+                  'Время вызова: '+_time(result['checked_at']),
+                  'ID серверного запроса: '+(result['gateway_request_id'] or 'Не указан'),
+                  'Приложение: '+label,
+                  'Права при вызове: '+(', '.join(result['effective_scopes']) or 'Не указаны'),
+                  'Разрешённые инструменты: '+(', '.join(result['allowed_tools']) or 'Не указаны'),
+                  '', 'Название и версию приложения сообщает сам клиент.',
+                  'Место выполнения чата сервер не определяет.',
+                  'Эта проверка подтверждает только вызов gateway_access_profile.',
+                  'Доступ к конкретным данным и результат применения навыка проверяются отдельно.']
+    lines += ['', 'Что передать в поддержку',
+              'Приложите этот файл. Отдельно напишите, что хотели сделать, на каком шаге',
+              'возникла проблема и какой текст ошибки показало ваше приложение.',
+              'Не добавляйте пароли, токены, ключи и полные ссылки авторизации.',
+              'Файл не отправляется автоматически. Это снимок результата на указанное время.']
+    return '\n'.join(lines)+'\n'
+
+
 def _render(actor, mark, result):
     prompt = ('Через MCP Платформы вызови gateway_access_profile с параметром diagnostic_id="'+mark+'". '
               'Покажи connection_check, мои scopes и имя вызванного инструмента. '
@@ -44,6 +80,7 @@ def _render(actor, mark, result):
         '<p>Метка проверки: <code>'+escape(mark)+'</code>. Она действует 15 минут и не даёт прав доступа.</p>'
         '<p>Проверка запишет техническое событие в журнал, рабочие данные не изменит.</p></section>')
     refresh = PATH+'?'+urlencode({'check':mark})
+    download = REPORT_PATH+'?'+urlencode({'check':mark})
     body = heading+instructions+'<section class="panel"><h2>2. Обновите результат</h2>'
     if result is None:
         body += ('<p role="status"><strong>Запрос с этой меткой пока не получен от вашей учётной записи.</strong></p>'
@@ -63,7 +100,11 @@ def _render(actor, mark, result):
             '<details><summary>Какие инструменты разрешены этим набором прав</summary><ul>'+tools+'</ul>'
             '<p>Это серверные разрешения. Отображение инструментов в другом чате и доступ к конкретным данным проверяются отдельно.</p></details>')
     body += ('<p><a class="button" href="'+escape(refresh,quote=True)+'">Обновить результат</a> '
-             '<a href="'+PATH+'">Начать новую проверку</a></p></section>'
+             '<a href="'+PATH+'">Начать новую проверку</a></p>'
+             '<p><a href="'+escape(download,quote=True)+'" download="platforma-connection.txt">'
+             'Скачать результат проверки (.txt)</a></p>'
+             '<p>Если нужна помощь, приложите файл к обращению в поддержку. Он содержит результат только вашей проверки '
+             'и не отправляется автоматически. Перед скачиванием обновите результат.</p></section>'
              '<section class="panel"><h2>3. Если вызова нет</h2><ol>'
              '<li>Проверьте, что в вашем ИИ-приложении включено MCP-подключение Платформы.</li>'
              '<li>Пройдите вход через свой корпоративный Битрикс24. Веб-панель и MCP требуют отдельных сессий.</li>'
@@ -76,6 +117,34 @@ def _render(actor, mark, result):
 
 
 def register_connection_diagnostics_routes(mcp):
+    @mcp.custom_route(REPORT_PATH,methods=['GET'],include_in_schema=False)
+    async def connection_report(request):
+        def problem(message,status):
+            return PlainTextResponse(message,status_code=status,headers=REPORT_HEADERS)
+        if not corporate_access.enabled():
+            return problem('Not found',404)
+        actor = web_actor(request)
+        if actor is None:
+            response = login_redirect(PATH)
+            response.headers.update(REPORT_HEADERS)
+            return response
+        if not has_scope(actor,'skills:read'):
+            return problem('Access denied',403)
+        items = list(request.query_params.multi_items())
+        if len(items)!=1 or items[0][0]!='check':
+            return problem('Некорректная ссылка проверки. Начните новую проверку в панели.',400)
+        try:
+            mark = service.validate_mark(items[0][1])
+        except ValueError:
+            return problem('Метка проверки недействительна или устарела. Начните новую проверку в панели.',400)
+        try:
+            result = await to_thread(service.read_probe,actor,mark)
+            body = _report_text(mark,result)
+        except Exception:
+            return problem('Журнал проверок временно недоступен. Повторите позже.',503)
+        return PlainTextResponse(body,headers={**REPORT_HEADERS,
+            'Content-Disposition':'attachment; filename="platforma-connection.txt"'})
+
     @mcp.custom_route(PATH,methods=['GET'],include_in_schema=False)
     async def connection_page(request):
         if not corporate_access.enabled():

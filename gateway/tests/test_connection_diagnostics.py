@@ -211,3 +211,99 @@ class DiagnosticToolTests(unittest.TestCase):
              patch.object(service,'record_probe') as record,self.assertRaises(PermissionError):
             asyncio.run(self.mcp.tools['gateway_access_profile'](diagnostic_id=service.new_mark()))
         profile.assert_not_called();record.assert_not_called()
+
+
+class DiagnosticReportTests(unittest.TestCase):
+    def report(self,query=None,current='default',result=None,error=None,enabled=True):
+        mcp=FakeMCP();routes.register_connection_diagnostics_routes(mcp)
+        query='check='+service.new_mark() if query is None else query
+        request=Request({'type':'http','method':'GET','path':routes.REPORT_PATH,
+                         'query_string':query.encode(),'headers':[]})
+        with patch.object(routes.corporate_access,'enabled',return_value=enabled),\
+             patch.object(routes,'web_actor',return_value=actor() if current=='default' else current),\
+             patch.object(service,'read_probe',return_value=result,side_effect=error) as read:
+            response=asyncio.run(mcp.routes[routes.REPORT_PATH](request))
+        return response,read
+
+    def test_waiting_report_is_not_a_false_success_or_server_failure(self):
+        response,_=self.report()
+        text=response.body.decode('utf-8')
+        self.assertEqual(response.status_code,200)
+        self.assertIn('пока не найден',text)
+        self.assertIn('не подтверждает неисправность',text)
+        self.assertNotIn('Результат: вызов MCP получен',text)
+        self.assertIn('не отправляется автоматически',text)
+
+    def test_attachment_has_fixed_name_no_cache_and_no_html(self):
+        response,_=self.report()
+        self.assertEqual(response.headers['content-disposition'],'attachment; filename="platforma-connection.txt"')
+        self.assertEqual(response.headers['content-type'],'text/plain; charset=utf-8')
+        self.assertEqual(response.headers['cache-control'],'no-store')
+        self.assertEqual(response.headers['referrer-policy'],'no-referrer')
+        self.assertEqual(response.headers['x-content-type-options'],'nosniff')
+        self.assertNotIn('<html',response.body.decode())
+
+    def test_confirmed_report_contains_only_supported_diagnostic_fields(self):
+        result={'checked_at':'2026-11-08T10:00:00Z','gateway_request_id':'gwc-'+'a'*32,
+                'effective_scopes':['skills:read'],'allowed_tools':['gateway_access_profile'],
+                'client':{'name':'codex','version':'9.9.9'},'password':'PRIVATE PASSWORD',
+                'subject':'OTHER USER','email':'private@example.test','raw_payload':'PRIVATE TOKEN'}
+        current=GatewayActor(subject='private:subject',login='PRIVATE LOGIN',email='private@example.test',scopes=('skills:read',))
+        response,read=self.report(result=result,current=current)
+        self.assertEqual(read.call_args.args[0],current)
+        text=response.body.decode()
+        for expected in ['вызов MCP получен','08.11.2026 13:00 МСК','gwc-'+'a'*32,
+                         'skills:read','gateway_access_profile','codex 9.9.9','сообщает сам клиент',
+                         'только вызов gateway_access_profile']:
+            self.assertIn(expected,text)
+        for forbidden in ['PRIVATE','private:subject','private@example.test','OTHER USER']:
+            self.assertNotIn(forbidden,text)
+
+    def test_report_uses_current_actor_and_exact_mark(self):
+        mark=service.new_mark();current=actor('employee:two')
+        response,read=self.report('check='+mark,current=current)
+        self.assertEqual(response.status_code,200)
+        read.assert_called_once_with(current,mark)
+
+    def test_missing_scope_and_login_do_not_read_the_journal(self):
+        for current,expected in [(actor(scopes=()),403),(None,303)]:
+            response,read=self.report(current=current)
+            self.assertEqual(response.status_code,expected)
+            self.assertEqual(response.headers['cache-control'],'no-store')
+            read.assert_not_called()
+
+    def test_disabled_corporate_mode_hides_report(self):
+        response,read=self.report(enabled=False)
+        self.assertEqual(response.status_code,404)
+        read.assert_not_called()
+
+    def test_missing_duplicate_and_foreign_parameters_are_rejected(self):
+        mark=service.new_mark()
+        for query in ['', 'check='+mark+'&subject=other','check='+mark+'&check='+mark,
+                      'check='+mark+'&filename=anything','subject=other']:
+            with self.subTest(query=query):
+                response,read=self.report(query)
+                self.assertEqual(response.status_code,400)
+                self.assertNotIn('content-disposition',response.headers)
+                read.assert_not_called()
+
+    def test_expired_or_malicious_mark_is_not_echoed_or_read(self):
+        old='diag-'+str(int(time.time())-901)+'-'+'a'*24
+        for mark in [old,'Bearer%20PRIVATE','%3Cscript%3E','%0d%0aX-Injected:PRIVATE']:
+            response,read=self.report('check='+mark)
+            self.assertEqual(response.status_code,400)
+            self.assertNotIn('PRIVATE',response.body.decode())
+            read.assert_not_called()
+
+    def test_storage_failure_never_downloads_a_success_or_leaks_error(self):
+        response,_=self.report(error=RuntimeError('postgres://PRIVATE KEY'))
+        self.assertEqual(response.status_code,503)
+        self.assertNotIn('PRIVATE',response.body.decode())
+        self.assertNotIn('content-disposition',response.headers)
+
+    def test_page_link_keeps_current_mark_and_explains_download(self):
+        mark=service.new_mark();html=routes._render(actor(),mark,None)
+        self.assertIn(routes.REPORT_PATH+'?check='+mark,html)
+        self.assertIn('download="platforma-connection.txt"',html)
+        self.assertIn('Скачать результат проверки (.txt)',html)
+        self.assertIn('только вашей проверки',html)

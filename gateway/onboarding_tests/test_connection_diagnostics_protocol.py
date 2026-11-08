@@ -118,3 +118,31 @@ class ConnectionDiagnosticsProtocolTests(unittest.TestCase):
         reply=self.http.post('/mcp',headers={'Accept':'application/json, text/event-stream'},
             json={'jsonrpc':'2.0','id':100,'method':'tools/list'})
         self.assertEqual(reply.status_code,401)
+
+    def test_report_download_follows_real_mcp_event_without_cross_user_disclosure(self):
+        mark=service.new_mark()
+        def download(name):
+            return self.http.get(routes.REPORT_PATH+'?check='+mark,headers={'x-fictional-web-user':name})
+        self.assertIn('пока не найден',download('alice').text)
+        result,data=self.call({'diagnostic_id':mark})
+        self.assertFalse(result.get('isError'),result)
+        request_id=data['connection_check']['gateway_request_id']
+        mine=download('alice');other=download('bob')
+        self.assertEqual(mine.status_code,200)
+        self.assertIn('attachment',mine.headers['content-disposition'])
+        self.assertIn(request_id,mine.text)
+        self.assertIn('codex 9.9.9',mine.text)
+        self.assertNotIn(self.actors['alice'].subject,mine.text)
+        self.assertIn('пока не найден',other.text)
+        self.assertNotIn(request_id,other.text)
+        self.assertNotIn('codex 9.9.9',other.text)
+
+    def test_report_requires_browser_identity_and_scope(self):
+        path=routes.REPORT_PATH+'?check='+service.new_mark()
+        anonymous=self.http.get(path,follow_redirects=False)
+        limited=self.http.get(path,headers={'x-fictional-web-user':'limited'})
+        self.assertEqual(anonymous.status_code,303)
+        self.assertEqual(limited.status_code,403)
+        for response in [anonymous,limited]:
+            self.assertNotIn('content-disposition',response.headers)
+            self.assertEqual(response.headers['cache-control'],'no-store')
