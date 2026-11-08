@@ -4,38 +4,8 @@ import argparse,hashlib,json,re,shlex,subprocess,sys,tarfile
 from pathlib import Path,PurePosixPath
 from handoff import ReceiptError,parse_receipt,read_file,read_remote
 
-def verify_delivery(archive,report):
-    data=json.loads(report.read_text(encoding='utf-8'))
-    required=['source_sha','image_id','tag','archive_sha256','archive_bytes']
-    if any(k not in data for k in required):raise ValueError('delivery_manifest_missing_fields')
-    if not re.fullmatch('[a-f0-9]{40}',data['source_sha']) or not re.fullmatch('sha256:[a-f0-9]{64}',data['image_id']):raise ValueError('delivery_identity_invalid')
-    if data['tag']!='platforma-gateway:evening-'+data['source_sha'][:12]:raise ValueError('delivery_tag_mismatch')
-    if archive.stat().st_size!=data['archive_bytes'] or archive.stat().st_size>2*1024**3:raise ValueError('delivery_size_invalid')
-    with archive.open('rb') as f:digest=hashlib.file_digest(f,'sha256').hexdigest()
-    if digest!=data['archive_sha256']:raise ValueError('delivery_archive_changed')
-    if any(data.get(k) is not False for k in ['production_configuration_included','database_included','private_skill_mount_included']):
-        raise ValueError('delivery_isolation_not_declared')
-    with tarfile.open(archive,'r:gz') as tar:
-        total=10240;seen=set()
-        for item in tar:
-            p=PurePosixPath(item.name);total+=512+((item.size+511)//512)*512
-            if (p.is_absolute() or '..' in p.parts or '\\' in item.name or item.name in seen or item.issparse()
-                    or not(item.isfile() or item.isdir()) or item.size<0 or total>4*1024**3 or len(seen)>=4096):
-                raise ValueError('delivery_archive_structure_invalid')
-            seen.add(item.name)
-        member=tar.getmember('manifest.json')
-        if member.size>65536:raise ValueError('delivery_manifest_oversized')
-        value=json.load(tar.extractfile(member))
-        if len(value)!=1 or value[0].get('RepoTags')!=[data['tag']]:raise ValueError('delivery_unexpected_tags')
-        member=tar.getmember(value[0]['Config'])
-        if member.size>2*1024**2:raise ValueError('delivery_config_oversized')
-        raw=tar.extractfile(member).read();config=json.loads(raw)
-        if 'sha256:'+hashlib.sha256(raw).hexdigest()!=data['image_id']:raise ValueError('delivery_config_digest_mismatch')
-        if config['config'].get('User')!='10001:10001' or config['config'].get('Labels',{}).get('org.opencontainers.image.revision')!=data['source_sha']:
-            raise ValueError('delivery_installed_source_mismatch')
-    return {'verified':True,**{k:data[k] for k in required},'deployment_performed':False,
-            'expanded_archive_bytes':total,'import_required_bytes':2*total+64*1024**2,
-            'import_estimate':'two_uncompressed_copies_plus_metadata; reserve checked on host'}
+from delivery import verify_delivery
+
 
 def storage_command(required):
     if type(required) is not int or not 0<required<=9*1024**3:raise ValueError('storage_budget_invalid')
@@ -81,6 +51,10 @@ def main():
     storage=sub.add_parser('storage-check',help='Verify archive and read dev disk/quota capacity; never loads or deploys')
     storage.add_argument('--archive',type=Path,required=True);storage.add_argument('--report',type=Path,required=True)
     storage.add_argument('--ssh-config',type=Path,required=True)
+    image=sub.add_parser('import-image',help='Verified dev image import only; does not deploy')
+    image.add_argument('--environment',choices=['dev'],required=True)
+    image.add_argument('--archive',type=Path,required=True);image.add_argument('--report',type=Path,required=True)
+    image.add_argument('--ssh-config',type=Path,required=True)
     handoff=sub.add_parser('handoff',help='Read an operator receipt; no server changes')
     source=handoff.add_mutually_exclusive_group(required=True)
     source.add_argument('--receipt',type=Path);source.add_argument('--ssh-config',type=Path)
@@ -96,6 +70,10 @@ def main():
         result,code=read_storage(args.ssh_config,delivery['import_required_bytes'])
         print(json.dumps({'delivery':delivery,'server_report':result}))
         raise SystemExit(0 if code==0 and result['capacity']['sufficient'] is True else 1)
+    if args.action=='import-image':
+        from import_client import import_image
+        print(json.dumps(import_image(args.archive,args.report,args.ssh_config)))
+        return
     if args.action=='handoff':
         if not re.fullmatch('[a-f0-9]{64}',args.expected_package_sha256):raise ReceiptError('handoff_expected_digest_invalid')
         raw=read_file(args.receipt) if args.receipt else read_remote(args.ssh_config)

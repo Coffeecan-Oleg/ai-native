@@ -20,7 +20,9 @@
     "docs/knowledge-base/15-load-check.md",
     "docs/knowledge-base/16-authorization-read-session.md",
     "docs/knowledge-base/17-integration-timings.md",
-    "docs/knowledge-base/18-storage-preflight.md"
+    "docs/knowledge-base/18-storage-preflight.md",
+    "docs/knowledge-base/19-guarded-dev-import.md",
+    "docs/knowledge-base/20-operations-and-recovery.md"
   ],
   "legacy_documents": [
     "docs/platforma-sandbox-writes.md",

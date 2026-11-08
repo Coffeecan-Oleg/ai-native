@@ -27,7 +27,7 @@ def require_host():
     if os.geteuid()!=0 or os.uname().nodename!='kromin':raise Refused('development_host_or_operator_required')
 
 def source_files(source):
-    paths=[source/n for n in ['main.py','dev_main.py','development.py','dev_bootstrap.py','storage_preflight.py']]
+    paths=[source/n for n in ['main.py','dev_main.py','development.py','dev_bootstrap.py','storage_preflight.py','delivery.py','image_import.py']]
     paths+=sorted((source/'release_control').glob('*.py'))
     return {p.relative_to(source).as_posix():sha(p.read_bytes()) for p in paths}
 

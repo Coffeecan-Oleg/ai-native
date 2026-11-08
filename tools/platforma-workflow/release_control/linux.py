@@ -202,6 +202,9 @@ print(json.dumps({'status':status,'body':base64.b64encode(body).decode()}))
         p.parent.mkdir(mode=0o700,exist_ok=True);p.mkdir(mode=0o700,exist_ok=True)
         return trusted(p,True)
     def inspect(self,tag):
+        marker=self.state/'image-import-active.json'
+        if self.c.get('mode')=='development' and (marker.exists() or marker.is_symlink()):
+            raise Refused('image_import_unresolved')
         # Rechecked at plan/apply/worker, before an inventory container or window.
         # Do not add changing counters to the immutable baseline view.
         for location in [self.base,self.state]:require_storage(location,self.c['minimum_disk_bytes'])
