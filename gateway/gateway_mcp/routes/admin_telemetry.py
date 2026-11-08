@@ -20,6 +20,17 @@ PERIODS = (
     (365, "365 дней"),
 )
 
+TABLE_STYLES = """<style>
+.skill-telemetry-table { min-width: 1500px; table-layout: auto; }
+.skill-telemetry-table th, .skill-telemetry-table td:not(:first-child) {
+  white-space: nowrap; overflow-wrap: normal;
+}
+.skill-telemetry-table th:first-child, .skill-telemetry-table td:first-child {
+  min-width: 260px; width: 260px; max-width: 340px;
+}
+.skill-telemetry-table td:first-child { white-space: normal; }
+</style>"""
+
 
 def register_admin_telemetry_routes(mcp) -> None:
     @mcp.custom_route("/admin/telemetry/skills", methods=["GET"], include_in_schema=False)
@@ -67,7 +78,8 @@ def register_admin_telemetry_routes(mcp) -> None:
             <div><h2>Использование навыков</h2><p class="description">Одна строка соответствует навыку, его версии, агенту и проекту.</p></div>
             <span class="status ok">{len(rows)} строк</span>
           </div>
-          <div class="table-wrap"><table>
+          <p class="muted">В узком окне прокрутите таблицу вправо, чтобы увидеть все показатели.</p>
+          <div class="table-wrap" role="region" aria-label="Использование навыков" tabindex="0"><table class="skill-telemetry-table">
             <thead><tr><th>Навык</th><th>Пакет</th><th>Версия</th><th>Агент</th><th>Проект</th><th>Запуски</th><th>Завершено</th><th>Ошибки</th><th>Прервано</th><th>Успешность</th><th>Пользователи</th><th>Медиана</th><th>95%</th><th>Последний запуск</th></tr></thead>
             <tbody>{_skill_rows(rows, visible_titles(actor) if rows else {})}</tbody>
           </table></div>
@@ -80,6 +92,7 @@ def register_admin_telemetry_routes(mcp) -> None:
                 actor=actor,
                 body=body,
                 shell_width="1560px",
+                extra_head=TABLE_STYLES,
             )
         )
 

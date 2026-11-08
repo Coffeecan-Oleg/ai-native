@@ -238,9 +238,9 @@
       "size": 13947
     },
     "routes/admin_telemetry.py": {
-      "sha256": "a0a295ee60cc03e9b6983701dc3df032849d51fbb5464b5e848e45325fe6eda7",
-      "lf_sha256": "a0a295ee60cc03e9b6983701dc3df032849d51fbb5464b5e848e45325fe6eda7",
-      "size": 9126
+      "sha256": "d6d23ad259f2c1bfaeb3d5848f9e321244d1b6a152abdc963d2916072108ae5c",
+      "lf_sha256": "d6d23ad259f2c1bfaeb3d5848f9e321244d1b6a152abdc963d2916072108ae5c",
+      "size": 9860
     },
     "routes/admin_ui.py": {
       "sha256": "92689f86bda07175683667c46e9d55dc1d4f61a4bf596baff3e52fed69a7a26a",
@@ -1130,4 +1130,3 @@
   ],
   "comparison_production_image": "sha256:25a4f103d6a1d871436483a8a65c1612b881791b8ab2a8102e495c5335433ab3"
 }
-

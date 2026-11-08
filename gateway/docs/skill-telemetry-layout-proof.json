@@ -1,0 +1,13 @@
+{
+  "parent": "d19bf8f558dfc5e6c82a3b1cc606d75c13655e85",
+  "changed_source": "gateway/gateway_mcp/routes/admin_telemetry.py",
+  "sha256": "d6d23ad259f2c1bfaeb3d5848f9e321244d1b6a152abdc963d2916072108ae5c",
+  "size": 9860,
+  "scope": "Table layout only: minimum column width and horizontal scroll. No authorization, query, schema or external service changes.",
+  "baseline_changes": [
+    "live_source_fingerprints.routes/admin_telemetry.py"
+  ],
+  "all_other_baseline_fields_unchanged": true,
+  "tests": "12 focused tests pass; browser rendering checked at 1280px; first column 260px and horizontal scroll available",
+  "deployment": false
+}
