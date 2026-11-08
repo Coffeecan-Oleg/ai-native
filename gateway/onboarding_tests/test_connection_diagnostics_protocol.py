@@ -146,3 +146,43 @@ class ConnectionDiagnosticsProtocolTests(unittest.TestCase):
         for response in [anonymous,limited]:
             self.assertNotIn('content-disposition',response.headers)
             self.assertEqual(response.headers['cache-control'],'no-store')
+
+    def test_corporate_employee_download_uses_real_browser_gate(self):
+        from gateway_mcp.services import auth,bitrix_identity as identity,corporate_access
+        from gateway_mcp.web import web_actor
+        subject='bitrix24:'+'b'*32+':8123'
+        current=GatewayActor(subject=subject,scopes=('skills:read',))
+        employee={'subject':subject,'member_id':'b'*32,'user_id':'8123',
+                  'name':'Fictional employee','verified_at':time.time()}
+        mark=service.new_mark()
+        event=service.record_probe(current,mark,self.mcp)
+        self.assertTrue(event['recorded'])
+        with patch.dict(os.environ,{'GATEWAY_LOGIN_PROVIDER':'bitrix24',
+                'GATEWAY_BITRIX_OWNER_USER_ID':'3318','GATEWAY_JWT_SECRET':'synthetic-report-test-key-not-production'}),\
+             patch.object(identity,'current_employee',return_value=employee),\
+             patch.object(routes,'web_actor',side_effect=web_actor):
+            token=auth.mint_gateway_token(current,ttl_seconds=60)
+            response=self.http.get(routes.REPORT_PATH+'?check='+mark,headers={'Authorization':'Bearer '+token})
+            self.assertEqual(response.status_code,200,response.text)
+            self.assertIn(event['gateway_request_id'],response.text)
+            self.assertIn('attachment',response.headers['content-disposition'])
+            self.assertNotIn(subject,response.text)
+            self.assertFalse(corporate_access.web_path_allowed(current,'/admin/users'))
+
+    def test_corporate_download_does_not_accept_mcp_credential_as_browser_session(self):
+        from gateway_mcp.services import auth,bitrix_identity as identity
+        from gateway_mcp.web import web_actor
+        subject='bitrix24:'+'b'*32+':8124'
+        employee={'subject':subject,'member_id':'b'*32,'user_id':'8124',
+                  'name':'Fictional employee','verified_at':time.time()}
+        delegated=GatewayActor(subject=subject,scopes=('skills:read',),scope_ceiling=('skills:read',),
+                               tool_allowlist=('gateway_access_profile',))
+        with patch.dict(os.environ,{'GATEWAY_LOGIN_PROVIDER':'bitrix24',
+                'GATEWAY_BITRIX_OWNER_USER_ID':'3318','GATEWAY_JWT_SECRET':'synthetic-report-test-key-not-production'}),\
+             patch.object(identity,'current_employee',return_value=employee),\
+             patch.object(routes,'web_actor',side_effect=web_actor):
+            token=auth.mint_gateway_token(delegated,ttl_seconds=60)
+            response=self.http.get(routes.REPORT_PATH+'?check='+service.new_mark(),
+                                   headers={'Authorization':'Bearer '+token},follow_redirects=False)
+            self.assertEqual(response.status_code,303)
+            self.assertNotIn('content-disposition',response.headers)

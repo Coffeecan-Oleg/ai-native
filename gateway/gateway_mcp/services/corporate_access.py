@@ -24,7 +24,8 @@ WEB_PATHS = frozenset({'/admin','/admin/audit','/admin/telemetry/skills',
     '/platforma/skills/view','/platforma/skills/rename','/platforma/how-it-works',
     '/platforma/skills/manage','/platforma/skills/manage/action','/platforma/skills/manage/edit',
     '/platforma/skills/activity',
-    '/platforma/how-it-works/download','/platforma/connection','/join','/auth/logout'})
+    '/platforma/how-it-works/download','/platforma/connection','/platforma/connection/report',
+    '/join','/auth/logout'})
 
 
 def enabled():
