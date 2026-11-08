@@ -238,9 +238,9 @@
       "size": 13947
     },
     "routes/admin_telemetry.py": {
-      "sha256": "f36aeadee579a47861979d5107157402465bc0d218263808781bb326ecb83d24",
-      "lf_sha256": "f36aeadee579a47861979d5107157402465bc0d218263808781bb326ecb83d24",
-      "size": 8965
+      "sha256": "a0a295ee60cc03e9b6983701dc3df032849d51fbb5464b5e848e45325fe6eda7",
+      "lf_sha256": "a0a295ee60cc03e9b6983701dc3df032849d51fbb5464b5e848e45325fe6eda7",
+      "size": 9126
     },
     "routes/admin_ui.py": {
       "sha256": "92689f86bda07175683667c46e9d55dc1d4f61a4bf596baff3e52fed69a7a26a",
@@ -728,9 +728,9 @@
       "size": 1064
     },
     "services/skill_library.py": {
-      "sha256": "cdfa8172cfe1827dbe43fa1cb58f7b1899491e41d95f2ff480a4ca927f949006",
-      "lf_sha256": "cdfa8172cfe1827dbe43fa1cb58f7b1899491e41d95f2ff480a4ca927f949006",
-      "size": 19753
+      "sha256": "ff2d7f04c2fd1fe2f04790c637b672917be1327083062b3a47dd33d2c701965f",
+      "lf_sha256": "ff2d7f04c2fd1fe2f04790c637b672917be1327083062b3a47dd33d2c701965f",
+      "size": 20295
     },
     "services/unisender_readonly.py": {
       "sha256": "be5799ce24381ace5948f417033a4be51ad2c8d1b3cca33c384b84cc8f55ce21",
@@ -938,9 +938,9 @@
       "size": 5685
     },
     "routes/skill_lifecycle.py": {
-      "sha256": "360cf05383d89c63350197df98232bc26f1c63c4e613a5644ac9b2cfa65858aa",
-      "lf_sha256": "360cf05383d89c63350197df98232bc26f1c63c4e613a5644ac9b2cfa65858aa",
-      "size": 22311
+      "sha256": "fbcf138c43a03cf0181ff477d4256185a7a9eab227e1f6ede314f10ba92c0af2",
+      "lf_sha256": "fbcf138c43a03cf0181ff477d4256185a7a9eab227e1f6ede314f10ba92c0af2",
+      "size": 22411
     },
     "services/skill_lifecycle.py": {
       "sha256": "be1da8016e9e79e92de3c45470aa89f967dd04de4ba406a4625ed050b7a1fc8d",
@@ -953,9 +953,9 @@
       "size": 4092
     },
     "routes/skill_activity.py": {
-      "sha256": "68c318eb807f691667f16f202998be90d27382cbbb21bb09dbe58df94ecbda70",
-      "lf_sha256": "68c318eb807f691667f16f202998be90d27382cbbb21bb09dbe58df94ecbda70",
-      "size": 4497
+      "sha256": "22de27cb1940d80d1f59ddadb831d7ed392754c53868edb83a6762b9834b3edc",
+      "lf_sha256": "22de27cb1940d80d1f59ddadb831d7ed392754c53868edb83a6762b9834b3edc",
+      "size": 4646
     },
     "services/skill_activity.py": {
       "sha256": "fc86647180ec5db949fc69969f58b5a06b5288454d30f75115687da0b9e50855",
@@ -1011,6 +1011,11 @@
       "sha256": "c6b5865913930ae309a9dc1b1e361349655b603ba7d553230866fdbbe55cbc49",
       "lf_sha256": "c6b5865913930ae309a9dc1b1e361349655b603ba7d553230866fdbbe55cbc49",
       "size": 2436
+    },
+    "routes/skill_labels.py": {
+      "sha256": "c232590bf30e5bf03ea6aaef4129d24386c79ad3e616c28da067e784a6fd5319",
+      "lf_sha256": "c232590bf30e5bf03ea6aaef4129d24386c79ad3e616c28da067e784a6fd5319",
+      "size": 933
     }
   },
   "private_mounts_excluded": [
@@ -1125,3 +1130,4 @@
   ],
   "comparison_production_image": "sha256:25a4f103d6a1d871436483a8a65c1612b881791b8ab2a8102e495c5335433ab3"
 }
+
