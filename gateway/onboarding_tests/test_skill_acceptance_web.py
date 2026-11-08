@@ -45,6 +45,9 @@ class AcceptanceWebTests(LifecycleFixture):
         self.assertIn('Готовый запрос для ассистента',p.text)
         reply=corporate_skills.read_skill(sid,service.FILE,actor=self.other)
         self.assertEqual(reply['sha256'],hashlib.sha256(reply['content'].encode()).hexdigest())
+        self.login(self.owner)
+        self.assertIn('Готовый запрос для ассистента',self.page(sid,True).text)
+        self.assertNotIn('Это закрытая сохранённая редакция',self.page(sid,True).text)
 
     def test_new_draft_does_not_replace_published_cases_and_archive_denies_cached_read(self):
         sid=self.create();self.publish(sid);self.login(self.other)
@@ -53,10 +56,15 @@ class AcceptanceWebTests(LifecycleFixture):
             content=package(CONTENT+b'\nUpdated instruction.\n','PRIVATE-NEW-CASE'),bundled=self.bundled)
         public=self.page(sid);self.assertIn('PUBLIC-SYNTHETIC',public.text);self.assertNotIn('PRIVATE-NEW-CASE',public.text)
         self.login(self.reader);self.assertIn('PRIVATE-NEW-CASE',self.page(sid,True).text)
+        self.assertNotIn('Готовый запрос для ассистента',self.page(sid,True).text)
+        self.assertIn('Готовый запрос для ассистента',self.page(sid,True,1).text)
         self.action(sid,'submit',self.reader);self.action(sid,'publish');self.login(self.other)
         current=self.page(sid);self.assertIn('PRIVATE-NEW-CASE',current.text);self.assertIn('1.0.1',current.text)
         self.login(self.owner);self.assertIn('PUBLIC-SYNTHETIC',self.page(sid,True,1).text)
-        self.action(sid,'archive');self.login(self.other)
+        self.assertNotIn('Готовый запрос для ассистента',self.page(sid,True,1).text)
+        self.action(sid,'archive')
+        self.assertNotIn('Готовый запрос для ассистента',self.page(sid,True).text)
+        self.login(self.other)
         with patch.object(service,'inspect',side_effect=AssertionError('archived')) as scanner:
             self.assertIn(self.page(sid).status_code,[403,409]);scanner.assert_not_called()
         with self.assertRaises(PermissionError):corporate_skills.read_skill(sid,cached['path'],actor=self.other)

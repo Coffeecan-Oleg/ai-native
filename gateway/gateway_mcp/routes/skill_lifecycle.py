@@ -137,7 +137,8 @@ async def _detail(request,actor):
     from gateway_mcp.services import skill_acceptance
     from gateway_mcp.routes.skill_acceptance import panel as acceptance_panel
     acceptance=skill_acceptance.inspect(version['files'].get(skill_acceptance.FILE),version['manifest']['SKILL.md']['sha256'])
-    body+=acceptance_panel(acceptance,skill_id=skill_id,version=version['version'],published=False)
+    is_public = row['stage'] != 'archived' and version['revision'] == row['published_revision']
+    body+=acceptance_panel(acceptance,skill_id=skill_id,version=version['version'],published=is_public)
     comparison=await to_thread(skill_comparison.compare,version,data['comparison_base'],basis=data['comparison_kind'])
     body+=_comparison_panel(comparison,skill_id)
     if not historical and row['stage']!='archived':
