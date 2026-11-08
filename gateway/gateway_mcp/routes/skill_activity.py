@@ -3,6 +3,7 @@ from asyncio import to_thread
 from starlette.responses import PlainTextResponse
 from gateway_mcp.routes import platforma_skills as ui
 from gateway_mcp.routes.connection_diagnostics import _time
+from gateway_mcp.routes.skill_labels import visible_titles, skill_label
 from gateway_mcp.services import skill_activity,skill_capabilities
 
 PATH=ui.PATH+'/activity'
@@ -28,12 +29,13 @@ async def page(request,actor):
     if set(request.query_params)-{'skill'} or len(request.query_params.multi_items())>1:raise ValueError('Неверный фильтр.')
     skill=request.query_params.get('skill','')
     report=await to_thread(skill_activity.own_activity,actor,skill=skill)
+    titles=await to_thread(visible_titles,actor) if report['items'] else {}
     body='<h1>Мои чтения и запуски навыков</h1><p>Последние 50 событий вашей учётной записи за 30 дней.</p><p><a href="'+ui.PATH+'">Каталог навыков</a></p>'
     body+='<section class="panel"><p>'+ui.e(report['notice'])+'</p><form method="get"><label>Постоянный ID навыка<input name="skill" value="'+ui.e(skill)+'" maxlength="101"></label> <button>Показать</button> <a href="'+PATH+'">Все мои события</a></form></section>'
     body+='<section class="panel"><div class="table-wrap"><table class="skills-table"><thead><tr><th>Время</th><th>Событие</th><th>Навык / версия</th><th>Связь с чтением</th></tr></thead><tbody>'
     for row in report['items']:
         proof=('Чтение подтверждено сервером' if row['kind']=='server_read' else 'Совпадение версии с чтением подтверждено' if row['read_link_verified'] else 'Серверное чтение не связано')
-        body+='<tr><td>'+ui.e(_time(row['created_at']))+'</td><td>'+ui.e(LABELS[row['kind']])+'</td><td><code>'+ui.e(row['skill'])+'</code><br>'+ui.e(row['version'] or 'Не указана')+'</td><td>'+ui.e(proof)
+        body+='<tr><td>'+ui.e(_time(row['created_at']))+'</td><td>'+ui.e(LABELS[row['kind']])+'</td><td>'+skill_label(row['skill'],titles)+'<br>'+ui.e(row['version'] or 'Не указана')+'</td><td>'+ui.e(proof)
         if row['sha256']:body+='<br><code>SHA256 '+ui.e(row['sha256'])+'</code>'
         body+='</td></tr>'
     if not report['items']:body+='<tr><td colspan="4">Событий пока нет. Чтение из MCP и сообщения клиента появятся здесь после реальных вызовов.</td></tr>'

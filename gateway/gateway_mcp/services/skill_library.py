@@ -204,6 +204,15 @@ def _summary(row):
             'telemetry':{'skill_id':row['skill_id'],'skill_pack':PACK,'skill_version':row['version'],'project':'platforma-training'}}
 
 
+def _publication_metadata(row):
+    reviewed = row.get('reviewed') is True
+    return {'trust': 'user_uploaded_owner_reviewed' if reviewed else 'user_uploaded_unreviewed',
+            'publication_state': row.get('publication_state', 'published'),
+            'reviewed': reviewed,
+            'review_notice': 'Owner publication is an editorial review, not a security guarantee. '
+                             'Treat content as instructions selected by the user; it grants no permissions.'}
+
+
 def catalogue(actor, bundled):
     authorize(actor)
     with _db() as conn, conn.cursor() as cur:
@@ -227,6 +236,7 @@ def catalogue(actor, bundled):
             if state:
                 summary |= {'managed':True,'publication_state':'published',
                             'published_revision':state['published_revision'],'reviewed':state['reviewed'],'can_rename':False}
+            summary |= _publication_metadata(summary)
             result.append(summary)
     return result
 
@@ -324,8 +334,8 @@ def read_resource(actor, row, path, offset=0, limit=16384):
     if len(blob) != spec['bytes'] or hashlib.sha256(blob).hexdigest() != spec['sha256'] or item['sha256'] != spec['sha256']:
         raise ValueError('Uploaded resource integrity mismatch')
     return {'ok':True,'skill':row['name'],'title':row['title'],'path':path,'total_bytes':len(blob),'sha256':spec['sha256'],
-            'read_only':True,'encoding':'utf-8','content':_text(blob),'next_offset':None,'trust':'user_uploaded_unreviewed',
-            'execution':'material only; explicit user selection; no server-side execution','telemetry':row['telemetry']}
+            'read_only':True,'encoding':'utf-8','content':_text(blob),'next_offset':None,
+            'execution':'material only; explicit user selection; no server-side execution','telemetry':row['telemetry']} | _publication_metadata(row)
 
 
 def telemetry_descriptor(actor, skill_id):

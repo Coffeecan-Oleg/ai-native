@@ -4,7 +4,9 @@ from typing import Any
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, PlainTextResponse, Response
 
-from gateway_mcp.routes.admin_ui import admin_shell, empty_row, fmt_time
+from gateway_mcp.routes.admin_ui import admin_shell, empty_row
+from gateway_mcp.routes.connection_diagnostics import _time
+from gateway_mcp.routes.skill_labels import visible_titles, skill_label
 from gateway_mcp.services.policy import has_scope
 from gateway_mcp.services.telemetry import skill_stats
 from gateway_mcp.web import login_redirect, web_actor
@@ -67,7 +69,7 @@ def register_admin_telemetry_routes(mcp) -> None:
           </div>
           <div class="table-wrap"><table>
             <thead><tr><th>Навык</th><th>Пакет</th><th>Версия</th><th>Агент</th><th>Проект</th><th>Запуски</th><th>Завершено</th><th>Ошибки</th><th>Прервано</th><th>Успешность</th><th>Пользователи</th><th>Медиана</th><th>95%</th><th>Последний запуск</th></tr></thead>
-            <tbody>{_skill_rows(rows)}</tbody>
+            <tbody>{_skill_rows(rows, visible_titles(actor) if rows else {})}</tbody>
           </table></div>
         </section>
         """
@@ -102,7 +104,7 @@ def _filter_form(filters: dict[str, Any]) -> str:
         ("Версия", "skill_version", "0.16.0"),
         ("Агент", "agent", "claude, codex"),
         ("Проект", "project", "acme"),
-        ("Пользователь", "actor_subject", "yandex:..."),
+        ("Пользователь", "actor_subject", "bitrix24:..."),
     )
     inputs = "".join(
         f'<label>{escape(label)}<input type="text" name="{name}" value="{escape(str(filters[name]))}" placeholder="{escape(placeholder)}"></label>'
@@ -124,12 +126,12 @@ def _filter_form(filters: dict[str, Any]) -> str:
     """
 
 
-def _skill_rows(rows: list[dict[str, Any]]) -> str:
+def _skill_rows(rows: list[dict[str, Any]], titles=None) -> str:
     if not rows:
         return empty_row(14, "За выбранный период запуски навыков не зафиксированы")
     return "".join(
         "<tr>"
-        f'<td><strong>{escape(str(row.get("skill_id") or "—"))}</strong></td>'
+        f'<td>{skill_label(row.get("skill_id"), titles or {})}</td>'
         f'<td>{escape(str(row.get("skill_pack") or "—"))}</td>'
         f'<td>{escape(str(row.get("skill_version") or "—"))}</td>'
         f'<td>{escape(str(row.get("agent") or "—"))}</td>'
@@ -142,7 +144,7 @@ def _skill_rows(rows: list[dict[str, Any]]) -> str:
         f'<td>{_number(row.get("active_users"))}</td>'
         f'<td>{_duration(row.get("p50_duration_ms"))}</td>'
         f'<td>{_duration(row.get("p95_duration_ms"))}</td>'
-        f'<td style="white-space:nowrap">{escape(fmt_time(row.get("last_seen_at")))}</td>'
+        f'<td style="white-space:nowrap">{escape(_time(row.get("last_seen_at")))}</td>'
         "</tr>"
         for row in rows
     )
