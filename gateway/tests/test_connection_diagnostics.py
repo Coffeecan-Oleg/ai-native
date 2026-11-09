@@ -214,6 +214,34 @@ class DiagnosticToolTests(unittest.TestCase):
 
 
 class DiagnosticReportTests(unittest.TestCase):
+    def test_report_identifies_server_and_report_generation_release(self):
+        with patch.object(routes,'public_url',return_value='https://platforma.example.test/path?code=PRIVATE#SECRET'),\
+             patch.object(routes,'release_sha',return_value='b'*40):
+            response,_=self.report()
+        text=response.body.decode()
+        self.assertIn('Сервер Платформы: https://platforma.example.test\n',text)
+        self.assertIn('Версия выпуска при подготовке отчёта: '+'b'*40,text)
+        for forbidden in ['PRIVATE','SECRET','/path','?code=']:
+            self.assertNotIn(forbidden,text)
+
+    def test_invalid_origin_credentials_and_revision_never_leak(self):
+        for value in ['https://user:PRIVATE@example.test','javascript:PRIVATE','https://example.test:PRIVATE']:
+            with self.subTest(value=value),patch.object(routes,'public_url',return_value=value),\
+                 patch.object(routes,'release_sha',return_value='PRIVATE-SECRET'):
+                response,_=self.report()
+            text=response.body.decode()
+            self.assertIn('Сервер Платформы: Не указан',text)
+            self.assertIn('Версия выпуска при подготовке отчёта: Не определён',text)
+            self.assertNotIn('PRIVATE',text)
+
+    def test_local_copy_is_labelled_as_development(self):
+        with patch.object(routes,'public_url',return_value='http://localhost:18081'),\
+             patch.object(routes,'release_sha',return_value='dev'):
+            response,_=self.report()
+        text=response.body.decode()
+        self.assertIn('http://localhost:18081',text)
+        self.assertIn('Локальная разработка',text)
+
     def report(self,query=None,current='default',result=None,error=None,enabled=True):
         mcp=FakeMCP();routes.register_connection_diagnostics_routes(mcp)
         query='check='+service.new_mark() if query is None else query
@@ -310,3 +338,6 @@ class DiagnosticReportTests(unittest.TestCase):
         self.assertIn('id="connection-report-download" hidden',html)
         self.assertNotIn('href="'+routes.REPORT_PATH,html)
         self.assertIn('только вашей проверки',html)
+        self.assertIn('<details id="connection-report-preview" hidden>',html)
+        self.assertIn('<label for="connection-report-text">',html)
+        self.assertIn('id="connection-report-text" readonly',html)

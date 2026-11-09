@@ -3,9 +3,11 @@ from asyncio import to_thread
 from datetime import datetime, timedelta, timezone
 from html import escape
 from pathlib import Path as FilePath
-from urllib.parse import urlencode
+import re
+from urllib.parse import urlencode, urlsplit
 
 from starlette.responses import FileResponse, HTMLResponse, PlainTextResponse
+from gateway_mcp.config import public_url, release_sha
 from gateway_mcp.routes.admin_ui import admin_shell
 from gateway_mcp.services import corporate_access
 from gateway_mcp.services import connection_diagnostics as service
@@ -36,10 +38,31 @@ def _response(actor, body, status=200):
                         'X-Content-Type-Options':'nosniff'})
 
 
+def _report_context():
+    # Configuration only, never Host/Forwarded headers, callback URLs or env dumps.
+    origin = 'Не указан'
+    try:
+        parsed = urlsplit(public_url())
+        if (parsed.scheme in ('http', 'https') and parsed.hostname
+                and parsed.username is None and parsed.password is None
+                and re.fullmatch(r'[A-Za-z0-9.:-]+', parsed.hostname)):
+            host = '['+parsed.hostname+']' if ':' in parsed.hostname else parsed.hostname
+            origin = parsed.scheme+'://'+host+(':'+str(parsed.port) if parsed.port else '')
+    except ValueError:
+        pass
+    revision = release_sha()
+    if not re.fullmatch(r'[0-9a-f]{40}', revision):
+        revision = 'Локальная разработка' if revision == 'dev' else 'Не определён'
+    return origin, revision
+
+
 def _report_text(mark, result):
     # Only the subject-bound, sanitized read_probe result belongs in this file.
+    origin, revision = _report_context()
     lines = ['Платформа Акметрон — проверка подключения',
              'Файл сформирован: '+_time(datetime.now(timezone.utc)),
+             'Сервер Платформы: '+origin,
+             'Версия выпуска при подготовке отчёта: '+revision,
              'Метка проверки: '+mark, '']
     if result is None:
         lines += ['Результат: вызов MCP с этой меткой от вашей учётной записи пока не найден.',
@@ -110,6 +133,14 @@ def _render(actor, mark, result):
              'Сначала подготовьте файл, затем нажмите появившуюся ссылку скачивания.</p>'
              '<p><a id="connection-report-download" hidden download="platforma-connection.txt">'
              'Скачать готовый файл (.txt)</a></p>'
+             '<details id="connection-report-preview" hidden><summary>Показать текст отчёта</summary>'
+             '<p id="connection-report-copy-help">Если файл не скачивается, нажмите на текст ниже, '
+             'выделите его целиком и скопируйте в обращение в поддержку. '
+             'Текст совпадает с подготовленным файлом.</p>'
+             '<label for="connection-report-text">Текст вашей проверки</label>'
+             '<textarea id="connection-report-text" readonly rows="12" '
+             'aria-describedby="connection-report-copy-help" '
+             'style="box-sizing:border-box;width:100%;font:inherit;line-height:1.5"></textarea></details>'
              '<noscript><p>Для подготовки файла включите JavaScript в браузере. '
              'При обращении в поддержку можно скопировать результат с этой страницы.</p></noscript>'
              '<p>Если нужна помощь, приложите файл к обращению в поддержку. Он содержит результат только вашей проверки '

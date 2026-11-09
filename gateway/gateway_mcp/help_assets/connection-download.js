@@ -4,6 +4,8 @@
   const prepare = document.getElementById('connection-report-prepare');
   const download = document.getElementById('connection-report-download');
   const status = document.getElementById('connection-report-status');
+  const preview = document.getElementById('connection-report-preview');
+  const reportText = document.getElementById('connection-report-text');
   if (!prepare || !download || !status) return;
   const MAX_BYTES = 65536;
   let objectURL = null;
@@ -16,6 +18,8 @@
     clearTimeout(expiry);
     download.hidden = true;
     download.removeAttribute('href');
+    if (preview) {preview.hidden = true; preview.open = false;}
+    if (reportText) reportText.value = '';
   }
 
   function messageFor(code) {
@@ -64,14 +68,18 @@
         reader.releaseLock();
       }
       if (!size || controller.signal.aborted || active !== controller) throw new Error('Report unavailable');
-      objectURL = URL.createObjectURL(new Blob(chunks, {type: 'text/plain;charset=utf-8'}));
+      const blob = new Blob(chunks, {type: 'text/plain;charset=utf-8'});
+      const text = await blob.text();
+      if (controller.signal.aborted || active !== controller) throw new Error('Report unavailable');
+      objectURL = URL.createObjectURL(blob);
       download.href = objectURL;
       download.hidden = false;
-      status.textContent = 'Файл подготовлен. Нажмите «Скачать готовый файл (.txt)». Ссылка действует 5 минут в этом окне; файл никому не отправлен.';
+      if (reportText && preview) {reportText.value = text; preview.hidden = false;}
+      status.textContent = 'Файл подготовлен. Нажмите «Скачать готовый файл (.txt)» или откройте «Показать текст отчёта». Файл и текст доступны 5 минут в этом окне; файл никому не отправлен.';
       download.focus();
       expiry = setTimeout(() => {
         clearFile();
-        status.textContent = 'Ссылка скачивания закрыта. При необходимости подготовьте файл заново.';
+        status.textContent = 'Ссылка скачивания и текст закрыты. При необходимости подготовьте файл заново.';
       }, 300000);
     } catch (_) {
       if (active === controller) {

@@ -15,14 +15,15 @@ function fixture(fetcher, reportUrl = '/platforma/connection/report?check=synthe
       removeAttribute(k) {delete this.attrs[k]; if (k === 'href') delete this.href;},
       addEventListener(k, v) {this[k] = v;}, focus() {this.focused = true;}};
   }
-  const prepare = element(), download = element(), status = element();
+  const prepare = element(), download = element(), status = element(), preview = element(), reportText = element();
   prepare.dataset = {reportUrl};
   class LocalURL extends URL {}
   LocalURL.createObjectURL = blob => {blobs.push(blob); return 'blob:https://copy.invalid/' + blobs.length;};
   LocalURL.revokeObjectURL = url => revoked.push(url);
   vm.runInNewContext(source, {
     document: {getElementById: id => ({'connection-report-prepare': prepare,
-      'connection-report-download': download, 'connection-report-status': status})[id]},
+      'connection-report-download': download, 'connection-report-status': status,
+      'connection-report-preview': preview, 'connection-report-text': reportText})[id]},
     window: {location: {href: 'https://copy.invalid/platforma/connection', origin: 'https://copy.invalid'},
       addEventListener: (name, handler) => {events[name] = handler;}},
     URL: LocalURL, Blob, AbortController,
@@ -30,7 +31,7 @@ function fixture(fetcher, reportUrl = '/platforma/connection/report?check=synthe
     setTimeout: (fn, delay) => {timers.set(++nextTimer, {fn, delay}); return nextTimer;},
     clearTimeout: id => timers.delete(id)
   });
-  return {prepare, download, status, calls, blobs, revoked, timers, events};
+  return {prepare, download, status, preview, reportText, calls, blobs, revoked, timers, events};
 }
 function response(text = 'Синтетический отчёт\n', status = 200, headers = {}) {
   return new Response(text, {status, headers: {'Content-Type': 'text/plain; charset=utf-8',
@@ -150,4 +151,37 @@ test('late request after leaving does not invalidate a new prepared file', async
   assert.equal(f.download.href, latest);
   assert.equal(f.download.hidden, false);
   assert.equal(f.blobs.length, 1);
+});
+
+test('preview uses exact report text as a value, including markup, without another fetch', async () => {
+  const text = 'Отчёт\n</textarea><img src=x onerror=alert(1)>\n';
+  const f = fixture(async () => response(text));
+  await f.prepare.click();
+  assert.equal(f.reportText.value, text);
+  assert.equal(f.preview.hidden, false);
+  assert.equal(f.reportText.innerHTML, undefined);
+  assert.equal(await f.blobs[0].text(), f.reportText.value);
+  assert.equal(f.calls.length, 1);
+});
+
+test('retry failure clears a previous report preview, without displaying the error body', async () => {
+  const f = fixture(() => f.calls.length === 1 ? response() : response('PRIVATE ERROR',403));
+  await f.prepare.click();
+  f.preview.open = true;
+  await f.prepare.click();
+  assert.equal(f.preview.hidden, true);
+  assert.equal(f.preview.open, false);
+  assert.equal(f.reportText.value, '');
+});
+
+test('expiry and leaving clear the report text as well as the download link', async () => {
+  const f = fixture(async () => response());
+  await f.prepare.click();
+  [...f.timers.values()].find(t => t.delay === 300000).fn();
+  assert.equal(f.reportText.value, '');
+  assert.equal(f.preview.hidden, true);
+  await f.prepare.click();
+  f.events.pagehide();
+  assert.equal(f.reportText.value, '');
+  assert.equal(f.preview.hidden, true);
 });
