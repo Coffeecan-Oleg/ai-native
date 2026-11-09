@@ -2,9 +2,10 @@
 from asyncio import to_thread
 from datetime import datetime, timedelta, timezone
 from html import escape
+from pathlib import Path as FilePath
 from urllib.parse import urlencode
 
-from starlette.responses import HTMLResponse, PlainTextResponse
+from starlette.responses import FileResponse, HTMLResponse, PlainTextResponse
 from gateway_mcp.routes.admin_ui import admin_shell
 from gateway_mcp.services import corporate_access
 from gateway_mcp.services import connection_diagnostics as service
@@ -13,6 +14,7 @@ from gateway_mcp.web import login_redirect, web_actor
 
 PATH = '/platforma/connection'
 REPORT_PATH = PATH + '/report'
+CLIENT_PATH = PATH + '/download.js'
 REPORT_HEADERS = {'Cache-Control':'no-store', 'Referrer-Policy':'no-referrer',
                   'X-Content-Type-Options':'nosniff'}
 
@@ -28,7 +30,8 @@ def _time(value):
 
 
 def _response(actor, body, status=200):
-    return HTMLResponse(admin_shell(title='Проверить подключение',active='connection-check',actor=actor,body=body),
+    return HTMLResponse(admin_shell(title='Проверить подключение',active='connection-check',actor=actor,body=body,
+                        extra_head='<script defer src="'+CLIENT_PATH+'"></script>'),
                         status_code=status,headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer',
                         'X-Content-Type-Options':'nosniff'})
 
@@ -101,8 +104,14 @@ def _render(actor, mark, result):
             '<p>Это серверные разрешения. Отображение инструментов в другом чате и доступ к конкретным данным проверяются отдельно.</p></details>')
     body += ('<p><a class="button" href="'+escape(refresh,quote=True)+'">Обновить результат</a> '
              '<a href="'+PATH+'">Начать новую проверку</a></p>'
-             '<p><a href="'+escape(download,quote=True)+'" download="platforma-connection.txt">'
-             'Скачать результат проверки (.txt)</a></p>'
+             '<p><button type="button" id="connection-report-prepare" data-report-url="'
+             +escape(download,quote=True)+'" aria-describedby="connection-report-status">Подготовить файл (.txt)</button></p>'
+             '<p id="connection-report-status" role="status" aria-live="polite" aria-atomic="true">'
+             'Сначала подготовьте файл, затем нажмите появившуюся ссылку скачивания.</p>'
+             '<p><a id="connection-report-download" hidden download="platforma-connection.txt">'
+             'Скачать готовый файл (.txt)</a></p>'
+             '<noscript><p>Для подготовки файла включите JavaScript в браузере. '
+             'При обращении в поддержку можно скопировать результат с этой страницы.</p></noscript>'
              '<p>Если нужна помощь, приложите файл к обращению в поддержку. Он содержит результат только вашей проверки '
              'и не отправляется автоматически. Перед скачиванием обновите результат.</p></section>'
              '<section class="panel"><h2>3. Если вызова нет</h2><ol>'
@@ -117,6 +126,14 @@ def _render(actor, mark, result):
 
 
 def register_connection_diagnostics_routes(mcp):
+    @mcp.custom_route(CLIENT_PATH,methods=['GET'],include_in_schema=False)
+    async def connection_download_client(request):
+        # Fixed public script only. No session, report, user data or proxy URL.
+        if not corporate_access.enabled():
+            return PlainTextResponse('Not found',status_code=404,headers=REPORT_HEADERS)
+        return FileResponse(FilePath(__file__).resolve().parents[1]/'help_assets'/'connection-download.js',
+            media_type='application/javascript',headers=REPORT_HEADERS)
+
     @mcp.custom_route(REPORT_PATH,methods=['GET'],include_in_schema=False)
     async def connection_report(request):
         def problem(message,status):

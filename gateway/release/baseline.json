@@ -928,9 +928,9 @@
       "size": 18020
     },
     "routes/connection_diagnostics.py": {
-      "sha256": "6b0237dbf085b22ba36b610047d583c4c4da984717e2f0856479e3076b67941e",
-      "lf_sha256": "6b0237dbf085b22ba36b610047d583c4c4da984717e2f0856479e3076b67941e",
-      "size": 13539
+      "sha256": "37640f41ca2ec9c894c6cff901d296c0a876d0c43ceb0b320ebe8a62bcf24eb7",
+      "lf_sha256": "37640f41ca2ec9c894c6cff901d296c0a876d0c43ceb0b320ebe8a62bcf24eb7",
+      "size": 14978
     },
     "services/connection_diagnostics.py": {
       "sha256": "c9b9fb73bd45ec4c4436984835f24bf8d78c0d76de8742d651c35e0218628eab",
@@ -1016,6 +1016,11 @@
       "sha256": "c232590bf30e5bf03ea6aaef4129d24386c79ad3e616c28da067e784a6fd5319",
       "lf_sha256": "c232590bf30e5bf03ea6aaef4129d24386c79ad3e616c28da067e784a6fd5319",
       "size": 933
+    },
+    "help_assets/connection-download.js": {
+      "sha256": "1b672121147dd9dac13f3d707e76f09cdc80a0e14af1580d55b020b51e70b6d5",
+      "lf_sha256": "1b672121147dd9dac13f3d707e76f09cdc80a0e14af1580d55b020b51e70b6d5",
+      "size": 4563
     }
   },
   "private_mounts_excluded": [

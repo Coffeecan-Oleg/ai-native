@@ -29,6 +29,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Connection download browser logic (synthetic, no network)
+        run: node --test gateway/tests-js/connection-download.test.cjs
       - name: Test CI guard and cleanup logic without Docker operations
         run: |
           python3 -m unittest discover -s gateway/release -p test_ci_check.py

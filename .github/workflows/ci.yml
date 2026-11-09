@@ -61,6 +61,11 @@ jobs:
           python -m json.tool gateway-tools.json > /dev/null
           python -m json.tool gateway-policy.json > /dev/null
           python -m json.tool gateway-company-indexes.json > /dev/null
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Connection download browser logic (synthetic, no network)
+        run: node --test tests-js/connection-download.test.cjs
       - name: Compile all modules
         run: >-
           python -m compileall -q gateway_mcp gateway.py gateway_access.py gateway_auth.py
