@@ -182,6 +182,13 @@ def install_dependency_stubs() -> None:
         class HTMLResponse(Response):
             pass
 
+        class FileResponse(Response):
+            # A constructor-only fake for unit route-registration tests.
+            # Real file delivery is covered with Starlette in its own process.
+            def __init__(self, path, media_type=None, status_code=200, headers=None, **kwargs):
+                super().__init__(None, media_type=media_type, status_code=status_code, headers=headers)
+                self.path = path
+
         class StreamingResponse(Response):
             def __init__(
                 self, content=None, media_type=None, status_code=200, headers=None
@@ -199,6 +206,7 @@ def install_dependency_stubs() -> None:
         responses.PlainTextResponse = PlainTextResponse
         responses.RedirectResponse = RedirectResponse
         responses.HTMLResponse = HTMLResponse
+        responses.FileResponse = FileResponse
         responses.StreamingResponse = StreamingResponse
         sys.modules.setdefault("starlette", starlette)
         sys.modules["starlette.requests"] = requests

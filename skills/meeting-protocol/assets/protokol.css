@@ -1,0 +1,262 @@
+/* ===========================================================================
+   Акметрон — Протокол встречи: печатный CSS (A4, светлый, фирменный).
+   Самодостаточный файл: шрифты (Montserrat + Inter, латиница + кириллица),
+   токены Акметрон на светлом носителе и чистый многостраничный макет A4.
+   Содержимое (window.PROTOCOL) и рендерер задают структуру; здесь — только стиль.
+   НЕ редактировать под конкретную встречу — это фиксированный слой дизайна.
+   =========================================================================== */
+
+/* ── Шрифты ─────────────────────────────────────────────────────────────── */
+@font-face { font-family:'Inter'; font-style:normal; font-weight:400; font-display:swap;
+  src:url("fonts/inter-latin-400.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:400; font-display:swap;
+  src:url("fonts/inter-cyr-400.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:500; font-display:swap;
+  src:url("fonts/inter-latin-500.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:500; font-display:swap;
+  src:url("fonts/inter-cyr-500.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:600; font-display:swap;
+  src:url("fonts/inter-latin-600.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:600; font-display:swap;
+  src:url("fonts/inter-cyr-600.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:700; font-display:swap;
+  src:url("fonts/inter-latin-700.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:700; font-display:swap;
+  src:url("fonts/inter-cyr-700.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:600; font-display:swap;
+  src:url("fonts/mont-latin-600.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:600; font-display:swap;
+  src:url("fonts/mont-cyr-600.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:700; font-display:swap;
+  src:url("fonts/mont-latin-700.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:700; font-display:swap;
+  src:url("fonts/mont-cyr-700.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:800; font-display:swap;
+  src:url("fonts/mont-latin-800.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:800; font-display:swap;
+  src:url("fonts/mont-cyr-800.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:900; font-display:swap;
+  src:url("fonts/mont-latin-900.woff2") format('woff2'); unicode-range:U+0000-03FF,U+0530-FFFF; }
+@font-face { font-family:'Montserrat'; font-style:normal; font-weight:900; font-display:swap;
+  src:url("fonts/mont-cyr-900.woff2") format('woff2'); unicode-range:U+0400-045F,U+0460-052F,U+1C80-1C8A,U+20B4,U+2116,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F; }
+
+/* ── Токены (светлый носитель, бренд Акметрон) ──────────────────────────── */
+:root {
+  --font-display:"Montserrat", system-ui, sans-serif;
+  --font-body:"Inter", system-ui, sans-serif;
+
+  --brand-blue:#004180;     /* логотип, шапки разделов, глубокие заливки */
+  --blue:#1C6BB0;           /* действия, акценты, нумерация */
+  --blue-deep:#2E6FA8;
+  --alert:#C2607A;          /* только риски/проблемы */
+
+  --page-w:794px;
+  --page-h:1123px;
+  --pad-x:60px;
+
+  --bg:#E6E9F1;             /* стол под листами */
+  --page:#FFFFFF;
+  --ink:#14223D;            /* заголовки, значения — фирменный navy */
+  --body:#33405C;           /* основной текст */
+  --muted:#6E7CA0;          /* подписи, сноски */
+  --rule:#DCE1EB;           /* линии */
+  --zebra:#F4F7FB;          /* чётные строки */
+  --grp:#E7EFFA;            /* фон строки-группы */
+  --card:#FBFCFE;           /* лёгкая карточка */
+}
+
+*, *::before, *::after { box-sizing:border-box; }
+
+body.proto-doc {
+  margin:0;
+  background:var(--bg);
+  padding:40px 0 64px;
+  font-family:var(--font-body);
+  color:var(--body);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+.proto-stack { display:flex; flex-direction:column; align-items:center; gap:26px; }
+
+/* ── Лист ───────────────────────────────────────────────────────────────── */
+.proto-page {
+  position:relative;
+  width:var(--page-w);
+  height:var(--page-h);
+  background:var(--page);
+  box-shadow:0 2px 14px rgba(20,34,61,0.12);
+  border-radius:3px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+
+/* пазл-мотив в правом верхнем углу — только на первой странице */
+.proto-page .proto-puzzle {
+  position:absolute; top:0; right:0; width:340px; height:340px;
+  background-image:url("puzzle-pattern.svg");
+  background-size:460px 460px; background-repeat:repeat; background-position:right top;
+  opacity:0.5; pointer-events:none;
+  -webkit-mask-image:radial-gradient(125% 125% at 100% 0%, #000 0%, #000 28%, transparent 70%);
+          mask-image:radial-gradient(125% 125% at 100% 0%, #000 0%, #000 28%, transparent 70%);
+}
+
+/* ── Колонтитул сверху ──────────────────────────────────────────────────── */
+.proto-runhead {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px var(--pad-x) 11px;
+  border-bottom:2px solid var(--brand-blue);
+  background:var(--page); position:relative; z-index:2;
+}
+.akm-logo { display:inline-flex; align-items:center; gap:0.42em; font-size:17px; line-height:1; }
+.akm-logo img { height:1em; width:auto; display:block; }
+.akm-logo span { font-family:var(--font-display); font-weight:800; font-size:0.82em; letter-spacing:0.02em; color:var(--ink); white-space:nowrap; }
+.proto-runhead .proto-site { font-family:var(--font-body); font-size:12px; color:var(--blue-deep); letter-spacing:0.02em; }
+
+/* ── Подвал ─────────────────────────────────────────────────────────────── */
+.proto-foot {
+  margin-top:auto;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px var(--pad-x) 16px;
+  border-top:1px solid var(--rule);
+  font-family:var(--font-body); font-size:10px; color:var(--muted);
+}
+.proto-foot .proto-pageno { font-family:var(--font-display); font-weight:700; letter-spacing:0.08em; color:var(--body); }
+
+/* ── Тело ───────────────────────────────────────────────────────────────── */
+.proto-body { flex:1; padding:26px var(--pad-x) 18px; position:relative; z-index:1; min-height:0; }
+.proto-flow { display:flex; flex-direction:column; }
+
+/* ── Титульный блок (страница 1) ────────────────────────────────────────── */
+.proto-title { margin-bottom:6px; }
+.proto-eyebrow {
+  font-family:var(--font-display); font-weight:700; font-size:12px;
+  letter-spacing:0.27em; text-transform:uppercase; color:var(--blue-deep);
+}
+.proto-h1 {
+  font-family:var(--font-display); font-weight:800; font-size:34px; line-height:1.12;
+  letter-spacing:-0.02em; color:var(--ink); margin:12px 0 0; max-width:600px;
+}
+.proto-meta {
+  display:flex; flex-wrap:wrap; gap:8px 18px; margin:16px 0 0;
+  font-family:var(--font-body); font-size:13px; color:var(--muted);
+}
+.proto-meta b { color:var(--ink); font-weight:600; }
+.proto-meta .dot { color:var(--rule); }
+.proto-lead {
+  font-family:var(--font-body); font-size:14.5px; line-height:1.55; color:var(--body);
+  margin:16px 0 0; max-width:620px;
+}
+.proto-parties { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 4px; }
+.proto-chip {
+  display:inline-flex; align-items:baseline; gap:6px;
+  padding:5px 13px; border-radius:999px;
+  background:var(--card); border:1px solid var(--rule);
+  font-family:var(--font-body); font-size:12px; color:var(--ink);
+}
+.proto-chip .role { color:var(--muted); font-size:11px; }
+.proto-title-rule { height:2px; background:var(--brand-blue); margin:20px 0 0; }
+
+/* ── Заголовок раздела ──────────────────────────────────────────────────── */
+.proto-section-head { display:flex; align-items:center; gap:12px; margin:22px 0 12px; }
+.proto-section-head:first-child { margin-top:4px; }
+.proto-section-num {
+  flex:0 0 auto; width:26px; height:26px; border-radius:7px;
+  background:var(--brand-blue); color:#fff;
+  font-family:var(--font-display); font-weight:800; font-size:13px;
+  display:flex; align-items:center; justify-content:center;
+}
+.proto-section-head h2 {
+  font-family:var(--font-display); font-weight:800; font-size:19px; line-height:1.1;
+  letter-spacing:-0.01em; color:var(--ink); margin:0; flex:1 1 auto;
+}
+.proto-section-head .cont { font-weight:500; font-size:13px; color:var(--muted); }
+.proto-section-rule { height:2px; background:var(--brand-blue); margin:-6px 0 14px; }
+
+/* ── Повестка / нумерованный перечень ──────────────────────────────────── */
+.proto-num {
+  display:flex; gap:13px; padding:7px 0; border-bottom:1px solid var(--rule);
+}
+.proto-num:last-child { border-bottom:none; }
+.proto-num .n {
+  flex:0 0 auto; font-family:var(--font-display); font-weight:800; font-size:14px;
+  color:var(--blue); min-width:22px;
+}
+.proto-num .t { font-family:var(--font-body); font-size:13.5px; line-height:1.5; color:var(--body); }
+
+/* ── Обсуждаемые темы (карточки-блоки) ─────────────────────────────────── */
+.proto-topic {
+  border:1px solid var(--rule); border-left:3px solid var(--blue);
+  border-radius:10px; background:var(--card);
+  padding:13px 16px; margin-bottom:12px;
+}
+.proto-topic:last-child { margin-bottom:0; }
+.proto-topic h3 {
+  font-family:var(--font-display); font-weight:700; font-size:15px; line-height:1.25;
+  color:var(--ink); margin:0 0 6px;
+}
+.proto-topic p { font-family:var(--font-body); font-size:13px; line-height:1.55; color:var(--body); margin:0; }
+.proto-topic ul { margin:8px 0 0; padding:0; list-style:none; }
+.proto-topic li {
+  position:relative; padding:3px 0 3px 16px; font-size:12.5px; line-height:1.5; color:var(--body);
+}
+.proto-topic li::before {
+  content:""; position:absolute; left:2px; top:10px; width:5px; height:5px;
+  border-radius:50%; background:var(--blue);
+}
+
+/* ── Решения и задачи (таблица по владельцам) ──────────────────────────── */
+.proto-tasktable { width:100%; border-collapse:collapse; font-family:var(--font-body); }
+.proto-tasktable .owner td {
+  background:var(--grp); color:var(--ink);
+  font-family:var(--font-display); font-weight:700; font-size:12px;
+  padding:7px 14px; border-top:1px solid var(--rule);
+}
+.proto-tasktable .owner .role { font-family:var(--font-body); font-weight:500; color:var(--muted); font-size:11px; margin-left:8px; }
+.proto-tasktable .task td {
+  font-size:12.5px; line-height:1.4; padding:7px 14px;
+  border-bottom:1px solid var(--rule); vertical-align:top;
+}
+.proto-tasktable .task.alt td { background:var(--zebra); }
+.proto-tasktable .task .desc { color:var(--body); }
+.proto-tasktable .task .desc .tnum { font-family:var(--font-display); font-weight:700; color:var(--blue); margin-right:7px; }
+.proto-tasktable .task .due {
+  text-align:right; white-space:nowrap; color:var(--blue-deep); font-weight:600;
+  font-size:11.5px; width:170px; padding-left:18px;
+}
+.proto-tasktable .task .due.empty { color:var(--muted); font-weight:500; }
+
+/* ── Колаут «Следующий шаг» ─────────────────────────────────────────────── */
+.proto-callout {
+  border:1px solid var(--rule); border-left:4px solid var(--blue);
+  border-radius:10px; background:#F2F8FD; padding:14px 17px;
+}
+.proto-callout .label {
+  font-family:var(--font-display); font-weight:700; font-size:11px;
+  letter-spacing:0.16em; text-transform:uppercase; color:var(--blue-deep); margin-bottom:6px;
+}
+.proto-callout p { font-family:var(--font-body); font-size:13.5px; line-height:1.55; color:var(--ink); margin:0; }
+
+/* ── Простой абзац ──────────────────────────────────────────────────────── */
+.proto-para { font-family:var(--font-body); font-size:13px; line-height:1.6; color:var(--body); }
+
+/* ── Галерея материалов ─────────────────────────────────────────────────── */
+.proto-photo { margin-bottom:14px; break-inside:avoid; }
+.proto-photo .frame {
+  border:1px solid var(--rule); border-radius:10px; overflow:hidden;
+  background:var(--zebra); display:flex; align-items:center; justify-content:center;
+}
+.proto-photo img { display:block; width:100%; height:auto; object-fit:contain; }
+.proto-photo .cap { font-family:var(--font-body); font-size:11px; color:var(--muted); margin:6px 2px 0; }
+
+/* ── Печать ─────────────────────────────────────────────────────────────── */
+@media print {
+  body.proto-doc { background:#fff; padding:0; }
+  .proto-stack { gap:0; }
+  .proto-page { width:100%; height:100vh; box-shadow:none; border-radius:0; break-after:page; }
+  .proto-page:last-child { break-after:auto; }
+}
+@page { size:A4; margin:0; }

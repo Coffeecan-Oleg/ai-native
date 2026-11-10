@@ -1,0 +1,19 @@
+{
+  "gateway": {
+    "publicOrigin": "https://openclaw.example.invalid"
+  },
+  "mcp": {
+    "servers": {
+      "platforma": {
+        "enabled": false,
+        "url": "https://kromin.axion-test.akmetron.ru/mcp",
+        "transport": "streamable-http",
+        "auth": "oauth",
+        "oauth": {
+          "identity": "per-requester",
+          "scope": "access:request memory:read platforma:read platforma:write skills:read telemetry:read telemetry:write tools:call tools:read"
+        }
+      }
+    }
+  }
+}

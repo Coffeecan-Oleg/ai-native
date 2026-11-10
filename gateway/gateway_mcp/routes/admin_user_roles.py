@@ -39,7 +39,9 @@ def role_panel(user, state, csrf):
     label = "Администратор" if state["is_admin"] else "Пользователь"
     body = f'<section class="access-band"><h2>Роль в шлюзе: {label}</h2>'
     if state["is_admin"]:
-        return body + "<p>Доступ к админке уже включён.</p></section>"
+        return body + ("<p>Роль администратора назначена. Доступ к конкретным страницам, данным "
+                       "и MCP-инструментам проверяется отдельно; учебные ограничения "
+                       "и разрешения личного подключения сохраняются.</p></section>")
     if state["denied"]:
         return (
             body

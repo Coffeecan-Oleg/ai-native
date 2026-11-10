@@ -18,6 +18,45 @@
         "sequential-thinking",
         "document-templates"
       ]
+    },
+    {
+      "name": "platforma-training",
+      "version": "0.1.2",
+      "displayName": "Архив — учебный помощник",
+      "shortDescription": "Учебные сервисы и заявки",
+      "author": {
+        "name": "Coffeecan-Oleg",
+        "url": "https://github.com/Coffeecan-Oleg"
+      },
+      "repository": "https://github.com/Coffeecan-Oleg/ai-native",
+      "mcpUrl": "https://platforma.akmetron.ru/mcp",
+      "category": "Productivity",
+      "description": "Исторический учебный пакет. Не рекомендуется для корпоративной установки: учебные операции закрыты. Для текущего сервера используйте gateway-mcp.",
+      "skills": [
+        "platforma-training-service-reader",
+        "platforma-training-service-writer"
+      ],
+      "distribution": "historical"
+    },
+    {
+      "name": "akmetron-corporate",
+      "version": "0.1.0",
+      "displayName": "Акметрон — корпоративное оформление",
+      "category": "Productivity",
+      "description": "Фирменные документы, интерфейсы и сообщения Акметрон. Только подготовка результата; доступ к корпоративным источникам не добавляется.",
+      "skills": [
+        "akmetron-design-system",
+        "datasheet-ru-localizer",
+        "meeting-protocol",
+        "message-format-tg-bitrix",
+        "plain-language-doc"
+      ],
+      "distribution": "reference",
+      "distributionNote": "Reference sources; employees read approved corporate skills through MCP, not a second installed copy."
     }
-  ]
+  ],
+  "gateway": {
+    "profile": "corporate",
+    "mcpUrl": "https://platforma.akmetron.ru/mcp"
+  }
 }

@@ -1,0 +1,91 @@
+{
+  "workspace_url": "https://akmetron.bitrix24.ru/note/workspace/29/",
+  "legacy_cleanup": {
+    "date": "2026-11-03",
+    "count": 20,
+    "status": "moved_to_product_trash",
+    "retention_days_shown_by_portal": 30,
+    "permissions_changed": false
+  },
+  "schema": 2,
+  "history": [
+    {
+      "source": "01-corporate-entry.md",
+      "status": "published_verified",
+      "article_id": 489,
+      "url": "https://akmetron.bitrix24.ru/note/document/489/",
+      "verified_at": "2026-11-03T15:08:42.767852+00:00",
+      "source_sha256": "1efe33e62e2592a5f7314b9d8739df0f13f0a269b59d8471c7fd53cf7589d51a",
+      "text_matches": true,
+      "headings": 7,
+      "links_checked": 3,
+      "repository_lf_sha256": "2d378bd4cb5f0f66c7774b1c4eea50f693b3c099fd3966ca91dc2519f05e5ed8",
+      "repository_normalization": "CRLF to LF only; original publication checksum retained; not republished"
+    },
+    {
+      "source": "02-operations-and-development.md",
+      "status": "published_verified",
+      "article_id": 495,
+      "url": "https://akmetron.bitrix24.ru/note/document/495/",
+      "verified_at": "2026-11-04T13:27:33.504144+00:00",
+      "source_sha256": "86bad649a3585a7c4cb4bf458e3dcdff71e0697244809bedac0e6359d353ec90",
+      "text_matches": true,
+      "headings": 7,
+      "links_checked": 2,
+      "code_blocks_verified": 2,
+      "read_after_reload": true,
+      "permissions_changed": false
+    }
+  ],
+  "historical_drafts": [
+    {
+      "source": "03-source-and-release.md",
+      "status": "draft_owner_review",
+      "source_sha256": "d2772241e671ee36a66da3a5175a9205184ce0aa90e6cb6bc4223cc0896584f8",
+      "article_id": null,
+      "publish_only_after_explicit_approval": true
+    }
+  ],
+  "source_policy": "Repository source and published articles are independent. No full text equality claimed. Current checks below reuse saved receipts, not a new browser verification.",
+  "articles": [
+    {
+      "article_id": 495,
+      "url": "https://akmetron.bitrix24.ru/note/document/495/",
+      "purpose": "Помощь сотрудникам",
+      "last_saved_verification": "2026-11-09T08:57:28.292Z",
+      "status": "previous_publication_verified",
+      "source_files": [
+        "01-corporate-entry.md",
+        "04-connection-check.md",
+        "21-support-diagnostics.md"
+      ],
+      "text_matches": false,
+      "candidate_update_pending": true
+    },
+    {
+      "article_id": 535,
+      "url": "https://akmetron.bitrix24.ru/note/document/535/",
+      "purpose": "Разработка и выпуски",
+      "last_saved_verification": "2026-11-09T08:57:54.468Z",
+      "status": "previous_publication_verified",
+      "source_files": [
+        "03-source-and-release.md",
+        "../release-1.0.md"
+      ],
+      "text_matches": false,
+      "candidate_update_pending": true
+    },
+    {
+      "article_id": 537,
+      "url": "https://akmetron.bitrix24.ru/note/document/537/",
+      "purpose": "Приёмка обычным сотрудником и файл навыка",
+      "status": "existing_article_receipt_pending",
+      "source_files": [
+        "06-skill-acceptance.md",
+        "../release-1.0-acceptance.md"
+      ],
+      "text_matches": false,
+      "employee_result": "pending"
+    }
+  ]
+}

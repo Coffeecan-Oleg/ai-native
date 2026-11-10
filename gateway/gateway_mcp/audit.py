@@ -1,7 +1,24 @@
+import math
+import time
 from typing import Any
 
 from gateway_mcp.services.auth import current_actor
 from gateway_mcp.services.observability import audit_event, observe_tool_call, record_policy_deny
+
+
+def _timed_arguments(arguments: dict[str, Any], started_at: float) -> dict[str, Any]:
+    """Server measurement only; old/unmeasurable events remain explicitly untimed."""
+    result = dict(arguments)
+    for name in ("gateway_duration_ms", "gateway_timing_kind"):
+        result.pop(name, None)
+    try:
+        elapsed = time.perf_counter() - started_at
+        if math.isfinite(elapsed) and 0 <= elapsed <= 86400:
+            result.update(gateway_duration_ms=round(elapsed * 1000),
+                          gateway_timing_kind="tool_run_v1")
+    except (TypeError, ValueError, OverflowError):
+        pass
+    return result
 
 
 def finish_tool(
@@ -15,6 +32,7 @@ def finish_tool(
     arguments: dict[str, Any],
     error: str = "",
 ) -> None:
+    measured = _timed_arguments(arguments, started_at) if tool == "gateway_call_tool" else arguments
     observe_tool_call(
         tool=tool,
         system=system,
@@ -30,8 +48,9 @@ def finish_tool(
         decision=decision,
         status=status,
         scope=scope,
-        arguments=arguments,
+        arguments=measured,
         error=error,
+        channel="mcp",
     )
 
 

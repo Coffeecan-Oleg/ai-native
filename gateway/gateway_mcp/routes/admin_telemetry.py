@@ -4,7 +4,9 @@ from typing import Any
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, PlainTextResponse, Response
 
-from gateway_mcp.routes.admin_ui import admin_shell, empty_row, fmt_time
+from gateway_mcp.routes.admin_ui import admin_shell, empty_row
+from gateway_mcp.routes.connection_diagnostics import _time
+from gateway_mcp.routes.skill_labels import visible_titles, skill_label
 from gateway_mcp.services.policy import has_scope
 from gateway_mcp.services.telemetry import skill_stats
 from gateway_mcp.web import login_redirect, web_actor
@@ -18,6 +20,17 @@ PERIODS = (
     (365, "365 дней"),
 )
 
+TABLE_STYLES = """<style>
+.skill-telemetry-table { min-width: 1500px; table-layout: auto; }
+.skill-telemetry-table th, .skill-telemetry-table td:not(:first-child) {
+  white-space: nowrap; overflow-wrap: normal;
+}
+.skill-telemetry-table th:first-child, .skill-telemetry-table td:first-child {
+  min-width: 260px; width: 260px; max-width: 340px;
+}
+.skill-telemetry-table td:first-child { white-space: normal; }
+</style>"""
+
 
 def register_admin_telemetry_routes(mcp) -> None:
     @mcp.custom_route("/admin/telemetry/skills", methods=["GET"], include_in_schema=False)
@@ -25,6 +38,9 @@ def register_admin_telemetry_routes(mcp) -> None:
         actor = web_actor(request)
         if actor is None:
             return login_redirect("/admin/telemetry/skills")
+        from gateway_mcp.routes.training_admin import is_training_visitor, skill_response
+        if is_training_visitor(actor):
+            return await skill_response(request, actor)
         if not has_scope(actor, "access:admin"):
             return PlainTextResponse("access:admin is required.", status_code=403)
 
@@ -62,9 +78,10 @@ def register_admin_telemetry_routes(mcp) -> None:
             <div><h2>Использование навыков</h2><p class="description">Одна строка соответствует навыку, его версии, агенту и проекту.</p></div>
             <span class="status ok">{len(rows)} строк</span>
           </div>
-          <div class="table-wrap"><table>
+          <p class="muted">В узком окне прокрутите таблицу вправо, чтобы увидеть все показатели.</p>
+          <div class="table-wrap" role="region" aria-label="Использование навыков" tabindex="0"><table class="skill-telemetry-table">
             <thead><tr><th>Навык</th><th>Пакет</th><th>Версия</th><th>Агент</th><th>Проект</th><th>Запуски</th><th>Завершено</th><th>Ошибки</th><th>Прервано</th><th>Успешность</th><th>Пользователи</th><th>Медиана</th><th>95%</th><th>Последний запуск</th></tr></thead>
-            <tbody>{_skill_rows(rows)}</tbody>
+            <tbody>{_skill_rows(rows, visible_titles(actor) if rows else {})}</tbody>
           </table></div>
         </section>
         """
@@ -75,6 +92,7 @@ def register_admin_telemetry_routes(mcp) -> None:
                 actor=actor,
                 body=body,
                 shell_width="1560px",
+                extra_head=TABLE_STYLES,
             )
         )
 
@@ -99,7 +117,7 @@ def _filter_form(filters: dict[str, Any]) -> str:
         ("Версия", "skill_version", "0.16.0"),
         ("Агент", "agent", "claude, codex"),
         ("Проект", "project", "acme"),
-        ("Пользователь", "actor_subject", "yandex:..."),
+        ("Пользователь", "actor_subject", "bitrix24:..."),
     )
     inputs = "".join(
         f'<label>{escape(label)}<input type="text" name="{name}" value="{escape(str(filters[name]))}" placeholder="{escape(placeholder)}"></label>'
@@ -121,12 +139,12 @@ def _filter_form(filters: dict[str, Any]) -> str:
     """
 
 
-def _skill_rows(rows: list[dict[str, Any]]) -> str:
+def _skill_rows(rows: list[dict[str, Any]], titles=None) -> str:
     if not rows:
         return empty_row(14, "За выбранный период запуски навыков не зафиксированы")
     return "".join(
         "<tr>"
-        f'<td><strong>{escape(str(row.get("skill_id") or "—"))}</strong></td>'
+        f'<td>{skill_label(row.get("skill_id"), titles or {})}</td>'
         f'<td>{escape(str(row.get("skill_pack") or "—"))}</td>'
         f'<td>{escape(str(row.get("skill_version") or "—"))}</td>'
         f'<td>{escape(str(row.get("agent") or "—"))}</td>'
@@ -139,7 +157,7 @@ def _skill_rows(rows: list[dict[str, Any]]) -> str:
         f'<td>{_number(row.get("active_users"))}</td>'
         f'<td>{_duration(row.get("p50_duration_ms"))}</td>'
         f'<td>{_duration(row.get("p95_duration_ms"))}</td>'
-        f'<td style="white-space:nowrap">{escape(fmt_time(row.get("last_seen_at")))}</td>'
+        f'<td style="white-space:nowrap">{escape(_time(row.get("last_seen_at")))}</td>'
         "</tr>"
         for row in rows
     )

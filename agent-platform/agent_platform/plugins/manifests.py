@@ -19,7 +19,7 @@ def pack_plugin_manifest(pack: dict[str, Any], platform_release: str = "") -> di
         "name": pack["name"],
         "version": pack_version(pack),
         "description": pack["description"],
-        "author": {
+        "author": pack.get("author") or {
             "name": "coMind",
             "email": "team@comind.space",
             "url": "https://comind.space",
@@ -31,12 +31,12 @@ def pack_plugin_manifest(pack: dict[str, Any], platform_release: str = "") -> di
             pack["category"].lower(),
         ],
         "skills": "./skills/",
-        "metadata": platform_metadata(platform_release),
+        "metadata": {**platform_metadata(platform_release), **({"distribution": pack["distribution"]} if pack.get("distribution") in {"historical", "reference"} else {})},
         "interface": {
             "displayName": pack["displayName"],
-            "shortDescription": pack["description"],
+            "shortDescription": pack.get("shortDescription") or pack["description"],
             "longDescription": pack["description"],
-            "developerName": "coMind",
+            "developerName": (pack.get("author") or {}).get("name", "coMind"),
             "category": pack["category"],
             "capabilities": ["Skills"],
             "defaultPrompt": [f"Use {pack['displayName']} for this work."],
@@ -51,7 +51,7 @@ def write_claude_manifest(plugin_root: Path, pack: dict[str, Any], platform_rele
             "name": pack["name"],
             "version": pack_version(pack),
             "description": pack["description"],
-            "author": {
+            "author": pack.get("author") or {
                 "name": "coMind",
                 "email": "team@comind.space",
                 "url": "https://comind.space",
@@ -70,15 +70,15 @@ def write_cursor_manifest(plugin_root: Path, pack: dict[str, Any], platform_rele
             "displayName": pack["displayName"],
             "version": pack_version(pack),
             "description": pack["description"],
-            "author": {"name": "coMind", "email": "team@comind.space"},
+            "author": pack.get("author") or {"name": "coMind", "email": "team@comind.space"},
             "homepage": "https://comind.space",
-            "repository": "https://github.com/comindspace/ai-native",
+            "repository": pack.get("repository") or "https://github.com/comindspace/ai-native",
             "license": "UNLICENSED",
             "keywords": ["agents", "skills", "ai-native", category],
             "category": category,
             "tags": [category, "skills", "agent-skills"],
             "skills": "./skills/",
-            "metadata": platform_metadata(platform_release),
+            "metadata": {**platform_metadata(platform_release), **({"distribution": pack["distribution"]} if pack.get("distribution") in {"historical", "reference"} else {})},
         },
     )
 
@@ -97,7 +97,7 @@ def write_zcode_manifest(plugin_root: Path, pack: dict[str, Any], platform_relea
             "name": pack["name"],
             "version": pack_version(pack),
             "description": pack["description"],
-            "author": {
+            "author": pack.get("author") or {
                 "name": "coMind",
                 "email": "team@comind.space",
                 "url": "https://comind.space",
@@ -163,7 +163,7 @@ def write_hermes_root_plugin(output: Path, registry: dict[str, Any], platform_re
     pack plugins under plugins/<pack>/, so the root plugin delegates to those
     generated pack directories and makes `hermes plugins install <repo>` work.
     """
-    packs = registry["packs"]
+    packs = [pack for pack in registry["packs"] if pack.get("distribution") not in {"historical", "reference"}]
     root_description = "Company Agent Skills: shared coMind skill packs for Hermes."
     write_text(
         output / "plugin.yaml",

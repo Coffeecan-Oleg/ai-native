@@ -1,0 +1,30 @@
+{
+  "name": "platforma-training",
+  "displayName": "Архив — учебный помощник",
+  "version": "0.1.2",
+  "description": "Исторический учебный пакет. Не рекомендуется для корпоративной установки: учебные операции закрыты. Для текущего сервера используйте gateway-mcp.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "homepage": "https://comind.space",
+  "repository": "https://github.com/Coffeecan-Oleg/ai-native",
+  "license": "UNLICENSED",
+  "keywords": [
+    "agents",
+    "skills",
+    "ai-native",
+    "productivity"
+  ],
+  "category": "productivity",
+  "tags": [
+    "productivity",
+    "skills",
+    "agent-skills"
+  ],
+  "skills": "./skills/",
+  "metadata": {
+    "platformRelease": "2026.09.11",
+    "distribution": "historical"
+  }
+}

@@ -264,6 +264,7 @@ def audit_event(
     scope: str = "",
     arguments: dict[str, Any] | None = None,
     error: str = "",
+    channel: str = "",
 ) -> None:
     payload = {
         "ts_ms": now_ms(),
@@ -283,6 +284,8 @@ def audit_event(
         "error": error,
     }
 
+    if channel in {"mcp", "web"}:
+        payload["channel"] = channel
     line = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     LOGGER.info(line)
 

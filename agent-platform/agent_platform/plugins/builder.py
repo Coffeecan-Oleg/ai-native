@@ -3,6 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from agent_platform.io import write_json, write_text, yaml_quote
 from agent_platform.plugins.gateway import (
@@ -32,7 +33,34 @@ def marketplace_entry(name: str, category: str) -> dict[str, Any]:
     }
 
 
+def write_pack_mcp(plugin_root: Path, pack: dict[str, Any], manifest: dict[str, Any]) -> None:
+    """Optional OAuth connection for an own pack, with a portable manifest."""
+    url = str(pack.get("mcpUrl") or "")
+    if not url:
+        return
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ValueError("pack mcpUrl must be an HTTPS endpoint without credentials or query parameters")
+    manifest["mcpServers"] = "./codex.mcp.json"
+    manifest["interface"]["capabilities"] = ["Skills", "MCP"]
+    write_json(plugin_root / "codex.mcp.json", {"mcpServers": {"gateway": {"type": "http", "url": url, "timeout": 60000}}})
+    write_json(plugin_root / "mcp.json", {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+        "mcpServers": {"gateway": {"type": "streamable-http", "url": url}},
+    })
+    write_json(plugin_root / "plugin.json", {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        "name": manifest["name"], "version": manifest["version"],
+        "description": manifest["description"], "author": manifest["author"],
+        "extensions": {"com.openai": {"interface": manifest["interface"]}},
+    })
+
+
 def build_plugins(source: Path, registry: dict[str, Any], output: Path, clean: bool) -> dict[str, Any]:
+    corporate = registry.get("gateway")
+    if corporate is not None:
+        from agent_platform.plugins.corporate import validate_config
+        validate_config(corporate)
     plugins_root = output / "plugins"
     if clean and plugins_root.exists():
         shutil.rmtree(plugins_root)
@@ -50,13 +78,20 @@ def build_plugins(source: Path, registry: dict[str, Any], output: Path, clean: b
         for skill in pack["skills"]:
             copy_skill(source, skill, plugin_root / "skills")
 
-        write_json(plugin_root / ".codex-plugin/plugin.json", pack_plugin_manifest(pack, platform_release))
+        manifest = pack_plugin_manifest(pack, platform_release)
+        write_pack_mcp(plugin_root, pack, manifest)
+        write_json(plugin_root / ".codex-plugin/plugin.json", manifest)
         write_claude_manifest(plugin_root, pack, platform_release)
         write_cursor_manifest(plugin_root, pack, platform_release)
         write_openclaw_manifest(plugin_root, pack, platform_release)
         write_hermes_plugin(plugin_root, pack, platform_release)
         write_zcode_manifest(plugin_root, pack, platform_release)
 
+        if pack.get("distribution") == "historical":
+            write_text(plugin_root / "README.md", "# Исторический учебный пакет\n\nЭтот пакет сохранён для истории и не рекомендуется для корпоративной установки.\nИспользуйте gateway-mcp и актуальную инструкцию корпоративной Платформы.\nУчебные операции не входят в корпоративный профиль.\n")
+            continue
+        if pack.get("distribution") == "reference":
+            continue
         marketplace_plugins.append(marketplace_entry(pack["name"], pack["category"]))
         claude_plugins.append(
             {
@@ -84,14 +119,19 @@ def build_plugins(source: Path, registry: dict[str, Any], output: Path, clean: b
     gateway_root = plugins_root / "gateway-mcp"
     if clean and gateway_root.exists():
         shutil.rmtree(gateway_root)
-    write_gateway_plugin(gateway_root, platform_release)
+    write_gateway_plugin(gateway_root, platform_release, corporate=corporate)
+    if corporate is not None:
+        from agent_platform.plugins.corporate import DESCRIPTION, VERSION
+        gateway_version, gateway_text = VERSION, DESCRIPTION
+    else:
+        gateway_version, gateway_text = GATEWAY_PLUGIN_VERSION, gateway_description()
     marketplace_plugins.append(marketplace_entry("gateway-mcp", "Productivity"))
     claude_plugins.append(
         {
             "name": "gateway-mcp",
             "source": "./plugins/gateway-mcp",
-            "description": gateway_description(),
-            "version": GATEWAY_PLUGIN_VERSION,
+            "description": gateway_text,
+            "version": gateway_version,
             "platformRelease": platform_release,
         }
     )
@@ -157,17 +197,22 @@ def build_claude(source: Path, registry: dict[str, Any], output: Path, clean: bo
     if clean and target.exists():
         shutil.rmtree(target)
     for pack in registry["packs"]:
+        if pack.get("distribution") in {"historical", "reference"}:
+            continue
         for skill in pack["skills"]:
             copy_skill(source, skill, target)
     return {"target": "claude", "path": str(target), "skills": len(list(target.iterdir()))}
 
 
-def build_cursor_rules(source: Path, output: Path, clean: bool) -> dict[str, Any]:
+def build_cursor_rules(source: Path, output: Path, clean: bool, registry: dict[str, Any] | None = None) -> dict[str, Any]:
     target = output / "cursor/.cursor/rules"
     if clean and target.exists():
         shutil.rmtree(target)
     target.mkdir(parents=True, exist_ok=True)
     skills = get_skills(source)
+    if registry is not None:
+        selected = {skill for pack in registry["packs"] if pack.get("distribution") not in {"historical", "reference"} for skill in pack["skills"]}
+        skills = [skill for skill in skills if skill.directory in selected]
     for skill in skills:
         text = (skill.path / "SKILL.md").read_text(encoding="utf-8")
         content = "\n".join(
@@ -184,11 +229,14 @@ def build_cursor_rules(source: Path, output: Path, clean: bool) -> dict[str, Any
     return {"target": "cursor", "path": str(target), "rules": len(skills)}
 
 
-def build_portable(target_name: str, source: Path, output: Path, clean: bool) -> dict[str, Any]:
+def build_portable(target_name: str, source: Path, output: Path, clean: bool, registry: dict[str, Any] | None = None) -> dict[str, Any]:
     target = output / target_name / "skills"
     if clean and target.exists():
         shutil.rmtree(target)
     skills = get_skills(source)
+    if registry is not None:
+        selected = {skill for pack in registry["packs"] if pack.get("distribution") not in {"historical", "reference"} for skill in pack["skills"]}
+        skills = [skill for skill in skills if skill.directory in selected]
     for skill in skills:
         copy_skill(source, skill.directory, target)
     write_json(

@@ -12,6 +12,13 @@ from gateway_mcp.services.storage_admin_roles import admin_role_assignment_lock
 
 def admin_role_state(user: dict[str, Any]) -> dict[str, Any]:
     """Resolve the same identity aliases and bootstrap policy as a fresh login."""
+    from gateway_mcp.services import bitrix_identity, corporate_access
+    if corporate_access.enabled():
+        if not bitrix_identity.is_subject(user['subject']):
+            return {'is_admin':False,'denied':True,'grants':[]}
+        actor = corporate_access.fresh_actor(user['subject'])
+        return {'is_admin':corporate_access.is_owner(actor) and has_scope(actor,'access:admin'),
+                'denied':not has_scope(actor,'access:admin'),'grants':[]}
     subject = str(user["subject"])
     yandex_id = str(user.get("yandex_id") or "")
     if not yandex_id and subject.startswith("yandex:"):

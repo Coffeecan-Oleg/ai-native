@@ -1,0 +1,476 @@
+{
+  "schema": 1,
+  "pack": "akmetron-corporate",
+  "version": "0.1.0",
+  "source_archive_sha256": "a5c9dfe0b0471d6b856a54086f6f45aef71a1b0ee53ed3a6b0bcf43295c87c76",
+  "skills": [
+    {
+      "name": "akmetron-design-system",
+      "title": "Дизайн-система Акметрон",
+      "version": "0.1.0",
+      "description": "Фирменный стиль Акметрон для страниц, интерфейсов и HTML: логотип, синий акцент, Montserrat и Inter. Применять к явно выбранному корпоративному оформлению.",
+      "files": {
+        "assets/akmetron.css": {
+          "sha256": "b2a71c09a688cb44399b6fb647b25ae50e9fb0366bcaab9266e6052e9494e3dd",
+          "bytes": 11581
+        },
+        "assets/fonts/inter-cyr-400.woff2": {
+          "sha256": "f0bb586459ce8f09b238285040f17e3e9e9538b2c5a7aae0775194e33c36c3c3",
+          "bytes": 7712
+        },
+        "assets/fonts/inter-cyr-500.woff2": {
+          "sha256": "b77a86ec16aadc157f4a99e8898d71cd75ea264753d9bdf13f962f8c3988cbb0",
+          "bytes": 7900
+        },
+        "assets/fonts/inter-cyr-600.woff2": {
+          "sha256": "6c2a37f82a676bcd441b735e4e2cda4edb8873a059ab9c362a84f0711f257041",
+          "bytes": 7972
+        },
+        "assets/fonts/inter-cyr-700.woff2": {
+          "sha256": "5917871d3cc970d8ce195101cbf65c1f68ec948022eb6070030342bb7edfb3bb",
+          "bytes": 7904
+        },
+        "assets/fonts/inter-latin-400.woff2": {
+          "sha256": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
+          "bytes": 23664
+        },
+        "assets/fonts/inter-latin-500.woff2": {
+          "sha256": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+          "bytes": 24272
+        },
+        "assets/fonts/inter-latin-600.woff2": {
+          "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+          "bytes": 24452
+        },
+        "assets/fonts/inter-latin-700.woff2": {
+          "sha256": "6f56409fd3d64bb85f7d070bce20749db2d66b6d63cec586cc22d1c761be2491",
+          "bytes": 24356
+        },
+        "assets/fonts/mont-cyr-600.woff2": {
+          "sha256": "12fe2b174f70b732553c46dae097be6a70b3f4a3d3cf305dbbbf236ac3b182b7",
+          "bytes": 11120
+        },
+        "assets/fonts/mont-cyr-700.woff2": {
+          "sha256": "c6880741986ff5648d6b6c08ebbacfe7ba77861a002bff2643b8af4221f40d34",
+          "bytes": 11160
+        },
+        "assets/fonts/mont-cyr-800.woff2": {
+          "sha256": "e9796e8de1954ee72e8d5de23d26bb8f577d4b903abae1fe11db8904279516ef",
+          "bytes": 11180
+        },
+        "assets/fonts/mont-cyr-900.woff2": {
+          "sha256": "d7197257ad3cbc21bf3527e867355206b2399d74652a88372a523e19df630edf",
+          "bytes": 10908
+        },
+        "assets/fonts/mont-latin-600.woff2": {
+          "sha256": "d857325c360f7128b347ca924c1974967aaa886ba47dad22e4042d6c38b26a83",
+          "bytes": 18688
+        },
+        "assets/fonts/mont-latin-700.woff2": {
+          "sha256": "f9d9e65b15372cebcafc3acd1e664a564c5c4b23278de4d5760de9a13c530371",
+          "bytes": 18824
+        },
+        "assets/fonts/mont-latin-800.woff2": {
+          "sha256": "ba826fb84c2e961578adf3a08b5778b87905d4443445d1d56d84f9f157d5ea4b",
+          "bytes": 19012
+        },
+        "assets/fonts/mont-latin-900.woff2": {
+          "sha256": "5b6958520638bb8609f9eacb17c4d189563efeae96d5da49f7c2043988697205",
+          "bytes": 18020
+        },
+        "assets/logo-mark.png": {
+          "sha256": "0bc4fb211e2d9ecca4c5db9a2bc476f8e4520674f9953a6cc9f165503674d382",
+          "bytes": 255065
+        },
+        "assets/puzzle-pattern.svg": {
+          "sha256": "c58b213de6a0a8f27401888fe5562abd02954e2ced45070ed0327118e2b50a9c",
+          "bytes": 541
+        },
+        "assets/starter.html": {
+          "sha256": "9cffe3fd5a1c044c3f481f7c6d808a97fe43841b94ce2a45c0b6437895f47bf8",
+          "bytes": 2745
+        },
+        "LICENSE": {
+          "sha256": "8e0dd3c0b66467e5e93d73ecc53207fb2d6764f063006ea3dfc78cddbbe5c3bc",
+          "bytes": 1065
+        },
+        "NOTICE.md": {
+          "sha256": "be41be879b10b4252dc4ef00cd19d31c1c520debbe2a2152cc5c7b6fc0db52d9",
+          "bytes": 1317
+        },
+        "references/components.md": {
+          "sha256": "1acabe88cb0a2ac7231e0f8a8a5c5ec9e7a7660042dcd7df713473c42c89e2f3",
+          "bytes": 7206
+        },
+        "references/voice.md": {
+          "sha256": "3400584d10c21e5ca0e2ed6f7b4a273e0e5fd875c33f0df89b915b8fbf20ce9a",
+          "bytes": 4368
+        },
+        "SKILL.md": {
+          "sha256": "595da8bc2193172bfa4cdb44a5939ee056aa95934aaf0ed6fb3d54604e918ba4",
+          "bytes": 13941
+        },
+        "skill.yaml": {
+          "sha256": "4d6b19f6cab04e125a95438524f41e2117b2fd9b4528a54844b58f5dbc0d9880",
+          "bytes": 624
+        }
+      }
+    },
+    {
+      "name": "datasheet-ru-localizer",
+      "title": "Технические даташиты на русском",
+      "version": "0.1.0",
+      "description": "Перевод технических даташитов на русский с сохранением таблиц, единиц и структуры; фирменный PDF Акметрон из предоставленного источника и реального фото прибора.",
+      "files": {
+        "assets/content.template.js": {
+          "sha256": "bd839549786f59c87e9586ab03fc97cd33fea28d564821ec2129db4302f61998",
+          "bytes": 4762
+        },
+        "assets/content_fswx.js": {
+          "sha256": "593865a81533814a0c10b636481b434b7b9f2520814d403e651f5fe990342d81",
+          "bytes": 93071
+        },
+        "assets/datasheet.css": {
+          "sha256": "d2deb1365651878ab9d20e72acefd8a71440c34dde08639bb171072c889c0c36",
+          "bytes": 27454
+        },
+        "assets/fonts/inter-cyr-400.woff2": {
+          "sha256": "f0bb586459ce8f09b238285040f17e3e9e9538b2c5a7aae0775194e33c36c3c3",
+          "bytes": 7712
+        },
+        "assets/fonts/inter-cyr-500.woff2": {
+          "sha256": "b77a86ec16aadc157f4a99e8898d71cd75ea264753d9bdf13f962f8c3988cbb0",
+          "bytes": 7900
+        },
+        "assets/fonts/inter-cyr-600.woff2": {
+          "sha256": "6c2a37f82a676bcd441b735e4e2cda4edb8873a059ab9c362a84f0711f257041",
+          "bytes": 7972
+        },
+        "assets/fonts/inter-cyr-700.woff2": {
+          "sha256": "5917871d3cc970d8ce195101cbf65c1f68ec948022eb6070030342bb7edfb3bb",
+          "bytes": 7904
+        },
+        "assets/fonts/inter-latin-400.woff2": {
+          "sha256": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
+          "bytes": 23664
+        },
+        "assets/fonts/inter-latin-500.woff2": {
+          "sha256": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+          "bytes": 24272
+        },
+        "assets/fonts/inter-latin-600.woff2": {
+          "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+          "bytes": 24452
+        },
+        "assets/fonts/inter-latin-700.woff2": {
+          "sha256": "6f56409fd3d64bb85f7d070bce20749db2d66b6d63cec586cc22d1c761be2491",
+          "bytes": 24356
+        },
+        "assets/fonts/mont-cyr-600.woff2": {
+          "sha256": "12fe2b174f70b732553c46dae097be6a70b3f4a3d3cf305dbbbf236ac3b182b7",
+          "bytes": 11120
+        },
+        "assets/fonts/mont-cyr-700.woff2": {
+          "sha256": "c6880741986ff5648d6b6c08ebbacfe7ba77861a002bff2643b8af4221f40d34",
+          "bytes": 11160
+        },
+        "assets/fonts/mont-cyr-800.woff2": {
+          "sha256": "e9796e8de1954ee72e8d5de23d26bb8f577d4b903abae1fe11db8904279516ef",
+          "bytes": 11180
+        },
+        "assets/fonts/mont-cyr-900.woff2": {
+          "sha256": "d7197257ad3cbc21bf3527e867355206b2399d74652a88372a523e19df630edf",
+          "bytes": 10908
+        },
+        "assets/fonts/mont-latin-600.woff2": {
+          "sha256": "d857325c360f7128b347ca924c1974967aaa886ba47dad22e4042d6c38b26a83",
+          "bytes": 18688
+        },
+        "assets/fonts/mont-latin-700.woff2": {
+          "sha256": "f9d9e65b15372cebcafc3acd1e664a564c5c4b23278de4d5760de9a13c530371",
+          "bytes": 18824
+        },
+        "assets/fonts/mont-latin-800.woff2": {
+          "sha256": "ba826fb84c2e961578adf3a08b5778b87905d4443445d1d56d84f9f157d5ea4b",
+          "bytes": 19012
+        },
+        "assets/fonts/mont-latin-900.woff2": {
+          "sha256": "5b6958520638bb8609f9eacb17c4d189563efeae96d5da49f7c2043988697205",
+          "bytes": 18020
+        },
+        "assets/logo-mark.png": {
+          "sha256": "0bc4fb211e2d9ecca4c5db9a2bc476f8e4520674f9953a6cc9f165503674d382",
+          "bytes": 255065
+        },
+        "assets/photoslot.js": {
+          "sha256": "9309434cb09c357def2c583652d335eb7dedfb5295c9ad66e7d4e75a796dc5f3",
+          "bytes": 31364
+        },
+        "assets/puzzle-pattern.svg": {
+          "sha256": "e4bbe84bc4be853c88e02f82c1456d473df24182486ddf33ab36efff7652a428",
+          "bytes": 541
+        },
+        "assets/render_pdf.py": {
+          "sha256": "7b15a755ba89c227f82073214354cf0deb0007b6ed011659ec150519de5e9d0b",
+          "bytes": 3883
+        },
+        "assets/renderer.js": {
+          "sha256": "945d619efca469386b8330ac7a277a059c130cc90ce8b87b2c04ef8e052bde2c",
+          "bytes": 11263
+        },
+        "LICENSE": {
+          "sha256": "8e0dd3c0b66467e5e93d73ecc53207fb2d6764f063006ea3dfc78cddbbe5c3bc",
+          "bytes": 1065
+        },
+        "NOTICE.md": {
+          "sha256": "be41be879b10b4252dc4ef00cd19d31c1c520debbe2a2152cc5c7b6fc0db52d9",
+          "bytes": 1317
+        },
+        "references/glossary.md": {
+          "sha256": "812b7dc4152331522a0cbed548445cb4660d9c5162ad05fb2348549eb20316a4",
+          "bytes": 7701
+        },
+        "SKILL.md": {
+          "sha256": "89a0a210b62f2ce8945df76d422e25e66c920c44341b3142875a741e8377cd03",
+          "bytes": 12807
+        },
+        "skill.yaml": {
+          "sha256": "ddd6482581a2391d3f6decfad1ed5e358071f9c242db8c437793298274622377",
+          "bytes": 669
+        }
+      }
+    },
+    {
+      "name": "meeting-protocol",
+      "title": "Протоколы встреч",
+      "version": "0.1.0",
+      "description": "Протокол встречи в стиле Акметрон из заметок или расшифровки: повестка, решения, задачи с владельцами и сроками, HTML и PDF A4.",
+      "files": {
+        "assets/content.template.js": {
+          "sha256": "2678070ef37c400b8c57f0cc04d8395fe38cc68b9ecf9fc05527e5799c25f0c9",
+          "bytes": 4454
+        },
+        "assets/fonts/inter-cyr-400.woff2": {
+          "sha256": "f0bb586459ce8f09b238285040f17e3e9e9538b2c5a7aae0775194e33c36c3c3",
+          "bytes": 7712
+        },
+        "assets/fonts/inter-cyr-500.woff2": {
+          "sha256": "b77a86ec16aadc157f4a99e8898d71cd75ea264753d9bdf13f962f8c3988cbb0",
+          "bytes": 7900
+        },
+        "assets/fonts/inter-cyr-600.woff2": {
+          "sha256": "6c2a37f82a676bcd441b735e4e2cda4edb8873a059ab9c362a84f0711f257041",
+          "bytes": 7972
+        },
+        "assets/fonts/inter-cyr-700.woff2": {
+          "sha256": "5917871d3cc970d8ce195101cbf65c1f68ec948022eb6070030342bb7edfb3bb",
+          "bytes": 7904
+        },
+        "assets/fonts/inter-latin-400.woff2": {
+          "sha256": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
+          "bytes": 23664
+        },
+        "assets/fonts/inter-latin-500.woff2": {
+          "sha256": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+          "bytes": 24272
+        },
+        "assets/fonts/inter-latin-600.woff2": {
+          "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+          "bytes": 24452
+        },
+        "assets/fonts/inter-latin-700.woff2": {
+          "sha256": "6f56409fd3d64bb85f7d070bce20749db2d66b6d63cec586cc22d1c761be2491",
+          "bytes": 24356
+        },
+        "assets/fonts/mont-cyr-600.woff2": {
+          "sha256": "12fe2b174f70b732553c46dae097be6a70b3f4a3d3cf305dbbbf236ac3b182b7",
+          "bytes": 11120
+        },
+        "assets/fonts/mont-cyr-700.woff2": {
+          "sha256": "c6880741986ff5648d6b6c08ebbacfe7ba77861a002bff2643b8af4221f40d34",
+          "bytes": 11160
+        },
+        "assets/fonts/mont-cyr-800.woff2": {
+          "sha256": "e9796e8de1954ee72e8d5de23d26bb8f577d4b903abae1fe11db8904279516ef",
+          "bytes": 11180
+        },
+        "assets/fonts/mont-cyr-900.woff2": {
+          "sha256": "d7197257ad3cbc21bf3527e867355206b2399d74652a88372a523e19df630edf",
+          "bytes": 10908
+        },
+        "assets/fonts/mont-latin-600.woff2": {
+          "sha256": "d857325c360f7128b347ca924c1974967aaa886ba47dad22e4042d6c38b26a83",
+          "bytes": 18688
+        },
+        "assets/fonts/mont-latin-700.woff2": {
+          "sha256": "f9d9e65b15372cebcafc3acd1e664a564c5c4b23278de4d5760de9a13c530371",
+          "bytes": 18824
+        },
+        "assets/fonts/mont-latin-800.woff2": {
+          "sha256": "ba826fb84c2e961578adf3a08b5778b87905d4443445d1d56d84f9f157d5ea4b",
+          "bytes": 19012
+        },
+        "assets/fonts/mont-latin-900.woff2": {
+          "sha256": "5b6958520638bb8609f9eacb17c4d189563efeae96d5da49f7c2043988697205",
+          "bytes": 18020
+        },
+        "assets/logo-mark.png": {
+          "sha256": "0bc4fb211e2d9ecca4c5db9a2bc476f8e4520674f9953a6cc9f165503674d382",
+          "bytes": 255065
+        },
+        "assets/protokol.css": {
+          "sha256": "2b4f2f73093e446921bcee64e59279b125a11d435ef6762808f443ecc4c0e9c6",
+          "bytes": 16133
+        },
+        "assets/puzzle-pattern.svg": {
+          "sha256": "e4bbe84bc4be853c88e02f82c1456d473df24182486ddf33ab36efff7652a428",
+          "bytes": 541
+        },
+        "assets/render_pdf.py": {
+          "sha256": "09702fd9fe63d58a12ec5688621f414a6ec8df38e09313e53e062ab24d029229",
+          "bytes": 4086
+        },
+        "assets/renderer.js": {
+          "sha256": "dfabff6843296f9606089f229ed6a995cd9beab16d1525f7d64a4308f3cfc176",
+          "bytes": 15366
+        },
+        "LICENSE": {
+          "sha256": "8e0dd3c0b66467e5e93d73ecc53207fb2d6764f063006ea3dfc78cddbbe5c3bc",
+          "bytes": 1065
+        },
+        "NOTICE.md": {
+          "sha256": "be41be879b10b4252dc4ef00cd19d31c1c520debbe2a2152cc5c7b6fc0db52d9",
+          "bytes": 1317
+        },
+        "SKILL.md": {
+          "sha256": "93ea4ee0f452dbca519c89a42599dee278e4fee5f34de86552fc0af49965e28b",
+          "bytes": 13262
+        },
+        "skill.yaml": {
+          "sha256": "e8a308bf255807e724b7d78be71bd8311c2c46b0a28908a662e669da472b1e8b",
+          "bytes": 561
+        }
+      }
+    },
+    {
+      "name": "message-format-tg-bitrix",
+      "title": "Сообщения для Telegram и Битрикс24",
+      "version": "0.1.0",
+      "description": "Подготовка текста для Telegram и Битрикс24 без Markdown-таблиц. Создаёт черновик сообщения; не отправляет и не публикует его.",
+      "files": {
+        "LICENSE": {
+          "sha256": "8e0dd3c0b66467e5e93d73ecc53207fb2d6764f063006ea3dfc78cddbbe5c3bc",
+          "bytes": 1065
+        },
+        "NOTICE.md": {
+          "sha256": "be41be879b10b4252dc4ef00cd19d31c1c520debbe2a2152cc5c7b6fc0db52d9",
+          "bytes": 1317
+        },
+        "SKILL.md": {
+          "sha256": "7c3ef6acb559a9883401ad1229ad4371bc51ab33d5d9d5e4aed0026e33587cf6",
+          "bytes": 7625
+        },
+        "skill.yaml": {
+          "sha256": "bc0eaac9912007d4bcc68215f3387519f76bf5ddd6ce886b337831229c2373e8",
+          "bytes": 584
+        }
+      }
+    },
+    {
+      "name": "plain-language-doc",
+      "title": "Понятные документы и отчёты",
+      "version": "0.1.0",
+      "description": "Понятные рабочие документы и отчёты с объяснением терминов, схемами и источниками, в корпоративном оформлении Акметрон.",
+      "files": {
+        "assets/fonts/inter-cyr-400.woff2": {
+          "sha256": "f0bb586459ce8f09b238285040f17e3e9e9538b2c5a7aae0775194e33c36c3c3",
+          "bytes": 7712
+        },
+        "assets/fonts/inter-cyr-500.woff2": {
+          "sha256": "b77a86ec16aadc157f4a99e8898d71cd75ea264753d9bdf13f962f8c3988cbb0",
+          "bytes": 7900
+        },
+        "assets/fonts/inter-cyr-600.woff2": {
+          "sha256": "6c2a37f82a676bcd441b735e4e2cda4edb8873a059ab9c362a84f0711f257041",
+          "bytes": 7972
+        },
+        "assets/fonts/inter-cyr-700.woff2": {
+          "sha256": "5917871d3cc970d8ce195101cbf65c1f68ec948022eb6070030342bb7edfb3bb",
+          "bytes": 7904
+        },
+        "assets/fonts/inter-latin-400.woff2": {
+          "sha256": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
+          "bytes": 23664
+        },
+        "assets/fonts/inter-latin-500.woff2": {
+          "sha256": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+          "bytes": 24272
+        },
+        "assets/fonts/inter-latin-600.woff2": {
+          "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+          "bytes": 24452
+        },
+        "assets/fonts/inter-latin-700.woff2": {
+          "sha256": "6f56409fd3d64bb85f7d070bce20749db2d66b6d63cec586cc22d1c761be2491",
+          "bytes": 24356
+        },
+        "assets/fonts/mont-cyr-600.woff2": {
+          "sha256": "12fe2b174f70b732553c46dae097be6a70b3f4a3d3cf305dbbbf236ac3b182b7",
+          "bytes": 11120
+        },
+        "assets/fonts/mont-cyr-700.woff2": {
+          "sha256": "c6880741986ff5648d6b6c08ebbacfe7ba77861a002bff2643b8af4221f40d34",
+          "bytes": 11160
+        },
+        "assets/fonts/mont-cyr-800.woff2": {
+          "sha256": "e9796e8de1954ee72e8d5de23d26bb8f577d4b903abae1fe11db8904279516ef",
+          "bytes": 11180
+        },
+        "assets/fonts/mont-cyr-900.woff2": {
+          "sha256": "d7197257ad3cbc21bf3527e867355206b2399d74652a88372a523e19df630edf",
+          "bytes": 10908
+        },
+        "assets/fonts/mont-latin-600.woff2": {
+          "sha256": "d857325c360f7128b347ca924c1974967aaa886ba47dad22e4042d6c38b26a83",
+          "bytes": 18688
+        },
+        "assets/fonts/mont-latin-700.woff2": {
+          "sha256": "f9d9e65b15372cebcafc3acd1e664a564c5c4b23278de4d5760de9a13c530371",
+          "bytes": 18824
+        },
+        "assets/fonts/mont-latin-800.woff2": {
+          "sha256": "ba826fb84c2e961578adf3a08b5778b87905d4443445d1d56d84f9f157d5ea4b",
+          "bytes": 19012
+        },
+        "assets/fonts/mont-latin-900.woff2": {
+          "sha256": "5b6958520638bb8609f9eacb17c4d189563efeae96d5da49f7c2043988697205",
+          "bytes": 18020
+        },
+        "assets/logo-mark.png": {
+          "sha256": "0bc4fb211e2d9ecca4c5db9a2bc476f8e4520674f9953a6cc9f165503674d382",
+          "bytes": 255065
+        },
+        "LICENSE": {
+          "sha256": "8e0dd3c0b66467e5e93d73ecc53207fb2d6764f063006ea3dfc78cddbbe5c3bc",
+          "bytes": 1065
+        },
+        "NOTICE.md": {
+          "sha256": "be41be879b10b4252dc4ef00cd19d31c1c520debbe2a2152cc5c7b6fc0db52d9",
+          "bytes": 1317
+        },
+        "references/layout-and-rendering.md": {
+          "sha256": "6d754d06e433e230704b562c002c8c303ece5bfa1cac58945b83d2dac4e95cb6",
+          "bytes": 16984
+        },
+        "SKILL.md": {
+          "sha256": "31be65ade36d5d896d553560d2e184d6c60e03773aeafa63d300d7d40c31dff6",
+          "bytes": 6898
+        },
+        "skill.yaml": {
+          "sha256": "1e8d21960a4d7806eacf9da6a472f478900d9a7b6effaf554213e678ce880806",
+          "bytes": 582
+        }
+      }
+    }
+  ]
+}

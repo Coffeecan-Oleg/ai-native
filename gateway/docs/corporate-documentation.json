@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "release_status": "prepared_not_deployed",
+  "migration_count": 29,
+  "active_documents": [
+    "docs/corporate-documentation-index.md",
+    "docs/knowledge-base/01-corporate-entry.md",
+    "docs/knowledge-base/02-operations-and-development.md",
+    "docs/knowledge-base/03-source-and-release.md",
+    "docs/knowledge-base/04-connection-check.md",
+    "docs/knowledge-base/05-skill-versions.md",
+    "docs/knowledge-base/06-skill-acceptance.md",
+    "docs/knowledge-base/07-skill-capabilities.md",
+    "docs/knowledge-base/08-skill-evidence.md",
+    "docs/knowledge-base/09-skill-file-review.md",
+    "docs/knowledge-base/10-skill-comparison.md",
+    "docs/knowledge-base/12-external-service-limits.md",
+    "docs/knowledge-base/13-external-service-safety.md",
+    "docs/knowledge-base/14-integration-status.md",
+    "docs/knowledge-base/15-load-check.md",
+    "docs/knowledge-base/16-authorization-read-session.md",
+    "docs/knowledge-base/17-integration-timings.md",
+    "docs/knowledge-base/18-storage-preflight.md",
+    "docs/knowledge-base/19-guarded-dev-import.md",
+    "docs/knowledge-base/20-operations-and-recovery.md",
+    "docs/release-1.0.md",
+    "docs/release-1.0-acceptance.md",
+    "docs/bitrix24-corporate-login.md",
+    "docs/bitrix24-embedded.md",
+    "docs/knowledge-base/21-support-diagnostics.md",
+    "docs/knowledge-base/22-activity-notifications.md"
+  ],
+  "legacy_documents": [
+    "docs/platforma-sandbox-writes.md",
+    "docs/platforma-how-it-works.md",
+    "docs/platforma-open-clients.md",
+    "docs/training-admin.md",
+    "docs/unisender-demo.md",
+    "docs/platforma-skill-library.md"
+  ],
+  "protected_mounts_not_changed": [
+    "market-*",
+    "awareness/install.md"
+  ]
+}

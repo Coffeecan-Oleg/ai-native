@@ -73,6 +73,9 @@ def record_skill_event(
     routes = _json_list(mcp_routes_json)
     missing_scopes = _json_list(missing_scopes_json)
     metadata = _json_dict(metadata_json)
+    from gateway_mcp.services import skill_activity
+    if skill_activity.enabled():
+        metadata=skill_activity.link_metadata(actor,normalized_skill_id,normalized_skill_pack,_clean(skill_version),metadata)
     duration = int(duration_ms) if duration_ms and int(duration_ms) > 0 else None
 
     if session_id:
@@ -104,6 +107,9 @@ def record_skill_event(
         error_class=_clean(error_class),
     )
     inserted = row is None or bool(row.get("inserted", True))
+    # A replay describes the persisted event, never the replacement input.
+    persisted = row or {}
+    persisted_metadata = persisted.get('metadata', metadata) if row else {}
     if inserted:
         observe_skill_event(
             event_type=normalized_event,
@@ -149,8 +155,11 @@ def record_skill_event(
             "correlation_id": correlation,
             "session_id": _clean(session_id),
             "agent": normalized_agent,
-            "skill_id": normalized_skill_id,
-            "skill_pack": normalized_skill_pack,
+            "skill_id": persisted.get('skill_id',normalized_skill_id),
+            "skill_pack": persisted.get('skill_pack',normalized_skill_pack),
+            "skill_version": persisted.get('skill_version',_clean(skill_version)),
+            "read_link_verified": bool(row) and bool(persisted_metadata.get('skill_read_id')),
+            "execution_evidence": "client_report",
             "status": normalized_status,
             "duration_ms": duration,
         },
