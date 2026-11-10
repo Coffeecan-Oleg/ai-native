@@ -1023,14 +1023,14 @@
       "size": 5153
     },
     "routes/activity_notifications.py": {
-      "sha256": "22cf0044296c9d2e72bca9655c230467ef34bf969927ae44c1b9b65834d3a82c",
-      "lf_sha256": "22cf0044296c9d2e72bca9655c230467ef34bf969927ae44c1b9b65834d3a82c",
-      "size": 13972
+      "sha256": "a8b6a5cb4792e96b162d846d2ed6a93d965a3a8b1b468661b8f5dd71ccc5693f",
+      "lf_sha256": "a8b6a5cb4792e96b162d846d2ed6a93d965a3a8b1b468661b8f5dd71ccc5693f",
+      "size": 17029
     },
     "services/activity_events.py": {
-      "sha256": "27773ea601eccba71a7893ff1ec8a1bd6cadba78328cfc0272d1974327eb708f",
-      "lf_sha256": "27773ea601eccba71a7893ff1ec8a1bd6cadba78328cfc0272d1974327eb708f",
-      "size": 7985
+      "sha256": "402153586e250a86e9588ffffddde4dd00808497e2f1d8d3a0d880913dd56fd1",
+      "lf_sha256": "402153586e250a86e9588ffffddde4dd00808497e2f1d8d3a0d880913dd56fd1",
+      "size": 7994
     },
     "services/activity_delivery.py": {
       "sha256": "b4b7972f93fc64e0dfd637e80a956d2b96670bfd4986360ac61e467f52816d2c",
@@ -1041,6 +1041,11 @@
       "sha256": "7b4e2af6b70c375c851821fcf8f7b35217d6adc81ff412730d9e9fbb13bb3b33",
       "lf_sha256": "7b4e2af6b70c375c851821fcf8f7b35217d6adc81ff412730d9e9fbb13bb3b33",
       "size": 7852
+    },
+    "services/activity_explanation.py": {
+      "sha256": "dfa8626ca976b750aa96192e369adf825472ee074ec9d7e699e22fb080d52748",
+      "lf_sha256": "dfa8626ca976b750aa96192e369adf825472ee074ec9d7e699e22fb080d52748",
+      "size": 7071
     }
   },
   "private_mounts_excluded": [
