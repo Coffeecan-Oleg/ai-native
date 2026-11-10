@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "release_status": "prepared_not_deployed",
-  "migration_count": 28,
+  "migration_count": 29,
   "active_documents": [
     "docs/corporate-documentation-index.md",
     "docs/knowledge-base/01-corporate-entry.md",
@@ -27,7 +27,8 @@
     "docs/release-1.0-acceptance.md",
     "docs/bitrix24-corporate-login.md",
     "docs/bitrix24-embedded.md",
-    "docs/knowledge-base/21-support-diagnostics.md"
+    "docs/knowledge-base/21-support-diagnostics.md",
+    "docs/knowledge-base/22-activity-notifications.md"
   ],
   "legacy_documents": [
     "docs/platforma-sandbox-writes.md",

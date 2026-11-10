@@ -1,6 +1,7 @@
 from gateway_mcp.mcp_runtime import create_server
 from gateway_mcp.routes.admin_access import register_admin_access_routes
 from gateway_mcp.routes.admin_audit import register_admin_audit_routes
+from gateway_mcp.routes.activity_notifications import register_activity_notification_routes
 from gateway_mcp.routes.admin_factory_connections import (
     register_admin_factory_connection_routes,
 )
@@ -62,6 +63,7 @@ def create_mcp():
     register_llm_proxy_routes(server)
     register_notification_routes(server)
     register_admin_audit_routes(server)
+    register_activity_notification_routes(server)
     register_admin_access_routes(server)
     register_admin_user_role_routes(server)
     register_admin_showcase_routes(server)

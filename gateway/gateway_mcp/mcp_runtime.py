@@ -14,7 +14,10 @@ except ImportError:
 
 
 def _frame_app(app):
+    from gateway_mcp.services.activity_delivery import ActivityLifespan, configured
     from gateway_mcp.services.bitrix_embed import BitrixFrameMiddleware, enabled
+    if configured():
+        app = ActivityLifespan(app)
     return BitrixFrameMiddleware(app) if enabled() else app
 
 

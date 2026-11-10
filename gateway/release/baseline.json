@@ -48,14 +48,14 @@
       "size": 3440
     },
     "mcp_runtime.py": {
-      "sha256": "a3b65a7c29c941ec574ffaffd043e63995bd4affbf93bc19c90b1d2689d052c5",
-      "lf_sha256": "a3b65a7c29c941ec574ffaffd043e63995bd4affbf93bc19c90b1d2689d052c5",
-      "size": 3139
+      "sha256": "a8b0dba87c2ddf30f5a467c9aeaa79d1fb27dea95f709d1ca3837bd468e5efd2",
+      "lf_sha256": "a8b0dba87c2ddf30f5a467c9aeaa79d1fb27dea95f709d1ca3837bd468e5efd2",
+      "size": 3280
     },
     "server.py": {
-      "sha256": "6c99417a4840c10c170e40be7a8042c1b6fe97520b1faf02b09cb7aa8201af0e",
-      "lf_sha256": "6c99417a4840c10c170e40be7a8042c1b6fe97520b1faf02b09cb7aa8201af0e",
-      "size": 5078
+      "sha256": "d18160d8ef7a92980aaedfba0a79745d8e6df84340140cdfd26a2eedc8d8eb64",
+      "lf_sha256": "d18160d8ef7a92980aaedfba0a79745d8e6df84340140cdfd26a2eedc8d8eb64",
+      "size": 5220
     },
     "smoke.py": {
       "sha256": "ea87dad3d1ee651ebc691a51814a5df9dc6bff4fe7e880f21d211adab55a40d5",
@@ -233,9 +233,9 @@
       "size": 44097
     },
     "routes/admin_showcase.py": {
-      "sha256": "62055dad76e1607e2a39e0aa6510b850e601701f16d62f3e3b80ed285a578d08",
-      "lf_sha256": "62055dad76e1607e2a39e0aa6510b850e601701f16d62f3e3b80ed285a578d08",
-      "size": 13947
+      "sha256": "3f87d53247f5d98f09827048f81dc508fa30fa0f8ecd1ef794c74a935c55ac6f",
+      "lf_sha256": "3f87d53247f5d98f09827048f81dc508fa30fa0f8ecd1ef794c74a935c55ac6f",
+      "size": 14024
     },
     "routes/admin_telemetry.py": {
       "sha256": "d6d23ad259f2c1bfaeb3d5848f9e321244d1b6a152abdc963d2916072108ae5c",
@@ -243,9 +243,9 @@
       "size": 9860
     },
     "routes/admin_ui.py": {
-      "sha256": "92689f86bda07175683667c46e9d55dc1d4f61a4bf596baff3e52fed69a7a26a",
-      "lf_sha256": "92689f86bda07175683667c46e9d55dc1d4f61a4bf596baff3e52fed69a7a26a",
-      "size": 22261
+      "sha256": "9e07e788f249ec7bfbc0619510c04cdd7e263a5f0b58e1a59ad384d144d36b51",
+      "lf_sha256": "9e07e788f249ec7bfbc0619510c04cdd7e263a5f0b58e1a59ad384d144d36b51",
+      "size": 22370
     },
     "routes/admin_user_roles.py": {
       "sha256": "b616f47ce05d3e3a9a76cdcedaa5320243497fd386335f7bf267e3085f43c2a1",
@@ -608,9 +608,9 @@
       "size": 11453
     },
     "services/storage_audit.py": {
-      "sha256": "8ec8cfedb06b4d65eeabded444d4fe8bb56231fc0adeda9300d9461e4018a023",
-      "lf_sha256": "8ec8cfedb06b4d65eeabded444d4fe8bb56231fc0adeda9300d9461e4018a023",
-      "size": 7267
+      "sha256": "c5b7396793e6378494b7ea7f0d8200d6152199ca603af3f81d7b9a78822c4031",
+      "lf_sha256": "c5b7396793e6378494b7ea7f0d8200d6152199ca603af3f81d7b9a78822c4031",
+      "size": 7966
     },
     "services/storage_business.py": {
       "sha256": "eaf26b7fba9d719cd661be74835c7a68a807431bccf3682ab9fa1fee3db61fd0",
@@ -1021,6 +1021,26 @@
       "sha256": "c1eddb02fcca9d39d5d106f6ed90e96d4b66e8b8f45073af49d652a57b558880",
       "lf_sha256": "c1eddb02fcca9d39d5d106f6ed90e96d4b66e8b8f45073af49d652a57b558880",
       "size": 5153
+    },
+    "routes/activity_notifications.py": {
+      "sha256": "22cf0044296c9d2e72bca9655c230467ef34bf969927ae44c1b9b65834d3a82c",
+      "lf_sha256": "22cf0044296c9d2e72bca9655c230467ef34bf969927ae44c1b9b65834d3a82c",
+      "size": 13972
+    },
+    "services/activity_events.py": {
+      "sha256": "27773ea601eccba71a7893ff1ec8a1bd6cadba78328cfc0272d1974327eb708f",
+      "lf_sha256": "27773ea601eccba71a7893ff1ec8a1bd6cadba78328cfc0272d1974327eb708f",
+      "size": 7985
+    },
+    "services/activity_delivery.py": {
+      "sha256": "b4b7972f93fc64e0dfd637e80a956d2b96670bfd4986360ac61e467f52816d2c",
+      "lf_sha256": "b4b7972f93fc64e0dfd637e80a956d2b96670bfd4986360ac61e467f52816d2c",
+      "size": 5537
+    },
+    "services/storage_activity_notifications.py": {
+      "sha256": "7b4e2af6b70c375c851821fcf8f7b35217d6adc81ff412730d9e9fbb13bb3b33",
+      "lf_sha256": "7b4e2af6b70c375c851821fcf8f7b35217d6adc81ff412730d9e9fbb13bb3b33",
+      "size": 7852
     }
   },
   "private_mounts_excluded": [
@@ -1106,7 +1126,7 @@
     "x-wr-timezone": "2.0.1",
     "yarl": "1.24.5"
   },
-  "migration_count": 28,
+  "migration_count": 29,
   "root_configs": [
     "gateway-tools.json",
     "gateway-policy.json",

@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Any
 
 from gateway_mcp.services.storage_core import _connect, ensure_schema, postgres_enabled
@@ -26,7 +27,7 @@ def append_audit_event(payload: dict[str, Any]) -> bool:
                     scope,
                     payload
                 )
-                values (%s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
+                values (%s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb) returning id
                 """,
                 (
                     payload.get("ts_ms", 0),
@@ -40,6 +41,17 @@ def append_audit_event(payload: dict[str, Any]) -> bool:
                     json.dumps(payload, ensure_ascii=False),
                 ),
             )
+            audit_id = cur.fetchone()['id']
+            # Notifications never make the original audited operation fail.
+            cur.execute('SAVEPOINT activity_notification')
+            try:
+                from gateway_mcp.services.storage_activity_notifications import enqueue
+                enqueue(cur, audit_id, payload)
+                cur.execute('RELEASE SAVEPOINT activity_notification')
+            except Exception:
+                cur.execute('ROLLBACK TO SAVEPOINT activity_notification')
+                cur.execute('RELEASE SAVEPOINT activity_notification')
+                logging.getLogger(__name__).warning('activity_notification_enqueue_failed')
         conn.commit()
     return True
 
