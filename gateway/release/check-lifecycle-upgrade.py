@@ -1,4 +1,4 @@
-"""25 -> 26 -> 27 -> 28 with synthetic state on an explicitly isolated test DB."""
+"""25 -> 26 -> 27 -> 28 -> 29 on an explicitly isolated, synthetic test DB."""
 import hashlib,json,os,shutil,tempfile
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -12,7 +12,7 @@ def main():
     if os.getenv('GATEWAY_TEST_ISOLATED')!='true' or urlsplit(migrations.database_url()).path!='/platforma_upgrade_test':
         raise RuntimeError('Refuse a non-isolated upgrade database')
     files=migrations.migration_files()
-    if len(files)!=28 or files[-1].stem!='0028_external_safety':
+    if len(files)!=29 or files[-1].stem!='0029_activity_notifications':
         raise RuntimeError('Unexpected schema boundary')
     with tempfile.TemporaryDirectory() as temp:
         for path in files[:25]:shutil.copyfile(path,Path(temp)/path.name)
@@ -70,14 +70,31 @@ def main():
         conn.execute("""insert into gateway_external_limits(integration,bucket,tat,blocked_until,updated_at)
             values ('unisender-readonly','global',clock_timestamp()+interval '1 minute',clock_timestamp()+interval '2 minutes',clock_timestamp())""")
         tables=[r['tablename'] for r in conn.execute("select tablename from pg_tables where schemaname='public' and tablename<>'schema_migrations' order by tablename")]
-    before28=snapshot();last=migrations.migrate_up();after28=snapshot()
+    before28=snapshot()
+    with tempfile.TemporaryDirectory() as temp:
+        for path in files[:28]:shutil.copyfile(path,Path(temp)/path.name)
+        with patch.dict(os.environ,{'GATEWAY_MIGRATIONS_DIR':temp}):last=migrations.migrate_up()
+    after28=snapshot()
     assert last['applied']==['0028_external_safety'] and before28==after28
-    assert migrations.migrate_up()['applied']==[]
     with migrations.connect() as conn:
         assert conn.execute('select count(*) n from gateway_external_calls').fetchone()['n']==0
         assert conn.execute('select count(*) n from gateway_external_circuits').fetchone()['n']==0
-    print(json.dumps({'successful':True,'from_migrations':25,'to_migrations':28,'dev_upgrade_from':27,
-        'dev_upgrade_to':28,'schema27_tables_unchanged':len(tables),'rate_state_retained':True,'private_draft_retained':True,
+        schema27_tables=len(tables)
+        tables=[r['tablename'] for r in conn.execute("select tablename from pg_tables where schemaname='public' and tablename<>'schema_migrations' order by tablename")]
+    before29=snapshot();last=migrations.migrate_up();after29=snapshot()
+    assert last['applied']==['0029_activity_notifications'] and before29==after29
+    assert len(last['status']['applied'])==29 and not last['status']['pending']
+    assert migrations.migrate_up()['applied']==[]
+    with migrations.connect() as conn:
+        settings=conn.execute('select enabled,categories,revision,interval_seconds from platforma_activity_settings where id=1').fetchone()
+        assert settings=={'enabled':False,'categories':[],'revision':1,'interval_seconds':60}
+        assert conn.execute('select count(*) n from platforma_activity_outbox').fetchone()['n']==0
+        final_tables={r['tablename'] for r in conn.execute("select tablename from pg_tables where schemaname='public' and tablename<>'schema_migrations'")}
+        assert final_tables-set(tables)=={'platforma_activity_settings','platforma_activity_outbox'}
+    print(json.dumps({'successful':True,'from_migrations':25,'to_migrations':29,'dev_upgrade_from':28,
+        'dev_upgrade_to':29,'schema27_tables_unchanged':schema27_tables,'schema28_tables_unchanged':len(tables),
+        'activity_notifications_disabled':True,'activity_outbox_empty':True,'new_tables':2,
+        'rate_state_retained':True,'private_draft_retained':True,
         'old_tables_unchanged':len(tables),'synthetic_publications_retained':3,
         'legacy_workflows_created':0,'idempotent':True,'production_data':False}))
 
