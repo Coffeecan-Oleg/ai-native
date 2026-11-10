@@ -31,7 +31,7 @@ def pack_plugin_manifest(pack: dict[str, Any], platform_release: str = "") -> di
             pack["category"].lower(),
         ],
         "skills": "./skills/",
-        "metadata": platform_metadata(platform_release),
+        "metadata": {**platform_metadata(platform_release), **({"distribution": pack["distribution"]} if pack.get("distribution") in {"historical", "reference"} else {})},
         "interface": {
             "displayName": pack["displayName"],
             "shortDescription": pack.get("shortDescription") or pack["description"],
@@ -78,7 +78,7 @@ def write_cursor_manifest(plugin_root: Path, pack: dict[str, Any], platform_rele
             "category": category,
             "tags": [category, "skills", "agent-skills"],
             "skills": "./skills/",
-            "metadata": platform_metadata(platform_release),
+            "metadata": {**platform_metadata(platform_release), **({"distribution": pack["distribution"]} if pack.get("distribution") in {"historical", "reference"} else {})},
         },
     )
 
@@ -163,7 +163,7 @@ def write_hermes_root_plugin(output: Path, registry: dict[str, Any], platform_re
     pack plugins under plugins/<pack>/, so the root plugin delegates to those
     generated pack directories and makes `hermes plugins install <repo>` work.
     """
-    packs = registry["packs"]
+    packs = [pack for pack in registry["packs"] if pack.get("distribution") not in {"historical", "reference"}]
     root_description = "Company Agent Skills: shared coMind skill packs for Hermes."
     write_text(
         output / "plugin.yaml",

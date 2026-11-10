@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "platforma-training",
-  "version": "0.2.0",
-  "description": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+  "version": "0.1.2",
+  "description": "Исторический учебный пакет. Не рекомендуется для корпоративной установки: учебные операции закрыты. Для текущего сервера используйте gateway-mcp.",
   "author": {
     "name": "Coffeecan-Oleg",
     "url": "https://github.com/Coffeecan-Oleg"
@@ -10,9 +10,9 @@
   "extensions": {
     "com.openai": {
       "interface": {
-        "displayName": "Платформа — учебный помощник",
-        "shortDescription": "Сервисы, знания и учёт расхода",
-        "longDescription": "Учебная Платформа: чтение сервисов и заявок, ограниченная карта знаний и личный учёт расхода.",
+        "displayName": "Архив — учебный помощник",
+        "shortDescription": "Учебные сервисы и заявки",
+        "longDescription": "Исторический учебный пакет. Не рекомендуется для корпоративной установки: учебные операции закрыты. Для текущего сервера используйте gateway-mcp.",
         "developerName": "Coffeecan-Oleg",
         "category": "Productivity",
         "capabilities": [
@@ -20,7 +20,7 @@
           "MCP"
         ],
         "defaultPrompt": [
-          "Use Платформа — учебный помощник for this work."
+          "Use Архив — учебный помощник for this work."
         ]
       }
     }

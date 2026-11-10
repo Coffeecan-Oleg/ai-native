@@ -22,7 +22,12 @@
     "docs/knowledge-base/17-integration-timings.md",
     "docs/knowledge-base/18-storage-preflight.md",
     "docs/knowledge-base/19-guarded-dev-import.md",
-    "docs/knowledge-base/20-operations-and-recovery.md"
+    "docs/knowledge-base/20-operations-and-recovery.md",
+    "docs/release-1.0.md",
+    "docs/release-1.0-acceptance.md",
+    "docs/bitrix24-corporate-login.md",
+    "docs/bitrix24-embedded.md",
+    "docs/knowledge-base/21-support-diagnostics.md"
   ],
   "legacy_documents": [
     "docs/platforma-sandbox-writes.md",

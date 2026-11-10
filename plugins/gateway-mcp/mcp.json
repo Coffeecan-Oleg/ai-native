@@ -1,12 +1,19 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "gateway": {
-      "type": "http",
-      "url": "${GATEWAY_MCP_URL}",
-      "headers": {
-        "Authorization": "Bearer ${GATEWAY_MCP_TOKEN}"
-      },
-      "timeout": 60000
+      "type": "streamable-http",
+      "url": "https://platforma.akmetron.ru/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": {
+              "mode": "dcr"
+            }
+          }
+        }
+      }
     }
   }
 }

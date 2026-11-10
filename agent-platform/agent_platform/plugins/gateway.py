@@ -67,7 +67,11 @@ def gateway_mcp_config_for(url: str, token: str) -> dict[str, Any]:
     }
 
 
-def write_gateway_plugin(plugin_root: Path, platform_release: str = "") -> None:
+def write_gateway_plugin(plugin_root: Path, platform_release: str = "", *, corporate: dict[str, Any] | None = None) -> None:
+    if corporate is not None:
+        from agent_platform.plugins.corporate import write_corporate_gateway
+        write_corporate_gateway(plugin_root, corporate, platform_release)
+        return
     plugin_root.mkdir(parents=True, exist_ok=True)
     codex_manifest = gateway_codex_manifest(platform_release)
     write_json(plugin_root / ".codex-plugin/plugin.json", codex_manifest)

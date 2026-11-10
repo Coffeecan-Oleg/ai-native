@@ -7,3 +7,4 @@ def register(ctx):
     base_dir = Path(__file__).parent
     # Hermes exposes these as namespaced skills, e.g. plugin-name:skill-name.
     ctx.register_skill('platforma-training-service-reader', base_dir / 'skills' / 'platforma-training-service-reader' / 'SKILL.md')
+    ctx.register_skill('platforma-training-service-writer', base_dir / 'skills' / 'platforma-training-service-writer' / 'SKILL.md')

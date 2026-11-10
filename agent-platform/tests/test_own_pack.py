@@ -15,7 +15,7 @@ class OwnPackTests(unittest.TestCase):
             "shortDescription": "Сервисы и заявки: чтение",
             "displayName": "Платформа — учебный помощник", "category": "Productivity",
             "author": {"name": "Coffeecan-Oleg", "url": "https://github.com/Coffeecan-Oleg"},
-            "mcpUrl": "https://195-133-14-140.sslip.io/mcp",
+            "mcpUrl": "https://example.invalid/mcp",
         }
 
     def test_own_author_and_oauth_connection_are_packaged_without_credentials(self):

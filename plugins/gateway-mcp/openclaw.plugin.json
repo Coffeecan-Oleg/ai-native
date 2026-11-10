@@ -1,26 +1,16 @@
 {
   "schema": 1,
   "name": "gateway-mcp",
-  "version": "0.1.10",
-  "description": "Single GatewayMCP boundary for private MCP servers, company context, and corporate memory.",
-  "mcpServers": "./mcp.json",
-  "configuration": {
-    "GATEWAY_MCP_URL": {
-      "type": "string",
-      "description": "Remote GatewayMCP HTTP endpoint. Production: https://195-133-14-140.sslip.io/mcp",
-      "default": "https://195-133-14-140.sslip.io/mcp",
-      "required": true
-    },
-    "GATEWAY_MCP_TOKEN": {
-      "type": "secret",
-      "description": "Fallback Gateway bearer token for agents without MCP OAuth support.",
-      "required": true
-    }
+  "version": "0.1.11",
+  "description": "Личное MCP-подключение к корпоративной Платформе: каталог опубликованных навыков, разрешённые инструменты и собственный журнал.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
   },
+  "mcpServers": "./mcp.json",
   "metadata": {
-    "openclaw": {
-      "category": "Productivity"
-    },
-    "platformRelease": "2026.09.11"
+    "platformRelease": "2026.09.11",
+    "distribution": "corporate",
+    "authentication": "oauth"
   }
 }
