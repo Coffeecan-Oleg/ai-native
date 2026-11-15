@@ -173,12 +173,20 @@ def set_skill_favorite(subject, pack, skill, selected):
             )
 
 
+def _portal_subject_filter(column):
+    from gateway_mcp.services import corporate_access
+    if not corporate_access.enabled():
+        return "true"
+    return column + " in (" + _users_cte() + "select subject from known_users)"
+
+
+def _profile_portal_filter():
+    # An unbound card uses the editor's identity until telemetry is linked.
+    return _portal_subject_filter("coalesce(nullif(p.actor_subject, ''), p.updated_by)")
+
+
 def agent_profiles(days=30):
     cte, params = _runs(days)
-    from gateway_mcp.services import corporate_access
-    allowed = ""
-    if corporate_access.enabled():
-        allowed = "where p.actor_subject in (" + _users_cte() + "select subject from known_users)"
     return _rows(
         cte
         + f""", activity as (
@@ -187,20 +195,16 @@ def agent_profiles(days=30):
             a.starts, a.completed, a.failed, a.pending, a.timed, a.median_ms, a.last_activity
         from assistant_agent_profiles p left join activity a
             on p.actor_subject = a.actor_subject and p.agent = a.agent and p.actor_subject <> ''
-        {allowed}
+          where {_profile_portal_filter()}
         order by p.display_name, p.agent_key""",
         params,
     )
 
 
 def agent_binding_options():
-    from gateway_mcp.services import corporate_access
-    allowed = ""
-    if corporate_access.enabled():
-        allowed = " and actor_subject in (" + _users_cte() + "select subject from known_users)"
-    return _rows("""select actor_subject, agent, max(created_at) as last_activity
+    return _rows(f"""select actor_subject, agent, max(created_at) as last_activity
         from assistant_skill_events where event_type = 'started' and actor_subject <> '' and agent <> ''
-        """ + allowed + """
+          and {_portal_subject_filter('actor_subject')}
         group by actor_subject, agent order by last_activity desc, actor_subject, agent limit 100""")
 
 
@@ -209,8 +213,9 @@ def save_agent_profile(*, key, name, description, subject, agent, revision, upda
     with _connect() as conn, conn.cursor() as cur:
         if subject:
             cur.execute(
-                """select 1 from assistant_skill_events
-                where actor_subject = %s and agent = %s and event_type = 'started' limit 1""",
+                f"""select 1 from assistant_skill_events
+                where actor_subject = %s and agent = %s and event_type = 'started'
+                    and {_portal_subject_filter('actor_subject')} limit 1""",
                 (subject, agent),
             )
             if cur.fetchone() is None:
@@ -226,9 +231,10 @@ def save_agent_profile(*, key, name, description, subject, agent, revision, upda
         if cur.fetchone() is not None:
             return
         cur.execute(
-            """update assistant_agent_profiles set display_name = %s, description = %s,
+            f"""update assistant_agent_profiles as p set display_name = %s, description = %s,
             actor_subject = %s, agent = %s, revision = revision + 1, updated_by = %s, updated_at = now()
-            where agent_key = %s and revision = %s returning agent_key""",
+            where agent_key = %s and revision = %s and {_profile_portal_filter()}
+            returning agent_key""",
             (name, description, subject, agent, updated_by, key, revision),
         )
         if cur.fetchone() is None:
