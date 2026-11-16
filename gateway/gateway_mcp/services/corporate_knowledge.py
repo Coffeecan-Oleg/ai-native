@@ -71,7 +71,12 @@ def search_documents(*, actor, query='', space='', limit=10, include_personal=Tr
     results = []
     # Filter at the read boundary, before ranking and limit. Never enumerate vault files.
     for name in sorted(documents):
-        item = _document(root, documents, name)
+        try:
+            item = _document(root, documents, name)
+        except FileNotFoundError:
+            # An approved path may not yet have a file on a new installation.
+            # Permission errors are still handled by the normal denial path.
+            continue
         content = item.pop('content', '')
         haystack = '\n'.join([name, str(item.get('title', '')), content]).casefold()
         if needle and needle not in haystack:

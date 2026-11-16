@@ -18,6 +18,10 @@ EVENT_TOOLS = frozenset({'gateway_telemetry_skill_started','gateway_telemetry_sk
 READ_ROUTES = frozenset()
 WRITE_ROUTES = {}
 BASE_SCOPES = frozenset({'skills:read','tools:read','tools:call','telemetry:read','telemetry:write','knowledge:read'})
+# The existing access-profile method uses skills:read. The guide's tool
+# allowlist excludes every skill, write, memory and integration method.
+GUIDE_SCOPES = frozenset({'skills:read', 'knowledge:read'})
+GUIDE_TOOLS = frozenset({'gateway_access_profile', 'gateway_knowledge_search', 'gateway_knowledge_document_get'})
 WEB_PATHS = frozenset({'/admin','/admin/audit','/admin/telemetry/skills',
     '/auth/bitrix24/frame-session',
     '/platforma/skills','/platforma/skills/upload',
@@ -69,11 +73,17 @@ def fresh_actor(subject, *, ceiling=None, tools=None):
     if ceiling is not None:
         scopes.intersection_update(ceiling)
     allowed = allowed_tools(scopes)
+    guide = subject == os.getenv('GATEWAY_KNOWLEDGE_GUIDE_SUBJECT')
+    if guide:
+        if is_owner(actor):
+            raise PermissionError('corporate_guide_requires_separate_identity')
+        scopes.intersection_update(GUIDE_SCOPES)
+        allowed.intersection_update(GUIDE_TOOLS)
     if tools is not None:
         allowed.intersection_update(tools)
     return replace(actor, scopes=tuple(sorted(scopes)),
-        scope_ceiling=tuple(sorted(scopes)) if ceiling is not None else None,
-        tool_allowlist=tuple(sorted(allowed)) if tools is not None else None)
+        scope_ceiling=tuple(sorted(scopes)) if guide or ceiling is not None else None,
+        tool_allowlist=tuple(sorted(allowed)) if guide or tools is not None else None)
 
 
 def from_claims(claims):
@@ -94,8 +104,8 @@ def delegated(actor):
     fresh = fresh_actor(actor.subject, ceiling=actor.scope_ceiling, tools=actor.tool_allowlist)
     scopes = set(fresh.scopes) & (set(BASE_SCOPES) | {'unisender:read'})
     allowed = allowed_tools(scopes)
-    if actor.tool_allowlist is not None:
-        allowed.intersection_update(actor.tool_allowlist)
+    if fresh.tool_allowlist is not None:
+        allowed.intersection_update(fresh.tool_allowlist)
     return replace(fresh, groups=(), scopes=tuple(sorted(scopes)),
         scope_ceiling=tuple(sorted(scopes)), tool_allowlist=tuple(sorted(allowed)))
 
@@ -125,6 +135,8 @@ def profile(actor):
         raise PermissionError('corporate_shared_catalogue_unavailable')
     from gateway_mcp.services.platforma_clients import telemetry_agents, telemetry_clients
     tools = allowed_tools(set(fresh.scopes))
+    if fresh.tool_allowlist is not None:
+        tools.intersection_update(fresh.tool_allowlist)
     resources = [{'id':'mcp:'+t,'kind':'tool','operations':['write' if t in EVENT_TOOLS else 'read']}
                  for t in sorted((READ_TOOLS|EVENT_TOOLS)&tools)]
     resources += [{'id':r,'kind':'backend_route','operations':['read']} for r in sorted(READ_ROUTES)]

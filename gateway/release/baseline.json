@@ -713,14 +713,14 @@
       "size": 12653
     },
     "services/corporate_access.py": {
-      "sha256": "d91ae91c423e0e4eee188b00f05bfe259cdd063145b3202a5c167b1b35e96415",
-      "lf_sha256": "d91ae91c423e0e4eee188b00f05bfe259cdd063145b3202a5c167b1b35e96415",
-      "size": 9789
+      "sha256": "1a9336f7084aea3e1f6818e163a9981d3675200c8800f7fa390eb250679d3c37",
+      "lf_sha256": "1a9336f7084aea3e1f6818e163a9981d3675200c8800f7fa390eb250679d3c37",
+      "size": 10510
     },
     "services/corporate_knowledge.py": {
-      "sha256": "4aecde7c6eca3f8f34c0c4d7cfb9ca706eeb4a1a7ed800ecfc2e3a4fdee37b78",
-      "lf_sha256": "4aecde7c6eca3f8f34c0c4d7cfb9ca706eeb4a1a7ed800ecfc2e3a4fdee37b78",
-      "size": 3913
+      "sha256": "4d4de294b97dfa7050ed65900bdaf7f23cdf2f8e92452561c3d948a720017cc9",
+      "lf_sha256": "4d4de294b97dfa7050ed65900bdaf7f23cdf2f8e92452561c3d948a720017cc9",
+      "size": 4140
     },
     "services/platforma_clients.py": {
       "sha256": "510d68a880e41345a5df076265b1541857422ed481dd0c80ffcb14181b6c6ad6",

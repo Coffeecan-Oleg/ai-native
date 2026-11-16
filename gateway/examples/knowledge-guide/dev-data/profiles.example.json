@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "profiles": {
+    "dev-guide-catalog-template": {
+      "documents": {
+        "space:organizational-awareness": {
+          "awareness/capabilities.md": {},
+          "awareness/install.md": {},
+          "awareness/project-profile.md": {},
+          "awareness/projects.md": {},
+          "awareness/refresh.md": {},
+          "awareness/resources.md": {},
+          "awareness/start.md": {},
+          "decisions/awareness-installed.md": {},
+          "skills/organizational-awareness/SKILL.md": {},
+          "skills/organizational-awareness/references/repository-examples.md": {}
+        }
+      }
+    }
+  }
+}
