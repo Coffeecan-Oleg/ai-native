@@ -1,0 +1,10 @@
+# Enable the fictional read-only catalog while preserving the VM-local owner policy.
+# Use together with docker-compose.yml; contains no credentials.
+services:
+  gateway:
+    environment:
+      GATEWAY_TOOLS_FILE: /app/gateway-platforma-tools.json
+      GATEWAY_MCP_OAUTH_SCOPES: skills:read access:request tools:read tools:call platforma:read telemetry:write
+      GATEWAY_MCP_OAUTH_TOOLS: gateway_access_profile gateway_search_tools gateway_call_tool gateway_telemetry_skill_started gateway_telemetry_skill_completed gateway_telemetry_skill_failed platforma.context.get platforma.services.list platforma.services.get platforma.requests.list platforma.requests.get
+    volumes:
+      - ./gateway-policy.json:/app/gateway-policy.json:ro

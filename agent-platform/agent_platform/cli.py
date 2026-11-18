@@ -69,7 +69,7 @@ def run_command(args: argparse.Namespace) -> tuple[object, int]:
     if args.command == "build-claude":
         return build_claude(source, registry, repo_path(args.output), clean=args.clean), 0
     if args.command == "build-cursor":
-        return build_cursor_rules(source, repo_path(args.output), clean=args.clean), 0
+        return build_cursor_rules(source, repo_path(args.output), clean=args.clean, registry=registry), 0
     if args.command == "build-cursor-distribution":
         return (
             build_cursor_distribution(
@@ -83,23 +83,23 @@ def run_command(args: argparse.Namespace) -> tuple[object, int]:
             0,
         )
     if args.command == "build-opencode":
-        return build_portable("opencode", source, repo_path(args.output), clean=args.clean), 0
+        return build_portable("opencode", source, repo_path(args.output), clean=args.clean, registry=registry), 0
     if args.command == "build-openclaw":
-        return build_portable("openclaw", source, repo_path(args.output), clean=args.clean), 0
+        return build_portable("openclaw", source, repo_path(args.output), clean=args.clean, registry=registry), 0
     if args.command == "build-hermes":
-        return build_portable("hermes", source, repo_path(args.output), clean=args.clean), 0
+        return build_portable("hermes", source, repo_path(args.output), clean=args.clean, registry=registry), 0
     if args.command == "build-zcode":
-        return build_portable("zcode", source, repo_path(args.output), clean=args.clean), 0
+        return build_portable("zcode", source, repo_path(args.output), clean=args.clean, registry=registry), 0
     if args.command == "build-all":
         output = repo_path(args.output)
         return [
             build_claude(source, registry, output, clean=args.clean),
             build_plugins(source, registry, output, clean=args.clean),
-            build_cursor_rules(source, output, clean=args.clean),
-            build_portable("opencode", source, output, clean=args.clean),
-            build_portable("openclaw", source, output, clean=args.clean),
-            build_portable("hermes", source, output, clean=args.clean),
-            build_portable("zcode", source, output, clean=args.clean),
+            build_cursor_rules(source, output, clean=args.clean, registry=registry),
+            build_portable("opencode", source, output, clean=args.clean, registry=registry),
+            build_portable("openclaw", source, output, clean=args.clean, registry=registry),
+            build_portable("hermes", source, output, clean=args.clean, registry=registry),
+            build_portable("zcode", source, output, clean=args.clean, registry=registry),
         ], 0
     if args.command == "validate-generated":
         result = validate_generated(source, registry)

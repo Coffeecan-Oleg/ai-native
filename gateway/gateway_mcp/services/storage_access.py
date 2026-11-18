@@ -54,6 +54,18 @@ def list_active_scope_grants(subjects: list[tuple[str, str]]) -> list[dict[str, 
 
     ensure_schema()
     subject_clause, params = _subject_filter_sql(subjects)
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        from gateway_mcp.services.storage_core import database_url
+        from gateway_mcp.services.authorization_reader import fetch
+        rows=fetch(database_url(),f"""
+            select * from access_scope_grants
+            where revoked_at is null
+              and (expires_at is null or expires_at > now())
+              and ({subject_clause})
+            order by case effect when 'deny' then 0 else 1 end, created_at desc
+            """,params)
+        return [_access_row(row) for row in rows]
     with _connect() as conn:
         with conn.cursor() as cur:
             cur.execute(

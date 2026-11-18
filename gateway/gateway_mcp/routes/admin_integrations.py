@@ -120,6 +120,8 @@ _INTEGRATIONS_CSS = """
 
 
 def register_admin_integration_routes(mcp) -> None:
+    from gateway_mcp.routes.admin_integration_status import register_integration_status_routes
+    register_integration_status_routes(mcp)
     @mcp.custom_route("/admin/integrations", methods=["GET"], include_in_schema=False)
     async def integrations_page(request: Request) -> Response:
         actor = web_actor(request)
@@ -144,6 +146,7 @@ def register_admin_integration_routes(mcp) -> None:
         body = f"""
         <div class="page-head"><div><h1>Интеграции</h1>
         <p class="lead">Подключения GatewayMCP к корпоративным системам. Секреты хранятся зашифрованно и не передаются агентам.</p></div><a class="button secondary" href="/admin/factory/connections">GitLab для фабрики</a></div>
+        <p><a href="/admin/integrations/status">Состояние вызовов, ограничения и паузы</a></p>
         {_banner(request)}
         <section class="integration-summary" aria-label="Состояние интеграций">
           {_summary_item("Всего систем", len(statuses))}

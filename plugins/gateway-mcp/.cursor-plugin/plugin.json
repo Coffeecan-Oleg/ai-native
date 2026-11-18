@@ -1,30 +1,17 @@
 {
   "name": "gateway-mcp",
-  "displayName": "Gateway MCP",
-  "version": "0.1.10",
-  "description": "Single GatewayMCP boundary for private MCP servers, company context, and corporate memory.",
+  "version": "0.1.11",
+  "description": "Личное MCP-подключение к корпоративной Платформе: каталог опубликованных навыков, разрешённые инструменты и собственный журнал.",
   "author": {
-    "name": "coMind",
-    "email": "team@comind.space"
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
   },
-  "homepage": "https://comind.space",
-  "repository": "https://github.com/comindspace/ai-native",
-  "license": "UNLICENSED",
-  "keywords": [
-    "cursor",
-    "mcp",
-    "gateway",
-    "agents",
-    "skills"
-  ],
+  "displayName": "Платформа Акметрон",
   "category": "productivity",
-  "tags": [
-    "mcp",
-    "gateway",
-    "agent-skills"
-  ],
   "mcpServers": "./cursor.mcp.json",
   "metadata": {
-    "platformRelease": "2026.09.11"
+    "platformRelease": "2026.09.11",
+    "distribution": "corporate",
+    "authentication": "oauth"
   }
 }

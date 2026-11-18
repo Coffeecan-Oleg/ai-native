@@ -2,5 +2,7 @@ include gateway-tools.json
 include gateway-policy.json
 include gateway-company-indexes.json
 include gateway-factory-projects.json
+include gateway-platforma-tools.json
+include gateway_mcp/backends/platforma_training_data.json
 recursive-include gateway_mcp *.py
 recursive-include migrations *.sql

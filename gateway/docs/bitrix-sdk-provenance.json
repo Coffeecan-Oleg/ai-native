@@ -1,0 +1,9 @@
+{
+  "source_url": "https://api.bitrix24.tech/api/v1/",
+  "retrieved_on": "2026-11-03",
+  "sha256": "945ad491df8ffb7490b89f4914a439b5a3f575c950c3480562815716a3e07f23",
+  "bytes": 27648,
+  "upstream_bytes_unmodified": true,
+  "intended_use": "Build-time download from the official source, SHA256 checked; SDK bytes excluded from Git",
+  "update_policy": "No automatic runtime downloads. Review and test any SDK replacement before deployment."
+}

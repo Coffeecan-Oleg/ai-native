@@ -1,0 +1,22 @@
+schema: 1
+name: meeting-protocol
+version: 0.1.0
+title: "Протоколы встреч"
+description: "Протокол встречи в стиле Акметрон из заметок или расшифровки: повестка, решения, задачи с владельцами и сроками, HTML и PDF A4."
+compatible_agents:
+  - claude
+  - codex
+  - cursor
+  - opencode
+  - openclaw
+  - hermes
+  - zcode
+requires:
+  mcp: []
+  permissions:
+    filesystem: read
+resources:
+  skill: SKILL.md
+  references: false
+  scripts: false
+  assets: true

@@ -1,11 +1,12 @@
 import base64
+import asyncio
 import hashlib
 import ipaddress
 import os
 import secrets
 import socket
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
@@ -16,12 +17,14 @@ from mcp.server.auth.provider import AccessToken
 from mcp.server.auth.settings import AuthSettings
 
 from gateway_mcp.services.observability import record_auth_failure
+from gateway_mcp.services.oauth_limits import limit_oauth_actor
 from gateway_mcp.services.policy import (
     GatewayActor,
     actor_from_claims,
     actor_from_user_info,
     has_scope,
     is_user_allowed,
+    _optional_token_list,
 )
 from gateway_mcp.services.storage import (
     consume_gateway_oauth_refresh_token,
@@ -77,6 +80,7 @@ DEFAULT_SUPPORTED_SCOPES = [
     "google_sheets:write",
     "infra:read",
     "infra:ssh:exec",
+    "knowledge:read",
     "mail:read",
     "mail:send",
     "llm:proxy",
@@ -87,6 +91,7 @@ DEFAULT_SUPPORTED_SCOPES = [
     "notifications:read",
     "notifications:write",
     "openrouter:audio",
+    "platforma:read",
     "process:read",
     "privacy:use",
     "skills:read",
@@ -96,6 +101,7 @@ DEFAULT_SUPPORTED_SCOPES = [
     "telegram:write",
     "tools:call",
     "tools:read",
+    "unisender:read",
     "tracker:read",
     "tracker:write",
     "webmaster:read",
@@ -177,7 +183,11 @@ def mcp_auth_settings() -> AuthSettings | None:
 class GatewayJwtVerifier:
     async def verify_token(self, token: str) -> AccessToken | None:
         try:
-            claims = verify_gateway_token_claims(token)
+            from gateway_mcp.services.bitrix_identity import enabled as bitrix_enabled
+            claims = (await asyncio.to_thread(verify_gateway_token_claims,token)
+                      if bitrix_enabled() else verify_gateway_token_claims(token))
+            if claims.get('browser_channel') is not None:
+                raise PermissionError('browser_session_cannot_authorize_mcp')
         except Exception as exc:  # noqa: BLE001 - authentication boundary fails closed
             record_auth_failure(exc.__class__.__name__)
             return None
@@ -251,12 +261,16 @@ def current_actor() -> GatewayActor:
 
 def require_scope(required_scope: str, *, tool: str) -> GatewayActor:
     actor = current_actor()
+    if actor.tool_allowlist is not None and tool not in actor.tool_allowlist:
+        raise PermissionError(f"tool is outside delegated OAuth allowlist: {tool}")
     if has_scope(actor, required_scope):
         return actor
     raise PermissionError(f"missing required scope for {tool}: {required_scope}")
 
 
-def mint_gateway_token(actor: GatewayActor, *, ttl_seconds: int | None = None) -> str:
+def mint_gateway_token(actor: GatewayActor, *, ttl_seconds: int | None = None, browser_channel: str | None = None) -> str:
+    if browser_channel not in (None,'bitrix24-frame'):
+        raise ValueError('invalid_browser_channel')
     now = int(time.time())
     exp = now + (ttl_seconds if ttl_seconds is not None else token_ttl_seconds())
     claims = {
@@ -272,6 +286,12 @@ def mint_gateway_token(actor: GatewayActor, *, ttl_seconds: int | None = None) -
         "login": actor.login,
         "yandex_id": actor.yandex_id,
     }
+    if actor.scope_ceiling is not None:
+        claims["scope_ceiling"] = list(actor.scope_ceiling)
+    if actor.tool_allowlist is not None:
+        claims["tool_allowlist"] = list(actor.tool_allowlist)
+    if browser_channel is not None:
+        claims['browser_channel'] = browser_channel
     return jwt.encode(claims, jwt_secret(), algorithm="HS256")
 
 
@@ -421,7 +441,9 @@ async def build_oauth_authorization_redirect(params: dict[str, str]) -> str:
         },
         ttl_seconds=600,
     )
-    return build_yandex_authorize_url(oauth_state)
+    from gateway_mcp.services import bitrix_identity
+    return (bitrix_identity.authorize_url(oauth_state) if bitrix_identity.enabled()
+            else build_yandex_authorize_url(oauth_state))
 
 
 async def fetch_oauth_client_metadata(client_id: str) -> dict[str, Any]:
@@ -549,11 +571,12 @@ def exchange_mcp_authorization_code(
         groups=tuple(actor_data.get("groups") or ()),
         scopes=tuple(actor_data.get("scopes") or ()),
     )
-    _validate_requested_scopes(str(payload.get("scope") or ""))
+    requested_scopes = _validate_requested_scopes(str(payload.get("scope") or ""))
     return _issue_oauth_tokens(
         actor=actor,
         client_id=client_id,
         resource=expected_resource,
+        requested_scopes=requested_scopes or None,
     )
 
 
@@ -578,6 +601,16 @@ def exchange_mcp_refresh_token(
         actor_data = json.loads(actor_data)
     if not isinstance(actor_data, dict):
         raise TypeError("refresh token has no actor")
+    from gateway_mcp.services import bitrix_identity, corporate_access
+    if bitrix_identity.enabled():
+        if not bitrix_identity.is_subject(actor_data.get('subject','')):
+            raise PermissionError('corporate_bitrix_login_required')
+        actor = corporate_access.fresh_actor(actor_data['subject'],
+            ceiling=_optional_token_list(actor_data,'scope_ceiling'),
+            tools=_optional_token_list(actor_data,'tool_allowlist'))
+        return _issue_oauth_tokens(actor=actor,client_id=client_id,resource=expected_resource)
+    if bitrix_identity.is_subject(actor_data.get('subject','')):
+        raise PermissionError('bitrix_login_disabled')
     user_info = {
         "id": str(actor_data.get("yandex_id") or ""),
         "uid": str(actor_data.get("yandex_id") or ""),
@@ -586,8 +619,17 @@ def exchange_mcp_refresh_token(
         "email": str(actor_data.get("email") or ""),
     }
     if not is_user_allowed(user_info):
-        raise PermissionError("Gateway user is no longer allowed")
-    actor = actor_from_user_info(user_info)
+        from gateway_mcp.services.platforma_onboarding import waiting_room_actor
+        actor = waiting_room_actor(user_info)
+        if actor is None:
+            raise PermissionError("Gateway user is no longer allowed")
+    else:
+        actor = actor_from_user_info(user_info)
+    actor = replace(
+        actor,
+        scope_ceiling=_optional_token_list(actor_data, "scope_ceiling"),
+        tool_allowlist=_optional_token_list(actor_data, "tool_allowlist"),
+    )
     return _issue_oauth_tokens(
         actor=actor,
         client_id=client_id,
@@ -614,8 +656,10 @@ def revoke_mcp_oauth_token(token: str) -> None:
 
 
 def _issue_oauth_tokens(
-    *, actor: GatewayActor, client_id: str, resource: str
+    *, actor: GatewayActor, client_id: str, resource: str,
+    requested_scopes: list[str] | None = None,
 ) -> dict[str, Any]:
+    actor = limit_oauth_actor(actor, requested_scopes)
     refresh_token = OAUTH_REFRESH_TOKEN_PREFIX + secrets.token_urlsafe(48)
     expires_at = time.time() + refresh_token_ttl_seconds()
     actor_data = actor_payload(actor)
@@ -965,11 +1009,15 @@ async def login_with_yandex_code(code: str) -> tuple[GatewayActor, str]:
     token_payload = await exchange_yandex_code(code)
     yandex_token = str(token_payload["access_token"])
     user_info = await fetch_yandex_user_info(yandex_token)
+    from gateway_mcp.services.platforma_onboarding import waiting_room_actor, web_login_actor
     if not is_user_allowed(user_info):
-        record_auth_failure("user_not_allowed")
-        raise PermissionError("Yandex user is not allowed by Gateway policy")
-
-    actor = actor_from_user_info(user_info)
+        actor = waiting_room_actor(user_info)
+        if actor is None:
+            record_auth_failure("user_not_allowed")
+            raise PermissionError("Yandex user is not allowed by Gateway policy")
+    else:
+        actor = actor_from_user_info(user_info)
+    actor = web_login_actor(actor)
     _save_yandex_actor_token(
         actor_subject=actor.subject,
         actor=actor,
@@ -1154,4 +1202,10 @@ def actor_payload(actor: GatewayActor) -> dict[str, Any]:
     payload = asdict(actor)
     payload["groups"] = list(actor.groups)
     payload["scopes"] = list(actor.scopes)
+    for field in ("scope_ceiling", "tool_allowlist"):
+        value = getattr(actor, field)
+        if value is None:
+            payload.pop(field)
+        else:
+            payload[field] = list(value)
     return payload

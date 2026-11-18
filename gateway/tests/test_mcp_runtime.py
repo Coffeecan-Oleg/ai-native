@@ -12,7 +12,7 @@ class McpRuntimeTests(unittest.TestCase):
     def test_v1_constructor_keeps_transport_settings(self) -> None:
         with (
             patch.object(mcp_runtime, "MCP_SDK_V2", False),
-            patch.object(mcp_runtime, "MCPServer") as server_type,
+            patch.object(mcp_runtime, "BrowserMCPServer") as server_type,
             patch.dict(
                 "os.environ",
                 {
@@ -40,7 +40,7 @@ class McpRuntimeTests(unittest.TestCase):
         server = Mock()
         with (
             patch.object(mcp_runtime, "MCP_SDK_V2", True),
-            patch.object(mcp_runtime, "MCPServer") as server_type,
+            patch.object(mcp_runtime, "BrowserMCPServer") as server_type,
             patch.object(
                 mcp_runtime,
                 "CacheHint",

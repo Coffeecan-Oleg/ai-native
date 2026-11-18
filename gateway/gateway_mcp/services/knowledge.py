@@ -647,6 +647,10 @@ def _actor_group_role(actor: GatewayActor, path: Path) -> str:
             member["role"], 0
         ) > ROLE_LEVELS.get(best, 0):
             best = member["role"]
+    if not best:
+        from gateway_mcp.services.platforma_onboarding import knowledge_reader
+        if knowledge_reader(actor, path):
+            return "reader"
     return best
 
 

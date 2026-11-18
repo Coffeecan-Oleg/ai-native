@@ -1,0 +1,22 @@
+schema: 1
+name: message-format-tg-bitrix
+version: 0.1.0
+title: "Сообщения для Telegram и Битрикс24"
+description: "Подготовка текста для Telegram и Битрикс24 без Markdown-таблиц. Создаёт черновик сообщения; не отправляет и не публикует его."
+compatible_agents:
+  - claude
+  - codex
+  - cursor
+  - opencode
+  - openclaw
+  - hermes
+  - zcode
+requires:
+  mcp: []
+  permissions:
+    filesystem: read
+resources:
+  skill: SKILL.md
+  references: false
+  scripts: false
+  assets: false

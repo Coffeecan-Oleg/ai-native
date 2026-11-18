@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gateway": {
+      "type": "http",
+      "url": "https://platforma.akmetron.ru/mcp",
+      "timeout": 60000
+    }
+  }
+}

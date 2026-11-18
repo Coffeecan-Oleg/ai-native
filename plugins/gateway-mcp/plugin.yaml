@@ -1,7 +1,3 @@
 name: gateway-mcp
-version: "0.1.10"
-description: "Single GatewayMCP boundary for private MCP servers, company context, and corporate memory."
-platform_release: "2026.09.11"
-requires_env:
-  - GATEWAY_MCP_URL
-  - GATEWAY_MCP_TOKEN
+version: "0.1.11"
+description: "Corporate MCP connection; configure OAuth in the host application."

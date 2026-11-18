@@ -455,6 +455,9 @@ def agent_form(profile, options, csrf):
         )
         + '</summary><form method="post" action="/admin/agents/save">'
         + hidden({"csrf": csrf, "revision": str(profile["revision"])})
+        + ("" if profile["agent_key"] else
+           "<p>Карточку можно сохранить сразу. После первого зарегистрированного запуска навыка "
+           "открой карточку и выбери источник.</p>")
         + key
         + f'<label>Имя<input name="name" value="{e(profile["display_name"])}" required maxlength="80"></label><label>Задача агента<input name="description" value="{e(profile["description"])}" maxlength="300"></label><label>Источник<select name="binding">{selects}</select></label><p class="sc-note">Выбери отдельную учётную запись и имя агента из его телеметрии. Все их запуски за период будут отнесены к этому агенту и исключены из личной статистики. Общая учётная запись с тем же именем клиента смешает работу людей и агента. В списке до 100 последних источников.</p><button type="submit">Сохранить профиль</button></form></details>'
     )

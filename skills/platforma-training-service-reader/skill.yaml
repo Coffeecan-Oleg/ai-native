@@ -1,0 +1,23 @@
+schema: 1
+name: platforma-training-service-reader
+version: 0.1.0
+title: "Помощник по сервисам и заявкам"
+description: "Чтение вымышленных сервисов и заявок учебной Платформы через личный OAuth и GatewayMCP."
+compatible_agents:
+  - claude
+  - codex
+  - cursor
+  - opencode
+  - openclaw
+  - hermes
+  - zcode
+requires:
+  mcp:
+    - gateway
+  permissions:
+    platforma: read
+resources:
+  skill: SKILL.md
+  references: false
+  scripts: false
+  assets: false

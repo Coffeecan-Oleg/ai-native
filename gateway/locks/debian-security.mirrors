@@ -1,0 +1,5 @@
+# Only .deb bytes may use the live CDN; signed indexes stay at this snapshot.
+https://deb.debian.org/debian-security/	priority:1 type:deb
+https://security.debian.org/debian-security/	priority:2 type:deb
+https://snapshot-cloudflare.debian.org/archive/debian-security/20261021T124057Z/	priority:3
+https://snapshot.debian.org/archive/debian-security/20261021T124057Z/	priority:4

@@ -1,0 +1,284 @@
+/* ============================================================
+   АКМЕТРОН — Design System (светлая тема)
+   Подключи Google Fonts (Montserrat + Inter) перед этим файлом:
+   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+   ============================================================ */
+
+:root {
+  /* — Поверхности (светлые) — */
+  --field-deep:   #E7EEF7;  /* самый глубокий фон */
+  --bg-main:      #F5F8FC;  /* основной фон */
+  --bg-main-2:    #EAF1FA;  /* конец градиента фона */
+  --panel-top:    #FFFFFF;  /* верх градиента карточки (белый) */
+  --panel-bottom: #F6FAFD;  /* низ градиента карточки */
+
+  /* — Бренд — */
+  --brand-blue:      #004180;  /* ГЛАВНЫЙ синий: логотип, глубокие заливки */
+  --brand-blue-deep: #00305E;
+
+  /* — Акценты (синий) — */
+  --blue:       #1C6BB0;  /* primary: действия, ссылки (белый текст проходит AA) */
+  --blue-light: #3E8FD0;  /* hover, active, подсветка */
+  --blue-deep:  #134E86;  /* низ градиентов, глубина */
+  --blue-glow:  rgba(75,159,213,0.24);
+
+  /* — Текст на светлом — */
+  --text-1: #16233F;  /* основной: фирменный нэйви */
+  --text-2: #4A5874;  /* вторичный: подписи, метки */
+  --text-3: #8693AD;  /* третичный: сноски */
+  --white:  #FFFFFF;  /* белая поверхность */
+
+  /* — Хайрлайны / границы — */
+  --hairline:        rgba(30,60,110,0.12);
+  --hairline-strong: rgba(30,60,110,0.22);
+
+  /* — Тревога / боль / предупреждение — ТОЛЬКО риски и проблемы — */
+  --alert-top:    #FCEEF1;
+  --alert-bottom: #FBE6EB;
+  --alert-stripe: #C0566F;
+  --alert-text:   #7E2B40;
+
+  /* — Заливки — */
+  --fill-faint: rgba(30,60,110,0.04);     /* пилл / чип */
+  --fill-blue:  rgba(75,159,213,0.12);    /* полоса коллаута */
+
+  /* — Радиусы — */
+  --radius-sm:  8px;    /* инпуты, мелкое */
+  --radius-md:  12px;   /* карточки по умолчанию */
+  --radius-lg:  18px;   /* крупные панели */
+  --radius-pill: 999px; /* пиллы, теги */
+
+  /* — Тени / свечение — */
+  --shadow-md:  0 10px 30px rgba(20,40,80,0.10);
+  --glow-blue:  0 0 50px rgba(75,159,213,0.18);
+
+  /* — Шрифты — */
+  --font-display: "Montserrat", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
+
+  /* — Анимация — */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text-1);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(75,159,213,0.12), transparent 60%),
+    linear-gradient(135deg, var(--bg-main), var(--bg-main-2));
+}
+
+/* — Типографика — */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--text-1);
+  margin: 0;
+}
+h1 { font-weight: 900; font-size: 72px; letter-spacing: -0.03em; line-height: 1.05; }
+h2 { font-weight: 800; font-size: 40px; letter-spacing: -0.02em; line-height: 1.2; }
+h3 { font-weight: 700; font-size: 24px; }
+.display { font-family: var(--font-display); font-weight: 900; font-size: 56px; letter-spacing: -0.03em; line-height: 1.05; }
+.lead { font-size: 20px; color: var(--text-2); line-height: 1.5; }
+
+.eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.27em;
+  font-size: 13px;
+  color: var(--blue-light);
+}
+
+/* — Stat / крупное число — */
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 88px;
+  line-height: 1;
+  color: var(--blue);
+  letter-spacing: -0.02em;
+}
+.stat-label { font-size: 16px; color: var(--text-2); margin-top: 8px; }
+.stat-sublabel { font-size: 13px; color: var(--text-3); }
+
+/* — Карточка — */
+.card {
+  background: linear-gradient(160deg, var(--panel-top), var(--panel-bottom));
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 32px;
+  transition: transform 240ms var(--ease-out), border-color 240ms var(--ease-out), box-shadow 240ms var(--ease-out);
+}
+.card:hover { transform: translateY(-4px); }
+.card--active {
+  background: linear-gradient(160deg, #FFFFFF, #EEF5FC);
+  border-color: var(--blue);
+  box-shadow: var(--shadow-md), var(--glow-blue);
+}
+.card--alert {
+  background: linear-gradient(160deg, var(--alert-top), var(--alert-bottom));
+  border-color: rgba(192,86,111,0.30);
+  box-shadow: var(--shadow-md);
+}
+
+/* — Кнопка — */
+.btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: var(--radius-pill);
+  padding: 14px 28px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: background 200ms var(--ease-out), border-color 200ms var(--ease-out), color 200ms var(--ease-out);
+}
+.btn--primary {
+  background: linear-gradient(180deg, var(--blue-light), var(--blue-deep));
+  color: var(--white);
+}
+.btn--primary:hover { background: linear-gradient(180deg, #57A2DE, var(--blue)); }
+.btn--secondary {
+  background: var(--white);
+  border-color: var(--hairline-strong);
+  color: var(--text-1);
+}
+.btn--secondary:hover { border-color: var(--blue); color: var(--blue); }
+.btn--ghost { background: transparent; color: var(--text-2); }
+.btn--ghost:hover { color: var(--blue); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* — Tag / чип — */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-2);
+  background: var(--fill-faint);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  padding: 7px 16px;
+}
+.tag--active { background: var(--fill-blue); border-color: var(--blue); color: var(--blue); }
+
+/* — Badge — */
+.badge {
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+.badge--blue    { background: var(--fill-blue); color: var(--blue); }
+.badge--neutral { background: var(--fill-faint); color: var(--text-2); }
+.badge--alert   { background: rgba(192,86,111,0.12); color: var(--alert-text); }
+
+/* — Callout — */
+.callout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--fill-blue);
+  border-left: 3px solid var(--blue);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  color: var(--text-1);
+  font-size: 15px;
+}
+.callout svg { color: var(--blue); flex-shrink: 0; }
+
+/* — Input — */
+.input-field {
+  width: 100%;
+  background: var(--white);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  color: var(--text-1);
+  font-family: var(--font-body);
+  font-size: 15px;
+  transition: border-color 200ms var(--ease-out);
+}
+.input-field:focus { outline: none; border-color: var(--blue); }
+.input-field::placeholder { color: var(--text-3); }
+.input-label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
+.input-hint  { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+
+/* — Хайрлайн-разделитель — */
+.hairline { height: 1px; background: var(--hairline); border: 0; }
+
+/* — Пазл-текстура (привязать к краю, маскировать к центру) — */
+.puzzle-edge {
+  position: absolute;
+  inset: 0;
+  background: url("puzzle-pattern.svg") repeat;
+  opacity: 0.20;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to left, #000, transparent 70%);
+          mask-image: linear-gradient(to left, #000, transparent 70%);
+}
+
+/* — Логотип-локап — */
+.akm-logo { display: inline-flex; align-items: center; gap: 12px; }
+.akm-logo img { height: 32px; width: auto; display: block; }
+.akm-logo span {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--text-1);
+}
+
+/* — Sticky-навигация — */
+.nav-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* — Появление контента — */
+@keyframes akm-reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal { animation: akm-reveal 600ms var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, .reveal, .card { animation: none !important; transition: none !important; }
+}
+
+/* — Контейнер — */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+
+@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/inter-cyr-400.woff2") format("woff2");unicode-range:U+0400-052F;}
+@font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/inter-latin-400.woff2") format("woff2");unicode-range:U+0000-024F;}
+@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url("fonts/inter-cyr-500.woff2") format("woff2");unicode-range:U+0400-052F;}
+@font-face{font-family:"Inter";font-style:normal;font-weight:500;font-display:swap;src:url("fonts/inter-latin-500.woff2") format("woff2");unicode-range:U+0000-024F;}
+@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/inter-cyr-600.woff2") format("woff2");unicode-range:U+0400-052F;}
+@font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url("fonts/inter-latin-600.woff2") format("woff2");unicode-range:U+0000-024F;}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/mont-cyr-700.woff2") format("woff2");unicode-range:U+0400-052F;}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/mont-latin-700.woff2") format("woff2");unicode-range:U+0000-024F;}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:800;font-display:swap;src:url("fonts/mont-cyr-800.woff2") format("woff2");unicode-range:U+0400-052F;}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:800;font-display:swap;src:url("fonts/mont-latin-800.woff2") format("woff2");unicode-range:U+0000-024F;}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:900;font-display:swap;src:url("fonts/mont-cyr-900.woff2") format("woff2");unicode-range:U+0400-052F;}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:900;font-display:swap;src:url("fonts/mont-latin-900.woff2") format("woff2");unicode-range:U+0000-024F;}

@@ -1,0 +1,25 @@
+[Unit]
+Description=Akmetron Gateway TCP 8000 ingress boundary
+DefaultDependencies=no
+After=local-fs.target
+Before=network-pre.target docker.service
+Wants=network-pre.target
+ConditionPathExists=/usr/local/libexec/akmetron-gateway-boundary.py
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /usr/local/libexec/akmetron-gateway-boundary.py apply
+# Stopping this unit does not silently remove the protection.
+# Removal is an explicit administrator rollback operation.
+User=root
+Group=root
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/run
+PrivateTmp=yes
+CapabilityBoundingSet=CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target

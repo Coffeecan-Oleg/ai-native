@@ -213,6 +213,9 @@ def public_access_package_catalog() -> list[dict[str, Any]]:
 
 
 def _actor_keys(actor: GatewayActor) -> list[str]:
+    from gateway_mcp.services import bitrix_identity
+    if bitrix_identity.enabled() and bitrix_identity.is_subject(actor.subject):
+        return [normalize_key(actor.subject)]
     keys = []
     for value in (actor.email, actor.login, actor.yandex_id, actor.subject):
         normalized = normalize_key(value)

@@ -8,3 +8,6 @@ dist/
 .env.*
 !.env.example
 gateway-audit.jsonl
+
+# Official third-party SDK: hash-pinned download during image build only.
+/gateway_mcp/help_assets/bitrix24-sdk-v1.js

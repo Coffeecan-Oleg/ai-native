@@ -1,0 +1,13 @@
+{
+  "name": "platforma-training",
+  "version": "0.1.2",
+  "description": "Исторический учебный пакет. Не рекомендуется для корпоративной установки: учебные операции закрыты. Для текущего сервера используйте gateway-mcp.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "skills": "skills",
+  "metadata": {
+    "platformRelease": "2026.09.11"
+  }
+}

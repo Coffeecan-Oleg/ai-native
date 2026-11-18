@@ -341,7 +341,8 @@ def register_admin_showcase_routes(mcp):
             actor=actor,
             system="telemetry",
             status="ok",
-            arguments={"agent_key": key, "binding_present": bool(pair[0])},
+            arguments={"agent_key": key, "binding_present": bool(pair[0]),
+                       "operation": "create" if revision == 0 else "update"},
         )
         return RedirectResponse(
             ui.url("/admin/agents/detail", key=key), status_code=303

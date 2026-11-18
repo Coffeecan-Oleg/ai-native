@@ -1,6 +1,6 @@
 """Aggregate projections only: no prompts, event payloads, credentials or HR data."""
 
-from gateway_mcp.services.storage_admin_console import _USERS, _rows
+from gateway_mcp.services.storage_admin_console import _users_cte, _rows
 from gateway_mcp.services.storage_core import _connect, ensure_schema
 
 
@@ -10,6 +10,9 @@ def _runs(days, subject=None, agent=None, people_only=False):
         "s.created_at >= now() - (%s * interval '1 day')",
         "s.created_at <= now()",
     ]
+    from gateway_mcp.services import corporate_access
+    if corporate_access.enabled():
+        where.append("s.actor_subject in (" + _users_cte() + "select subject from known_users)")
     params = [days]
     if subject is not None:
         where.append("s.actor_subject = %s")
@@ -80,7 +83,7 @@ def showcase_people(days=30, query="", offset=0, limit=12):
     sql = (
         cte
         + ", "
-        + _USERS.strip().removeprefix("with ")
+        + _users_cte().strip().removeprefix("with ")
         + f""",
         totals as (select actor_subject, {_COUNTS} from runs group by actor_subject),
         clients as (select actor_subject, array_agg(distinct agent order by agent) as clients
@@ -170,6 +173,18 @@ def set_skill_favorite(subject, pack, skill, selected):
             )
 
 
+def _portal_subject_filter(column):
+    from gateway_mcp.services import corporate_access
+    if not corporate_access.enabled():
+        return "true"
+    return column + " in (" + _users_cte() + "select subject from known_users)"
+
+
+def _profile_portal_filter():
+    # An unbound card uses the editor's identity until telemetry is linked.
+    return _portal_subject_filter("coalesce(nullif(p.actor_subject, ''), p.updated_by)")
+
+
 def agent_profiles(days=30):
     cte, params = _runs(days)
     return _rows(
@@ -180,14 +195,16 @@ def agent_profiles(days=30):
             a.starts, a.completed, a.failed, a.pending, a.timed, a.median_ms, a.last_activity
         from assistant_agent_profiles p left join activity a
             on p.actor_subject = a.actor_subject and p.agent = a.agent and p.actor_subject <> ''
+          where {_profile_portal_filter()}
         order by p.display_name, p.agent_key""",
         params,
     )
 
 
 def agent_binding_options():
-    return _rows("""select actor_subject, agent, max(created_at) as last_activity
+    return _rows(f"""select actor_subject, agent, max(created_at) as last_activity
         from assistant_skill_events where event_type = 'started' and actor_subject <> '' and agent <> ''
+          and {_portal_subject_filter('actor_subject')}
         group by actor_subject, agent order by last_activity desc, actor_subject, agent limit 100""")
 
 
@@ -196,8 +213,9 @@ def save_agent_profile(*, key, name, description, subject, agent, revision, upda
     with _connect() as conn, conn.cursor() as cur:
         if subject:
             cur.execute(
-                """select 1 from assistant_skill_events
-                where actor_subject = %s and agent = %s and event_type = 'started' limit 1""",
+                f"""select 1 from assistant_skill_events
+                where actor_subject = %s and agent = %s and event_type = 'started'
+                    and {_portal_subject_filter('actor_subject')} limit 1""",
                 (subject, agent),
             )
             if cur.fetchone() is None:
@@ -213,9 +231,10 @@ def save_agent_profile(*, key, name, description, subject, agent, revision, upda
         if cur.fetchone() is not None:
             return
         cur.execute(
-            """update assistant_agent_profiles set display_name = %s, description = %s,
+            f"""update assistant_agent_profiles as p set display_name = %s, description = %s,
             actor_subject = %s, agent = %s, revision = revision + 1, updated_by = %s, updated_at = now()
-            where agent_key = %s and revision = %s returning agent_key""",
+            where agent_key = %s and revision = %s and {_profile_portal_filter()}
+            returning agent_key""",
             (name, description, subject, agent, updated_by, key, revision),
         )
         if cur.fetchone() is None:

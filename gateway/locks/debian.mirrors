@@ -1,0 +1,5 @@
+# Live CDN is allowed for package bytes only, never for release/package indexes.
+# APT validates every .deb against the authenticated frozen snapshot index.
+https://deb.debian.org/debian/	priority:1 type:deb
+https://snapshot-cloudflare.debian.org/archive/debian/20261021T124057Z/	priority:2
+https://snapshot.debian.org/archive/debian/20261021T124057Z/	priority:3
