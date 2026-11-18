@@ -6,6 +6,7 @@ import re
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
+from connection_check import ConnectionCheckError, check_connection
 
 SPACE = 'space:organizational-awareness'
 DEV_URL = 'https://platforma-dev.akmetron.ru/mcp'
@@ -71,6 +72,7 @@ async def answer(session, subject, keyword=None):
 
 async def run(subject, keyword):
     from browser_login import authorized_client
+    await check_connection(DEV_URL, SCOPES)
     async with authorized_client(DEV_URL, SCOPES) as http:
         async with streamable_http_client(DEV_URL, http_client=http) as (reader, writer, _):
             async with ClientSession(reader, writer) as session:
@@ -78,20 +80,28 @@ async def run(subject, keyword):
                 return await answer(session, subject, keyword)
 
 
-if __name__ == '__main__':
+def main(argv=None):
     parser = argparse.ArgumentParser(description='Справочник общих знаний Платформы (dev).')
-    parser.add_argument('--subject', required=True, help='Полный несекретный ID выделенной учётной записи.')
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--subject', help='Полный несекретный ID выделенной учётной записи.')
+    mode.add_argument('--check', action='store_true', help='Проверить доступность dev до личного входа.')
     parser.add_argument('--find', help='Найти фрагмент по слову. По умолчанию — адрес MCP и портал входа.')
-    args = parser.parse_args()
-    if not re.fullmatch(r'bitrix24:[a-f0-9]{32}:[1-9][0-9]{0,18}', args.subject):
+    args = parser.parse_args(argv)
+    if args.check and args.find is not None:
+        parser.error('Для поиска используйте --subject. Параметр --check проверяет подключение.')
+    if args.subject is not None and not re.fullmatch(r'bitrix24:[a-f0-9]{32}:[1-9][0-9]{0,18}', args.subject):
         parser.error('Ожидается идентификатор Битрикс24.')
     try:
-        output = asyncio.run(run(args.subject, args.find))
+        output = asyncio.run(check_connection(DEV_URL, SCOPES) if args.check else run(args.subject, args.find))
     except Exception as error:
         def reason(exc):
-            if isinstance(exc, GuideError):
+            if isinstance(exc, (GuideError, ConnectionCheckError)):
                 return str(exc)
             if isinstance(exc, BaseExceptionGroup):
                 return next((r for sub in exc.exceptions if (r := reason(sub))), None)
         parser.exit(1, (reason(error) or 'Не удалось подключиться к dev или завершить OAuth.') + '\n')
     print(json.dumps(output, ensure_ascii=False, indent=2))
+
+
+if __name__ == '__main__':
+    main()
