@@ -32,12 +32,21 @@ class BrowserMCPServer(MCPServer):
 def create_server(*, name: str, token_verifier: Any, auth: Any) -> Any:
     """Create an MCP server with the constructor expected by the installed SDK."""
     from gateway_mcp.services.bitrix_embed import enabled as frame_enabled
+    from gateway_mcp.services.bitrix_identity import enabled as corporate_login
     if MCP_SDK_V2 and frame_enabled():
         raise RuntimeError('Bitrix embedded HTTP adapter requires verification before an SDK v2 upgrade')
     common = {
         "token_verifier": token_verifier,
         "auth": auth,
     }
+    if corporate_login():
+        common["instructions"] = (
+            "При вопросах о компании проверь свои разрешения через gateway_access_profile. "
+            "Если доступно чтение общих знаний, найди паспорт через gateway_knowledge_search. "
+            "Передай идентификатор общего пространства из описания этого инструмента. "
+            "Прочитай найденный документ через gateway_knowledge_document_get и укажи источник ответа. "
+            "Если документ недоступен или в нём нет нужных сведений, сообщи об этом."
+        )
     if MCP_SDK_V2:
         return BrowserMCPServer(
             name,
