@@ -84,6 +84,16 @@ class KnowledgeGuideTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(GuideError):
                 await call(session, 'gateway_knowledge_document_get', space=SPACE, document=PASSPORT)
 
+    async def test_receipt_is_limited_to_designated_document_reads(self):
+        async with create_connected_server_and_client_session(self.server) as session:
+            search = await call(session, 'gateway_knowledge_search', space=SPACE, query='паспорт')
+            self.assertNotIn('gateway_request_id', search)
+            read = await call(session, 'gateway_knowledge_document_get', space=SPACE, document=PASSPORT)
+            self.assertIn('gateway_request_id', read)
+            with patch.dict(os.environ, {'GATEWAY_KNOWLEDGE_GUIDE_SUBJECT': OTHER}):
+                ordinary = await call(session, 'gateway_knowledge_document_get', space=SPACE, document=PASSPORT)
+                self.assertNotIn('gateway_request_id', ordinary)
+
     async def test_only_the_shipped_dev_passport_is_installed(self):
         examples = Path(guide.__file__).parent / 'dev-data'
         self.passport.write_bytes((examples / 'project-profile.md').read_bytes())

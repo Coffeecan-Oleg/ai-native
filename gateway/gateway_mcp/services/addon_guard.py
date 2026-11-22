@@ -9,6 +9,7 @@ import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from uuid import uuid4
 
 from gateway_mcp.services.security_guard import authorize
 
@@ -334,8 +335,7 @@ def register(server):
     if list_handler is not None:
         server._mcp_server.request_handlers[ListToolsRequest] = reader_tools
 
-    async def guarded(request):
-        actor = current_actor()
+    async def dispatch(request, actor):
         name = request.params.name
         args = request.params.arguments or {}
         try:
@@ -347,7 +347,7 @@ def register(server):
                 if profile and profile.get("reader_only") and name == "gateway_knowledge_space_list":
                     request.params.arguments = {**args, "include_personal": False}
                 result = await handler(request)
-                return filter_result(actor, name, result, profile)
+                return filter_result(actor, name, result, profile), False
         except PermissionError as exc:
             audit_event(event="addon_policy", actor=actor, tool=name,
                         system="addon-security", decision="deny",
@@ -355,6 +355,42 @@ def register(server):
                         arguments={}, error=str(exc))
             return ServerResult(CallToolResult(
                 content=[TextContent(type="text", text=json.dumps({"ok":False,"error":str(exc)}))],
-                isError=True))
+                isError=True)), True
+
+    async def guarded(request):
+        actor = current_actor()
+        from gateway_mcp.services import corporate_access
+        if (request.params.name != 'gateway_knowledge_document_get'
+                or not corporate_access.enabled()
+                or not actor.subject
+                or actor.subject != os.getenv('GATEWAY_KNOWLEDGE_GUIDE_SUBJECT')):
+            result, _ = await dispatch(request, actor)
+            return result
+
+        # One receipt per final document response. The client cannot submit
+        # events or choose the source, status or request ID.
+        request_id = str(uuid4())
+        status, decision = 'error', ''
+        try:
+            result, policy_denied = await dispatch(request, actor)
+            root = result.root
+            if policy_denied:
+                status, decision = 'denied', 'deny'
+            elif not root.isError:
+                status, decision = 'ok', 'allow'
+            elif len(root.content) == 1 and root.content[0].type == 'text':
+                try:
+                    error = json.loads(root.content[0].text).get('error', '')
+                except (ValueError, AttributeError):
+                    error = ''
+                if error == 'knowledge_scope_required':
+                    status, decision = 'denied', 'deny'
+            root.meta = {**(root.meta or {}), 'ru.akmetron.platforma/request_id': request_id}
+            return result
+        finally:
+            audit_event(event='knowledge_guide_read', actor=actor, tool=request.params.name,
+                        system='knowledge', decision=decision, status=status, scope='knowledge:read',
+                        arguments={'gateway_request_id': request_id}, channel='mcp')
+
     server._mcp_server.request_handlers[CallToolRequest] = guarded
 

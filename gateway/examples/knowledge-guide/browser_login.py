@@ -80,7 +80,7 @@ async def authorized_client(url, scopes):
     server = await asyncio.start_server(receive, '127.0.0.1', 0, limit=8192)
     async with server:
         port = server.sockets[0].getsockname()[1]
-        metadata = OAuthClientMetadata(client_name='Platforma knowledge guide (dev)',
+        metadata = OAuthClientMetadata(client_name='Справочник Платформы',
             redirect_uris=[f'http://127.0.0.1:{port}/callback'], scope=' '.join(sorted(scopes)),
             token_endpoint_auth_method='none', grant_types=['authorization_code', 'refresh_token'])
         provider = OAuthClientProvider(url, metadata, storage, open_sign_in, callback)

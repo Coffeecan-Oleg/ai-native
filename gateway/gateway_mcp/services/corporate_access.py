@@ -22,6 +22,7 @@ BASE_SCOPES = frozenset({'skills:read','tools:read','tools:call','telemetry:read
 # allowlist excludes every skill, write, memory and integration method.
 GUIDE_SCOPES = frozenset({'skills:read', 'knowledge:read'})
 GUIDE_TOOLS = frozenset({'gateway_access_profile', 'gateway_knowledge_search', 'gateway_knowledge_document_get'})
+GUIDE_SOURCE = 'gateway:knowledge-guide'
 WEB_PATHS = frozenset({'/admin','/admin/audit','/admin/telemetry/skills',
     '/auth/bitrix24/frame-session',
     '/platforma/skills','/platforma/skills/upload',
@@ -79,6 +80,10 @@ def fresh_actor(subject, *, ceiling=None, tools=None):
             raise PermissionError('corporate_guide_requires_separate_identity')
         scopes.intersection_update(GUIDE_SCOPES)
         allowed.intersection_update(GUIDE_TOOLS)
+        if 'knowledge:read' not in scopes:
+            allowed.difference_update({'gateway_knowledge_search', 'gateway_knowledge_document_get'})
+        if 'skills:read' not in scopes:
+            allowed.discard('gateway_access_profile')
     if tools is not None:
         allowed.intersection_update(tools)
     return replace(actor, scopes=tuple(sorted(scopes)),

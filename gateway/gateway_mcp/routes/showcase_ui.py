@@ -6,6 +6,7 @@ from html import escape
 from urllib.parse import urlencode
 
 from gateway_mcp.routes.admin_ui import fmt_time
+from gateway_mcp.services.corporate_access import GUIDE_SOURCE
 
 CSS = """<style>
 /* Hallmark: modern-minimal, corporate directory. Function carries the page. */
@@ -103,6 +104,8 @@ def url(path, **params):
 
 
 def client_label(value):
+    if value == GUIDE_SOURCE:
+        return ("Справочник · чтение документов", "MCP")
     key = str(value or "").strip().lower()
     return CLIENTS.get(key, (str(value or "Клиент не указан"), "AI"))
 
@@ -221,15 +224,14 @@ def person_card(person, days):
 def agent_card(profile, days):
     bound = bool(profile["actor_subject"])
     link = url("/admin/agents/detail", key=profile["agent_key"], days=days)
+    metrics = (("reads", "Запросов документа"), ("delivered", "Прочитано"), ("unsuccessful", "Без выдачи")) if (
+        profile.get("agent") == GUIDE_SOURCE
+    ) else (("starts", "Запусков"), ("completed", "Без ошибки"), ("failed", "С ошибкой"))
     stats = (
         '<div class="sc-card-metrics">'
         + "".join(
             f"<div><strong>{number((profile.get(k) or 0) if bound else None)}</strong><small>{label}</small></div>"
-            for k, label in (
-                ("starts", "Запусков"),
-                ("completed", "Без ошибки"),
-                ("failed", "С ошибкой"),
-            )
+            for k, label in metrics
         )
         + "</div>"
     )
@@ -424,6 +426,21 @@ def hidden(fields):
     )
 
 
+def guide_detail(profile, reads, days):
+    title = header(profile["display_name"], profile["description"], days, "/admin/agents/detail",
+                   "agents", key=profile["agent_key"])
+    labels = {"ok": "Документ выдан", "denied": "Доступ отклонён", "error": "Ошибка чтения"}
+    rows = "".join(
+        f'<tr><td>{e(fmt_time(row["created_at"]))}</td><td>{e(labels.get(row["status"], "Неизвестно"))}</td>'
+        f'<td><code>{e(row["gateway_request_id"])}</code></td></tr>' for row in reads
+    )
+    table = ('<table><thead><tr><th>Время</th><th>Результат</th><th>ID запроса</th></tr></thead>'
+             f'<tbody>{rows}</tbody></table>') if reads else '<p>За этот период обращений нет.</p>'
+    return (f'<div class="showcase">{title}<section class="sc-panel"><h2>Чтение документов</h2>'
+            '<p>Последние 50 обращений за выбранный период. По ID можно сверить ответ справочника с журналом.</p>'
+            f'{table}</section></div>')
+
+
 def agent_form(profile, options, csrf):
     profile = profile or {
         "agent_key": "",
@@ -440,7 +457,8 @@ def agent_form(profile, options, csrf):
     selects = '<option value="[]">Без источника телеметрии</option>'
     for subject, agent in sorted(pairs):
         selected = " selected" if [subject, agent] == pair else ""
-        selects += f'<option value="{e(json.dumps([subject, agent]))}"{selected}>{e(subject)} · {e(agent)}</option>'
+        label = client_label(agent)[0] if agent == GUIDE_SOURCE else agent
+        selects += f'<option value="{e(json.dumps([subject, agent]))}"{selected}>{e(subject)} · {e(label)}</option>'
     key = (
         hidden({"key": profile["agent_key"]})
         if profile["agent_key"]
@@ -456,10 +474,10 @@ def agent_form(profile, options, csrf):
         + '</summary><form method="post" action="/admin/agents/save">'
         + hidden({"csrf": csrf, "revision": str(profile["revision"])})
         + ("" if profile["agent_key"] else
-           "<p>Карточку можно сохранить сразу. После первого зарегистрированного запуска навыка "
-           "открой карточку и выбери источник.</p>")
+           "<p>Карточку можно сохранить сразу. Выберите источник после первого запуска навыка "
+           "или первого обращения справочника к документу.</p>")
         + key
-        + f'<label>Имя<input name="name" value="{e(profile["display_name"])}" required maxlength="80"></label><label>Задача агента<input name="description" value="{e(profile["description"])}" maxlength="300"></label><label>Источник<select name="binding">{selects}</select></label><p class="sc-note">Выбери отдельную учётную запись и имя агента из его телеметрии. Все их запуски за период будут отнесены к этому агенту и исключены из личной статистики. Общая учётная запись с тем же именем клиента смешает работу людей и агента. В списке до 100 последних источников.</p><button type="submit">Сохранить профиль</button></form></details>'
+        + f'<label>Имя<input name="name" value="{e(profile["display_name"])}" required maxlength="80"></label><label>Задача агента<input name="description" value="{e(profile["description"])}" maxlength="300"></label><label>Источник<select name="binding">{selects}</select></label><p class="sc-note">Выберите выделенную учётную запись агента. Для справочника укажите источник «Справочник · чтение документов». Для остальных агентов выберите имя клиента, который регистрирует запуски навыков. В списке до 100 последних источников.</p><button type="submit">Сохранить профиль</button></form></details>'
     )
 
 
@@ -479,6 +497,6 @@ def agents_page(profiles, options, csrf, days):
     body += (
         '<section class="sc-panel">'
         + agent_form(None, options, csrf)
-        + '</section><p class="sc-note">Метрики относятся к навыкам, переданным в GatewayMCP. Название клиента Hermes само по себе не означает автономную работу. Для сообщений Фёклы и других действий вне навыков потребуется отдельная телеметрия результатов.</p>'
+        + '</section><p class="sc-note">Карточки показывают зарегистрированные запуски навыков. В карточке справочника показаны обращения к документам, которые зарегистрировал шлюз.</p>'
     )
     return '<div class="showcase">' + body + "</div>"

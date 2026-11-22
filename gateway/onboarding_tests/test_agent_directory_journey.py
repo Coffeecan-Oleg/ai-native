@@ -1,7 +1,11 @@
 """Corporate directory journey using the real HTML routes and disposable PostgreSQL."""
 import json
 import os
+import asyncio
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -11,6 +15,7 @@ from starlette.testclient import TestClient
 
 from gateway_mcp.routes import admin_showcase
 from gateway_mcp.services import corporate_access, storage_showcase
+from gateway_mcp.services.corporate_access import fresh_actor as resolve_actor
 from gateway_mcp.services.policy import GatewayActor
 from gateway_mcp.services.storage_core import _connect
 from gateway_mcp.services.telemetry import record_skill_event
@@ -112,6 +117,77 @@ class AgentDirectoryTests(unittest.TestCase):
 
     def profile(self):
         return next(p for p in storage_showcase.agent_profiles() if p['agent_key'] == self.key)
+
+    def test_read_only_guide_from_mcp_to_audit_and_card(self):
+        from mcp.server.fastmcp import FastMCP
+        from mcp.shared.memory import create_connected_server_and_client_session
+        from gateway_mcp.services import addon_guard, auth, bitrix_identity, storage_access, storage_audit
+        from gateway_mcp.services.platforma_onboarding import DOCUMENTS
+        from gateway_mcp.tools.access_requests import register_access_request_tools
+        from gateway_mcp.tools.knowledge import register_knowledge_tools
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'examples' / 'knowledge-guide'))
+        self.addCleanup(sys.path.pop, 0)
+        import guide
+
+        vault = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        space = vault / 'spaces' / 'organizational-awareness'
+        for path, body in [
+            (guide.PASSPORT, '---\ntitle: Паспорт\n---\nhttps://platforma.akmetron.ru/mcp · akmetron.bitrix24.ru'),
+            (guide.CONTROL_PATH, guide.CONTROL_MARKER),
+        ]:
+            target = space / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(body, encoding='utf-8')
+        catalogue = vault / 'catalogue.json'
+        catalogue.write_text(json.dumps({'profiles': {'fixture': {'documents': {guide.SPACE: {
+            name: {} for name in DOCUMENTS}}}}}))
+        self.enterContext(patch.dict(os.environ, {'GATEWAY_KNOWLEDGE_GUIDE_SUBJECT': SERVICE,
+            'GATEWAY_KNOWLEDGE_VAULT_PATH': str(vault), 'GATEWAY_ADDON_PROFILES_FILE': str(catalogue),
+            'GATEWAY_PLATFORMA_OWNER_SUBJECT': 'fixture'}))
+        server = FastMCP('isolated-acceptance')
+        register_access_request_tools(server)
+        register_knowledge_tools(server)
+        created = self.save()
+        self.assertEqual(created.status_code, 303)
+        detail = created.headers['location']
+        pair = [SERVICE, corporate_access.GUIDE_SOURCE]
+        self.assertEqual(self.save(1, pair).status_code, 409)
+
+        async def revoke():
+            grant = storage_access.insert_scope_grant(subject_type='user', subject_key=SERVICE,
+                scope='knowledge:read', effect='deny', reason='acceptance', created_by=ADMIN, ttl_days=1)
+            self.addCleanup(storage_access.revoke_scope_grants, grant_id=grant['id'], actor_subject=ADMIN)
+
+        async def journey():
+            async with create_connected_server_and_client_session(server) as session:
+                return await guide.check_journey(session, SERVICE, revoke)
+
+        with patch.object(corporate_access, 'fresh_actor', resolve_actor), \
+                patch.object(bitrix_identity, 'current_employee', return_value={
+                    'name': 'Fixture', 'member_id': MEMBER, 'user_id': SERVICE.rsplit(':', 1)[1]}), \
+                patch.object(auth, 'current_actor', return_value=resolve_actor(SERVICE)):
+            addon_guard.register(server)
+            receipts = asyncio.run(journey())
+
+        self.assertEqual(self.save(1, pair).status_code, 303)
+        self.assertEqual(self.profile()['reads'], 3)
+        self.assertEqual(self.profile()['delivered'], 1)
+        self.assertEqual(self.profile()['unsuccessful'], 2)
+        page = self.client.get(detail)
+        self.assertEqual(page.status_code, 200)
+        self.assertIn('Документ выдан', page.text)
+        self.assertIn('Доступ отклонён', page.text)
+        self.assertNotIn(guide.CONTROL_MARKER, page.text)
+        ids = [receipts['passport']['gateway_request_id'], receipts['closed_read']['request_id'],
+               receipts['after_revocation']['request_id']]
+        self.assertEqual(len(set(ids)), 3)
+        for rid, status in zip(ids, ('ok', 'denied', 'denied'), strict=True):
+            self.assertIn(rid, page.text)
+            events = storage_audit.list_audit_events(gateway_request_id=rid, actor_subject=SERVICE)
+            self.assertEqual([(e['event'], e['status']) for e in events], [('knowledge_guide_read', status)])
+            self.assertEqual(events[0]['payload']['arguments'], {'gateway_request_id': rid})
+        self.actor = GatewayActor(subject=SERVICE)
+        self.assertEqual(self.client.get(detail).status_code, 403)
 
     def test_legacy_and_foreign_cards_stay_out_of_directory(self):
         self.event(FOREIGN, 'started')

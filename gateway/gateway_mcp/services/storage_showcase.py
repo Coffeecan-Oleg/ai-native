@@ -2,6 +2,7 @@
 
 from gateway_mcp.services.storage_admin_console import _users_cte, _rows
 from gateway_mcp.services.storage_core import _connect, ensure_schema
+from gateway_mcp.services.corporate_access import GUIDE_SOURCE
 
 
 def _runs(days, subject=None, agent=None, people_only=False):
@@ -192,31 +193,47 @@ def agent_profiles(days=30):
         + f""", activity as (
         select actor_subject, agent, {_COUNTS} from runs group by actor_subject, agent)
         select p.agent_key, p.display_name, p.description, p.actor_subject, p.agent, p.revision,
-            a.starts, a.completed, a.failed, a.pending, a.timed, a.median_ms, a.last_activity
+            a.starts, a.completed, a.failed, a.pending, a.timed, a.median_ms,
+            coalesce(g.last_read, a.last_activity) as last_activity, g.reads, g.delivered, g.unsuccessful
         from assistant_agent_profiles p left join activity a
             on p.actor_subject = a.actor_subject and p.agent = a.agent and p.actor_subject <> ''
+        left join (select actor_subject, count(*) as reads, count(*) filter (where status='ok') as delivered,
+                   count(*) filter (where status <> 'ok') as unsuccessful, max(created_at) as last_read
+                   from audit_events where event='knowledge_guide_read'
+                   and created_at between now() - (%s * interval '1 day') and now() group by actor_subject) g
+            on p.agent = %s and p.actor_subject = g.actor_subject
           where {_profile_portal_filter()}
         order by p.display_name, p.agent_key""",
-        params,
+        params + (days, GUIDE_SOURCE),
     )
 
 
+def _binding_sources():
+    # Reserve the gateway source: client-submitted skill telemetry cannot claim it.
+    return ("""select actor_subject, agent, created_at from assistant_skill_events
+                where event_type='started' and agent <> %s
+                union all select actor_subject, %s as agent, created_at from audit_events
+                where event='knowledge_guide_read'""", (GUIDE_SOURCE, GUIDE_SOURCE))
+
+
 def agent_binding_options():
+    sources, params = _binding_sources()
     return _rows(f"""select actor_subject, agent, max(created_at) as last_activity
-        from assistant_skill_events where event_type = 'started' and actor_subject <> '' and agent <> ''
+        from ({sources}) as sources where actor_subject <> '' and agent <> ''
           and {_portal_subject_filter('actor_subject')}
-        group by actor_subject, agent order by last_activity desc, actor_subject, agent limit 100""")
+        group by actor_subject, agent order by last_activity desc, actor_subject, agent limit 100""", params)
 
 
 def save_agent_profile(*, key, name, description, subject, agent, revision, updated_by):
     ensure_schema()
     with _connect() as conn, conn.cursor() as cur:
         if subject:
+            sources, params = _binding_sources()
             cur.execute(
-                f"""select 1 from assistant_skill_events
-                where actor_subject = %s and agent = %s and event_type = 'started'
+                f"""select 1 from ({sources}) as sources
+                where actor_subject = %s and agent = %s
                     and {_portal_subject_filter('actor_subject')} limit 1""",
-                (subject, agent),
+                params + (subject, agent),
             )
             if cur.fetchone() is None:
                 raise ValueError("unknown telemetry binding")

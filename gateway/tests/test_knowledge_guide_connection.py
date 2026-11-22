@@ -16,7 +16,7 @@ import browser_login
 import connection_check as checks
 import guide
 
-ORIGIN = 'https://platforma-dev.akmetron.ru'
+ORIGIN = 'https://platforma.akmetron.ru'
 METADATA_PATH = '/.well-known/oauth-authorization-server'
 SUBJECT = 'bitrix24:' + 'b' * 32 + ':42'
 HEALTH = {'service': 'gateway-mcp', 'ok': True, 'auth_enabled': True}
@@ -54,16 +54,16 @@ class ConnectionTests(unittest.IsolatedAsyncioTestCase):
 
     async def verify_failure(self, code):
         with self.assertRaises(checks.ConnectionCheckError) as failure:
-            await checks.check_connection(guide.DEV_URL, guide.SCOPES)
+            await checks.check_connection(guide.MCP_URL, guide.SCOPES)
         self.assertEqual(failure.exception.code, code)
         self.assertNotIn('PRIVATE-CONTROL', str(failure.exception))
         return failure.exception
 
     async def test_ready_probes_do_not_authorize_or_follow_redirects(self):
-        result = await checks.check_connection(guide.DEV_URL, guide.SCOPES)
+        result = await checks.check_connection(guide.MCP_URL, guide.SCOPES)
         self.assertTrue(result['connection_ready'])
         self.assertFalse(result['account_checked'])
-        self.assertEqual(result['mcp_url'], guide.DEV_URL)
+        self.assertEqual(result['mcp_url'], guide.MCP_URL)
         self.assertEqual([r.url.path for r in self.requests], ['/healthz', METADATA_PATH, '/join', '/mcp'])
         for request in self.requests:
             self.assertEqual(request.method, 'GET')
@@ -142,8 +142,8 @@ class ConnectionTests(unittest.IsolatedAsyncioTestCase):
             await self.verify_failure('timeout')
 
     async def test_invalid_address_is_rejected_before_connecting(self):
-        for url in ('http://platforma-dev.akmetron.ru/mcp', ORIGIN+'/mcp?code=PRIVATE-CONTROL',
-                    ORIGIN+'/mcp#PRIVATE-CONTROL', 'https://user:PRIVATE-CONTROL@platforma-dev.akmetron.ru/mcp'):
+        for url in ('http://platforma.akmetron.ru/mcp', ORIGIN+'/mcp?code=PRIVATE-CONTROL',
+                    ORIGIN+'/mcp#PRIVATE-CONTROL', 'https://user:PRIVATE-CONTROL@platforma.akmetron.ru/mcp'):
             with self.subTest(url=url):
                 with self.assertRaises(checks.ConnectionCheckError) as failed:
                     await checks.check_connection(url, guide.SCOPES)
@@ -167,7 +167,7 @@ class CommandTests(unittest.TestCase):
                 patch.object(guide, 'run', AsyncMock()) as run, redirect_stdout(text):
             guide.main(['--check'])
         self.assertEqual(json.loads(text.getvalue()), result)
-        check.assert_awaited_once_with(guide.DEV_URL, guide.SCOPES)
+        check.assert_awaited_once_with(guide.MCP_URL, guide.SCOPES)
         run.assert_not_awaited()
 
     def test_existing_subject_and_search_command_still_runs(self):

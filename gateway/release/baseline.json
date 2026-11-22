@@ -233,9 +233,9 @@
       "size": 44097
     },
     "routes/admin_showcase.py": {
-      "sha256": "3f87d53247f5d98f09827048f81dc508fa30fa0f8ecd1ef794c74a935c55ac6f",
-      "lf_sha256": "3f87d53247f5d98f09827048f81dc508fa30fa0f8ecd1ef794c74a935c55ac6f",
-      "size": 14024
+      "sha256": "18acaa0d42f817becacbfab93ef6263b6e9253c1612983ad1abafa1e6ec343f3",
+      "lf_sha256": "18acaa0d42f817becacbfab93ef6263b6e9253c1612983ad1abafa1e6ec343f3",
+      "size": 14435
     },
     "routes/admin_telemetry.py": {
       "sha256": "d6d23ad259f2c1bfaeb3d5848f9e321244d1b6a152abdc963d2916072108ae5c",
@@ -308,9 +308,9 @@
       "size": 19974
     },
     "routes/showcase_ui.py": {
-      "sha256": "49a68f293cb4d5b973bcaa37f20b03a75f2a2f448d3b0f0ebc8b6878eb6083ac",
-      "lf_sha256": "49a68f293cb4d5b973bcaa37f20b03a75f2a2f448d3b0f0ebc8b6878eb6083ac",
-      "size": 31321
+      "sha256": "19e16522d5217a937da116d53cfcf5ffbb346b949ae6a3a82f95835a0622ede9",
+      "lf_sha256": "19e16522d5217a937da116d53cfcf5ffbb346b949ae6a3a82f95835a0622ede9",
+      "size": 32703
     },
     "routes/team_ai_ui.py": {
       "sha256": "ee2f40e3f3f8620f6e22806edef3a13993e4bd4f42bd34a6137b572712c28233",
@@ -398,9 +398,9 @@
       "size": 8443
     },
     "services/addon_guard.py": {
-      "sha256": "982cc38c0d81b95789b315014061ae6d9f7cd67e900ea8cda57d62e6ab66862d",
-      "lf_sha256": "982cc38c0d81b95789b315014061ae6d9f7cd67e900ea8cda57d62e6ab66862d",
-      "size": 18887
+      "sha256": "2b26ce6daae0f5b4d2675229327b0c03554d65351d733ad5fb54803ef4646520",
+      "lf_sha256": "2b26ce6daae0f5b4d2675229327b0c03554d65351d733ad5fb54803ef4646520",
+      "size": 20618
     },
     "services/admin_metrics.py": {
       "sha256": "4fb60445753ddb56da95fe79de2aae2ec2a855ca9a78e40966e8eea5fb451439",
@@ -673,9 +673,9 @@
       "size": 7312
     },
     "services/storage_showcase.py": {
-      "sha256": "276bb5bcc77398dcabee047dc16793d1fea9efee4593bbc9a029fa87e07fda17",
-      "lf_sha256": "276bb5bcc77398dcabee047dc16793d1fea9efee4593bbc9a029fa87e07fda17",
-      "size": 11388
+      "sha256": "37330d9e960d9c09b6f39da9fdfcdf8da662aaafc40c87f2a5ad08a044bcfbc1",
+      "lf_sha256": "37330d9e960d9c09b6f39da9fdfcdf8da662aaafc40c87f2a5ad08a044bcfbc1",
+      "size": 12506
     },
     "services/storage_telemetry.py": {
       "sha256": "25cbbcb276f21159c0086db4403c712191a6c0d4f0716a497bdf6d0162f2a329",
@@ -713,9 +713,9 @@
       "size": 12653
     },
     "services/corporate_access.py": {
-      "sha256": "1a9336f7084aea3e1f6818e163a9981d3675200c8800f7fa390eb250679d3c37",
-      "lf_sha256": "1a9336f7084aea3e1f6818e163a9981d3675200c8800f7fa390eb250679d3c37",
-      "size": 10510
+      "sha256": "9f177d90c4b63d07890b7d883317e6df5a75db3f93a91714fd2eb3a074343efb",
+      "lf_sha256": "9f177d90c4b63d07890b7d883317e6df5a75db3f93a91714fd2eb3a074343efb",
+      "size": 10790
     },
     "services/corporate_knowledge.py": {
       "sha256": "4d4de294b97dfa7050ed65900bdaf7f23cdf2f8e92452561c3d948a720017cc9",
