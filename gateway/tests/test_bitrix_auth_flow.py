@@ -73,6 +73,10 @@ class BrowserOAuthTests(unittest.IsolatedAsyncioTestCase):
             client.cookies.clear()
             response=await client.get('/auth/bitrix24/callback',params={'state':state,'code':'fixture','domain':identity.PORTAL,'member_id':MEMBER})
             self.assertEqual(response.status_code,403);self.complete.assert_not_called()
+            self.assertIn('вернитесь в ИИ-приложение',response.text)
+            self.assertIn('Войти в веб-панель',response.text)
+            self.assertNotIn('Нужна действующая внутренняя',response.text)
+            self.assertNotIn(state,response.text)
 
     async def test_foreign_portal_callback_is_rejected_before_exchange(self):
         async with await self.client() as client:
@@ -102,6 +106,8 @@ class BrowserOAuthTests(unittest.IsolatedAsyncioTestCase):
                 response=await client.get('/auth/bitrix24/callback',params={'state':state,'code':'synthetic-private-code','domain':identity.PORTAL,'member_id':MEMBER})
             self.assertEqual(response.status_code,403)
             self.assertEqual(audit.call_args.kwargs['error'],'bitrix_internal_employee_required')
+            self.assertIn('Нужна действующая внутренняя',response.text)
+            self.assertNotIn('Ссылка для входа устарела',response.text)
             self.assertEqual(audit.call_args.kwargs['actor'].subject,'anonymous')
             self.assertNotIn('synthetic-private-code',str(audit.call_args))
 

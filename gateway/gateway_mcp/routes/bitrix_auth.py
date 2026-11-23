@@ -167,8 +167,19 @@ def register_bitrix_auth_routes(server):
             audit_event(event='corporate_login', actor=GatewayActor(subject='anonymous'),
                 tool='bitrix24_login', system='identity', decision='deny', scope='',
                 status='denied', arguments={}, error=reason)
+            if reason == 'bitrix_state_invalid':
+                help_text = (
+                    '<p>Ссылка для входа устарела или относится к другой попытке входа.</p>'
+                    '<p>Если вы подключаете MCP, вернитесь в ИИ-приложение и начните подключение заново. '
+                    'Завершите вход в новом окне, которое откроет приложение.</p>'
+                    '<a href="/join">Войти в веб-панель Платформы</a>'
+                )
+            else:
+                help_text = (
+                    '<p>Нужна действующая внутренняя учётная запись akmetron.bitrix24.ru. '
+                    'Повторите вход или обратитесь к администратору.</p><a href="/join">Повторить вход</a>'
+                )
             response = HTMLResponse('<!doctype html><html lang="ru"><meta charset="utf-8"><h1>Вход не выполнен</h1>'
-                '<p>Нужна действующая внутренняя учётная запись akmetron.bitrix24.ru. '
-                'Повторите вход или обратитесь к администратору.</p><a href="/join">Повторить вход</a></html>',status_code=403,headers=HEADERS)
+                + help_text + '</html>',status_code=403,headers=HEADERS)
             response.delete_cookie(identity.FLOW_COOKIE,path='/')
             return response

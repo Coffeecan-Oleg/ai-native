@@ -323,9 +323,9 @@
       "size": 4289
     },
     "routes/bitrix_auth.py": {
-      "sha256": "a1eb517d59016998604b3597840dd4f78ca79aad8e20de2ce1dc59e5748940be",
-      "lf_sha256": "8e374ed91e2f496055d92f7a470b8f7ea533a93dfb79b690a3338504e2a19b04",
-      "size": 12883
+      "sha256": "e6c6ff8669fe2a82bbcb3cba10b4a7e078d6f62f22726d35b86236552c011006",
+      "lf_sha256": "e6c6ff8669fe2a82bbcb3cba10b4a7e078d6f62f22726d35b86236552c011006",
+      "size": 13455
     },
     "routes/corporate_ui.py": {
       "sha256": "5cf671698037c05005199001c90aea82dc6cceeb60f9bf91efb63a877ec39c06",
