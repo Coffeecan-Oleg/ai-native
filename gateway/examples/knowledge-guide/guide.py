@@ -53,9 +53,9 @@ async def answer(session, subject, keyword=None):
     term = 'паспорт' if keyword is None else keyword.strip()
     if not 1 <= len(term) <= 120:
         raise GuideError('Введите короткое слово или фразу для поиска.')
-    hits = (await call(session, 'gateway_knowledge_search', space=SPACE, query=term,
-                       limit=10, include_personal=False, include_groups=False))['documents']
-    for hit in hits:
+    search = await call(session, 'gateway_knowledge_search', space=SPACE, query=term,
+                        limit=10, include_personal=False, include_groups=False)
+    for hit in search['documents']:
         if hit.get('space') != SPACE or (keyword is None and hit.get('path') != PASSPORT):
             continue
         read = await call(session, 'gateway_knowledge_document_get', space=SPACE, document=hit['path'])
@@ -63,21 +63,38 @@ async def answer(session, subject, keyword=None):
         if doc.get('space') != SPACE or doc.get('path') != hit['path']:
             raise GuideError('Источник ответа не совпал с результатом поиска.')
         body = doc['content']
+        citation = None
         if keyword is None:
             urls = set(re.findall(r'https://[a-z0-9.-]+/mcp\b', body, re.I))
             portals = set(re.findall(r'\b[a-z0-9-]+\.bitrix24\.ru\b', body, re.I))
             if len(urls) != 1 or len(portals) != 1:
                 raise GuideError('В паспорте нет однозначного адреса MCP и портала входа.')
             result = f'Адрес подключения — {urls.pop()}. Вход — через {portals.pop()}.'
+        elif doc.get('source_url'):
+            # Only quote text still present on the second, separately authorised read.
+            article = re.fullmatch(r'bitrix24/notes/(489|531)\.md', doc['path'])
+            if not article:
+                continue
+            base = f'https://akmetron.bitrix24.ru/note/document/{article[1]}/'
+            citation = hit.get('source_url', '')
+            if doc['source_url'] != base or not re.fullmatch(re.escape(base) + r'(#[a-z0-9-]+)?', citation):
+                continue
+            result = hit.get('snippet', '')
+            if not result or result not in body:
+                continue
         else:
             lines = [line.strip() for line in body.splitlines() if term.casefold() in line.casefold()]
             if not lines:
                 continue
             result = '\n'.join(lines[:3])[:900]
         response = {'answer': result, 'title': doc['title'], 'document': doc['path'], 'space': SPACE}
+        if citation:
+            response['source_url'] = citation
         if read.get('gateway_request_id'):
             response['gateway_request_id'] = read['gateway_request_id']
         return response
+    if search.get('partial'):
+        raise GuideError('Поиск неполный. Проверьте подключение к БЗ Битрикс24 и повторите запрос.')
     raise GuideError('В разрешённых документах ответ не найден.')
 
 

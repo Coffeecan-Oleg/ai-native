@@ -1,4 +1,5 @@
 import json
+from asyncio import to_thread
 
 from mcp.types import ToolAnnotations
 
@@ -444,7 +445,10 @@ def register_knowledge_tools(mcp):
         )
         try:
             actor = run.require_scope()
-            result = (shared.get_document if corporate else get_document)(actor=actor, space=space, document=document)
+            if corporate:
+                result = await to_thread(shared.get_document, actor=actor, space=space, document=document)
+            else:
+                result = get_document(actor=actor, space=space, document=document)
             run.finish()
             return json.dumps(
                 {"ok": True, "document": result}, ensure_ascii=False, indent=2
@@ -470,7 +474,8 @@ def register_knowledge_tools(mcp):
 
         Corporate entry requires knowledge:read and searches approved shared
         files only, before ranking/limit. A Russian question or keywords are supported.
-        Use gateway_knowledge_document_get to read a cited result. Set space explicitly to
+        Use gateway_knowledge_document_get to read a cited result. For Bitrix24 results cite
+        source_url. A partial result means an upstream source could not be checked. Set space explicitly to
         space:organizational-awareness; empty and other spaces are denied.
         Legacy entry keeps memory:read and its existing profile restrictions.
         Read the response from content or structuredContent.result; the latter
@@ -492,17 +497,16 @@ def register_knowledge_tools(mcp):
         )
         try:
             actor = run.require_scope()
-            results = (shared.search_documents if corporate else search_documents)(
-                actor=actor,
-                query=query,
-                space=space,
-                limit=limit,
-                include_personal=include_personal,
-                include_groups=include_groups,
-            )
+            args = dict(actor=actor, query=query, space=space, limit=limit,
+                        include_personal=include_personal, include_groups=include_groups)
+            if corporate:
+                payload = await to_thread(shared.search_documents, **args)
+            else:
+                results = search_documents(**args)
+                payload = {"ok": True, "count": len(results), "documents": results}
             run.finish()
             return json.dumps(
-                {"ok": True, "count": len(results), "documents": results},
+                payload,
                 ensure_ascii=False,
                 indent=2,
             )

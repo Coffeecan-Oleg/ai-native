@@ -138,6 +138,11 @@ def profile(actor):
     documents = {path:available[path] for path in sorted(DOCUMENTS) if path in available}
     if not DOCUMENTS <= documents.keys():
         raise PermissionError('corporate_shared_catalogue_unavailable')
+    # These paths are candidates only. Every read is authorised by the portal.
+    if identity.notes_enabled() and 'knowledge:read' in fresh.scopes:
+        from gateway_mcp.services.bitrix_notes import PATHS
+        documents.update({path: {'kind':'note', 'document_id':f'bitrix24-note-{key}'}
+                          for path, key in PATHS.items()})
     from gateway_mcp.services.platforma_clients import telemetry_agents, telemetry_clients
     tools = allowed_tools(set(fresh.scopes))
     if fresh.tool_allowlist is not None:

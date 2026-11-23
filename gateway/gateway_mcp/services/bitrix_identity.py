@@ -105,6 +105,14 @@ def _request(url, data):
         raise PermissionError('bitrix_identity_unavailable') from None
 
 
+def notes_enabled():
+    return enabled() and os.getenv('GATEWAY_BITRIX_KB_READ', '').lower() == 'true'
+
+
+def _allowed_scopes(scopes):
+    return scopes == {'user_brief'} or (notes_enabled() and scopes == {'user_brief', 'note'})
+
+
 def _validate_tokens(data, expected_member=''):
     cfg = settings()
     member = require_member(data.get('member_id'))
@@ -117,7 +125,7 @@ def _validate_tokens(data, expected_member=''):
     raw_scopes = data.get('scope')
     parts = raw_scopes.split(',') if isinstance(raw_scopes, str) else raw_scopes if isinstance(raw_scopes, list) else []
     scopes = {part.strip() for part in parts if isinstance(part, str) and part.strip()}
-    if scopes not in ({'user_brief'}, {'app'}) or any(not isinstance(part, str) for part in parts):
+    if (scopes != {'app'} and not _allowed_scopes(scopes)) or any(not isinstance(part, str) for part in parts):
         raise PermissionError('bitrix_unexpected_application_scopes')
     for field in ('access_token', 'refresh_token'):
         value = data.get(field)
@@ -128,10 +136,10 @@ def _validate_tokens(data, expected_member=''):
         raise PermissionError('bitrix_credential_invalid')
     # No `full` parameter: scope defaults to this application's granted scopes.
     granted = _request('https://' + PORTAL + '/rest/scope.json', {'auth':data['access_token']}).get('result')
-    if not isinstance(granted, list) or any(not isinstance(item, str) for item in granted) or set(granted) != {'user_brief'}:
+    if not isinstance(granted, list) or any(not isinstance(item, str) for item in granted) or not _allowed_scopes(set(granted)):
         raise PermissionError('bitrix_unexpected_application_scopes')
     return {'access_token':data['access_token'], 'refresh_token':data['refresh_token'],
-            'expires_at':time.time()+ttl, 'member_id':member}
+            'expires_at':time.time()+ttl, 'member_id':member, 'scopes':sorted(set(granted))}
 
 
 def exchange_code(code):
@@ -188,7 +196,7 @@ def _save(tokens, employee):
     envelope = {k:tokens[k] for k in ('access_token','refresh_token','expires_at','member_id')}
     if not save_user_oauth_token(provider=PROVIDER, actor_subject=employee['subject'], yandex_id='',
             login=employee['name'], email='', access_token=json.dumps(envelope), token_type='Bitrix24OAuth',
-            scopes=['user_brief'], metadata={'portal':PORTAL,'user_id':employee['user_id'],
+            scopes=tokens.get('scopes', ['user_brief']), metadata={'portal':PORTAL,'user_id':employee['user_id'],
             'member_id':employee['member_id']}, expires_at_epoch=None):
         raise PermissionError('bitrix_secure_storage_required')
 
@@ -215,7 +223,7 @@ def current_employee(subject):
     from gateway_mcp.services.storage import get_user_oauth_token
     try:
         record = get_user_oauth_token(PROVIDER, subject)
-        if not record or record.get('scopes') != ['user_brief']:
+        if not record or not _allowed_scopes(set(record.get('scopes') or [])):
             raise PermissionError('bitrix_login_required')
         tokens = json.loads(record['access_token'])
         if tokens.get('member_id') != member:

@@ -9,6 +9,7 @@ names+=['test_audit_user_names','test_skill_acceptance_examples']
 names+=['test_external_limits']
 names+=['test_external_safety']
 names+=['test_integration_status']
+names+=['test_bitrix_note_search']
 with tempfile.TemporaryDirectory() as temp:
     root=Path(temp)
     shutil.copytree(source/'tests',root/'tests',ignore=shutil.ignore_patterns('__pycache__'))

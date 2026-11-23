@@ -708,19 +708,19 @@
       "size": 12485
     },
     "services/bitrix_identity.py": {
-      "sha256": "e9c0ee2f6e78420279c232c84699b532409086aefb0c60755442e4d8a978b92a",
-      "lf_sha256": "e9c0ee2f6e78420279c232c84699b532409086aefb0c60755442e4d8a978b92a",
-      "size": 12653
+      "sha256": "952d9c0b45353b2b7ac14a5a6185f48013ba56bb05dcc917d33617914bc12154",
+      "lf_sha256": "952d9c0b45353b2b7ac14a5a6185f48013ba56bb05dcc917d33617914bc12154",
+      "size": 12966
     },
     "services/corporate_access.py": {
-      "sha256": "9f177d90c4b63d07890b7d883317e6df5a75db3f93a91714fd2eb3a074343efb",
-      "lf_sha256": "9f177d90c4b63d07890b7d883317e6df5a75db3f93a91714fd2eb3a074343efb",
-      "size": 10790
+      "sha256": "6e34c42cfd900983de4de832ebd4a3662fc3fbeddcf9f3765e6e226473673bc7",
+      "lf_sha256": "6e34c42cfd900983de4de832ebd4a3662fc3fbeddcf9f3765e6e226473673bc7",
+      "size": 11144
     },
     "services/corporate_knowledge.py": {
-      "sha256": "c6020c17596b1baca7fb895679ea24e977e3327aa6f7aa8c2d34c13f3c1bd721",
-      "lf_sha256": "c6020c17596b1baca7fb895679ea24e977e3327aa6f7aa8c2d34c13f3c1bd721",
-      "size": 4140
+      "sha256": "24ad68b198999c6dec9f5401831f54ae4a354e7fc2b535800c8730a19e5dfaf3",
+      "lf_sha256": "24ad68b198999c6dec9f5401831f54ae4a354e7fc2b535800c8730a19e5dfaf3",
+      "size": 5630
     },
     "services/platforma_clients.py": {
       "sha256": "510d68a880e41345a5df076265b1541857422ed481dd0c80ffcb14181b6c6ad6",
@@ -783,9 +783,9 @@
       "size": 4376
     },
     "tools/knowledge.py": {
-      "sha256": "edde6e713a0e3da9028317a466d61118e36d6b4e4b11f61c219b688193cb5685",
-      "lf_sha256": "edde6e713a0e3da9028317a466d61118e36d6b4e4b11f61c219b688193cb5685",
-      "size": 26359
+      "sha256": "9296668aa479ba2ea84166f2ad8fdf60959d20acab59870a9bd73a7b0186b3f4",
+      "lf_sha256": "9296668aa479ba2ea84166f2ad8fdf60959d20acab59870a9bd73a7b0186b3f4",
+      "size": 26672
     },
     "tools/memory.py": {
       "sha256": "a8357a2296be24f90c24d43150e828340a1e58c63d4939243b73991614925d8c",
@@ -1051,6 +1051,11 @@
       "sha256": "7967c10dd992cf258b9c6128ec9003fa91c55b583f13edda31a8ec045950983f",
       "lf_sha256": "7967c10dd992cf258b9c6128ec9003fa91c55b583f13edda31a8ec045950983f",
       "size": 4707
+    },
+    "services/bitrix_notes.py": {
+      "sha256": "0bb896e6b79a71dac389f6ebd9458085f02469050e5c902ade4cbedb40bbfb9f",
+      "lf_sha256": "0bb896e6b79a71dac389f6ebd9458085f02469050e5c902ade4cbedb40bbfb9f",
+      "size": 8983
     }
   },
   "private_mounts_excluded": [

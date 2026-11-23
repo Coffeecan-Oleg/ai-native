@@ -67,6 +67,29 @@ class KnowledgeGuideTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(GuideError):
                 await answer(session, OTHER)
 
+    async def test_article_answer_requires_fresh_authorised_text(self):
+        from gateway_mcp.services import bitrix_notes
+        path = 'bitrix24/notes/531.md'
+        url = 'https://akmetron.bitrix24.ru/note/document/531/'
+        first = {'path':path, 'space':SPACE, 'title':'Навыки', 'source_url':url,
+                 'content':'## 2. Скопируйте запрос из карточки\nСкопируйте запрос и добавьте условия.'}
+        async with create_connected_server_and_client_session(self.server) as session:
+            with patch.dict(os.environ, {'GATEWAY_BITRIX_KB_READ':'true'}):
+                for changed in (False, True):
+                    reads = iter((first, first | {'content':'Текст обновлён.'} if changed else first))
+                    def read_article(actor, space, key):
+                        if key != path:
+                            raise PermissionError('corporate_knowledge_document_denied')
+                        return next(reads)
+                    with patch.object(bitrix_notes,'read',side_effect=read_article):
+                        if changed:
+                            with self.assertRaises(GuideError):
+                                await answer(session, AGENT, 'Как применить найденный навык?')
+                        else:
+                            result = await answer(session, AGENT, 'Как применить найденный навык?')
+                            self.assertEqual(result['source_url'], url+'#2-skopiruyte-zapros-iz-kartochki')
+                            self.assertIn(result['answer'], first['content'])
+
     async def test_denied_document_write_and_no_hits(self):
         async with create_connected_server_and_client_session(self.server) as session:
             with self.assertRaisesRegex(GuideError, 'не найден'):
