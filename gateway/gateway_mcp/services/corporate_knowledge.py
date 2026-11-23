@@ -6,6 +6,7 @@ creates an index or inherits an old email/login membership.
 from gateway_mcp.services import corporate_access as access
 from gateway_mcp.services import knowledge
 from gateway_mcp.services.policy import has_scope
+from gateway_mcp.services.text_search import SearchQuery
 
 
 def _catalogue(actor, tool, space=access.SPACE):
@@ -67,7 +68,7 @@ def get_document(*, actor, document, space=''):
 
 def search_documents(*, actor, query='', space='', limit=10, include_personal=True, include_groups=True):
     root, documents = _catalogue(actor, 'gateway_knowledge_search', space)
-    needle = query.casefold().strip()
+    question = SearchQuery(query)
     results = []
     # Filter at the read boundary, before ranking and limit. Never enumerate vault files.
     for name in sorted(documents):
@@ -78,11 +79,11 @@ def search_documents(*, actor, query='', space='', limit=10, include_personal=Tr
             # Permission errors are still handled by the normal denial path.
             continue
         content = item.pop('content', '')
-        haystack = '\n'.join([name, str(item.get('title', '')), content]).casefold()
-        if needle and needle not in haystack:
+        score, anchor = question.match(name + '\n' + str(item.get('title', '')), content)
+        if not score:
             continue
-        item['score'] = haystack.count(needle) if needle else 1
-        item['snippet'] = knowledge._snippet(content, needle)
+        item['score'] = score
+        item['snippet'] = knowledge._snippet(content, anchor)
         results.append(item)
     results.sort(key=lambda item: (item['score'], str(item.get('updated_at', '')), item['path']), reverse=True)
     return results[:max(1, min(int(limit), 50))]

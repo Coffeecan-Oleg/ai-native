@@ -154,6 +154,51 @@ class CorporateKnowledgeProtocolTests(unittest.TestCase):
         self.assertTrue(result.get('isError'))
         self.assertEqual(payload['required_scope'],'knowledge:read')
 
+    def test_employee_question_ranks_only_authorised_documents(self):
+        root = self.vault/'spaces'/'organizational-awareness'
+        path = 'awareness/project-profile.md'
+        (root/path).write_text('# Паспорт\nАО «Акметрон». ИНН 0000000000.\n', encoding='utf-8')
+        (root/'unapproved.md').write_text('Какой ИНН у Акметрона? Закрытая альпака.', encoding='utf-8')
+        for query in ('Какой ИНН у Акметрона?', 'Какие у нас реквизиты?'):
+            result, payload = self.tool('gateway_knowledge_search', {'query': query, 'space': SPACE, 'limit': 1})
+            self.assertFalse(result.get('isError'))
+            self.assertEqual([d['path'] for d in payload['documents']], [path])
+            self.assertIn('ИНН', payload['documents'][0]['snippet'])
+            self.assertEqual(json.loads(result['structuredContent']['result']), payload)
+        _, empty = self.tool('gateway_knowledge_search', {'query':'Где закрытая альпака?', 'space': SPACE})
+        self.assertEqual(empty['documents'], [])
+        self.grants.return_value = [{'effect':'deny','scope':'knowledge:read'}]
+        result, payload = self.tool('gateway_knowledge_search', {'query':'Какие у нас реквизиты?', 'space':SPACE})
+        self.assertTrue(result['isError'])
+        self.assertEqual(payload['required_scope'], 'knowledge:read')
+
+    def test_skill_task_search_obeys_scope_and_guide_allowlist(self):
+        name = 'gateway_corporate_skill_list'
+        catalog = {'schema':1, 'pack':'akmetron-corporate', 'version':'1',
+                   'skills':[{'name':'quotation-check','title':'Проверка комплектности ТКП','version':'1',
+                              'description':'Требования и текст коммерческого предложения.', 'files':{}}]}
+        from gateway_mcp.services import corporate_skills
+        with patch.object(corporate_skills, '_catalog', return_value=catalog), \
+             patch.dict(os.environ, {'GATEWAY_PLATFORMA_SKILL_LIBRARY_ENABLED':'false'}):
+            _, full = self.tool(name)
+            self.assertIn('files', full['skills'][0])
+            args = {'query':'Сравни предложение поставщика с требованиями'}
+            _, hits = self.tool(name, args)
+            self.assertEqual([s['name'] for s in hits['skills']], ['quotation-check'])
+            self.assertNotIn('files', hits['skills'][0])
+            self.grants.return_value = [{'effect':'deny','scope':'skills:read'}]
+            def refusal():
+                self.seq += 1
+                result = self.rpc({'id':self.seq, 'method':'tools/call', 'params':{'name':name,'arguments':args}})
+                self.assertTrue(result['result']['isError'])
+                self.assertNotIn('quotation-check', json.dumps(result))
+            refusal()
+            self.grants.return_value = []
+            with patch.dict(os.environ, {'GATEWAY_KNOWLEDGE_GUIDE_SUBJECT':SUBJECT}):
+                refusal()
+                _, read = self.tool('gateway_knowledge_search', {'query':'CORPORATE_ALLOWED', 'space':SPACE})
+                self.assertGreater(read['count'], 0)
+
     def test_new_oauth_scope_is_supported_without_admin_or_memory(self):
         from gateway_mcp.services.oauth_limits import limit_oauth_actor
         configured='skills:read tools:read tools:call telemetry:read telemetry:write knowledge:read'

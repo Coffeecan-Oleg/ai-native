@@ -33,6 +33,25 @@ def list_skills(actor=None):
             'execution': 'client-side only; this MCP never executes the skill'}
 
 
+def search_skills(actor, query, limit):
+    from gateway_mcp.services.text_search import SearchQuery
+    catalogue = list_skills(actor)
+    question = SearchQuery(query)
+    results = []
+    for skill in catalogue['skills']:
+        if skill.get('publication_state', 'published') != 'published':
+            continue
+        score, _ = question.match(skill['name'] + '\n' + skill['title'], skill['description'])
+        if score:
+            results.append((score, skill))
+    results.sort(key=lambda row: (-row[0], row[1]['name']))
+    fields = ('name', 'title', 'description', 'version', 'origin', 'publication_state',
+              'trust', 'reviewed', 'review_notice')
+    hits = [{key: skill[key] for key in fields if key in skill}
+            for _, skill in results[:max(1, min(limit, 50))]]
+    return {'ok': True, 'count': len(hits), 'skills': hits}
+
+
 def read_skill(skill, path='SKILL.md', offset=0, limit=16384, *, actor=None):
     catalog = _catalog()
     from gateway_mcp.services import skill_library

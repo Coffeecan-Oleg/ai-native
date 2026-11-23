@@ -22,8 +22,14 @@ def register_corporate_skill_tools(mcp):
             raise
 
     @mcp.tool(annotations=ToolAnnotations(title='Корпоративные навыки Акметрон', readOnlyHint=True))
-    async def gateway_corporate_skill_list() -> str:
-        """List the available corporate and training skills with immutable resource hashes."""
+    async def gateway_corporate_skill_list(query: str = '', limit: int = 5) -> str:
+        """Omit query for the full catalogue with resource hashes. Pass an employee's
+        task in Russian to find matching available skills (name is the permanent ID).
+        Limit applies only to search. Read the chosen skill with gateway_corporate_skill_read.
+        """
+        if query.strip():
+            return await perform('gateway_corporate_skill_list', {'limit': limit},
+                                 lambda actor: corporate_skills.search_skills(actor, query, limit))
         return await perform('gateway_corporate_skill_list', {}, lambda actor: corporate_skills.list_skills(actor))
 
     @mcp.tool(annotations=ToolAnnotations(title='Прочитать корпоративный навык', readOnlyHint=True))

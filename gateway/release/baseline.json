@@ -463,9 +463,9 @@
       "size": 4439
     },
     "services/corporate_skills.py": {
-      "sha256": "4dbbf6a2290a0fe5746bdb313c16de58900bfe829436bf7d035ca441a10a1bce",
-      "lf_sha256": "4dbbf6a2290a0fe5746bdb313c16de58900bfe829436bf7d035ca441a10a1bce",
-      "size": 4107
+      "sha256": "cf574048ed9bac9d2da1fc466978b27b9ca91487ba3eebac3afbc6d1d466263b",
+      "lf_sha256": "cf574048ed9bac9d2da1fc466978b27b9ca91487ba3eebac3afbc6d1d466263b",
+      "size": 4968
     },
     "services/credential_checks.py": {
       "sha256": "1acf6d8b847e209ee9872c2d70f11fc868c52fde934db3f725a985ae77fd416c",
@@ -718,8 +718,8 @@
       "size": 10790
     },
     "services/corporate_knowledge.py": {
-      "sha256": "4d4de294b97dfa7050ed65900bdaf7f23cdf2f8e92452561c3d948a720017cc9",
-      "lf_sha256": "4d4de294b97dfa7050ed65900bdaf7f23cdf2f8e92452561c3d948a720017cc9",
+      "sha256": "c6020c17596b1baca7fb895679ea24e977e3327aa6f7aa8c2d34c13f3c1bd721",
+      "lf_sha256": "c6020c17596b1baca7fb895679ea24e977e3327aa6f7aa8c2d34c13f3c1bd721",
       "size": 4140
     },
     "services/platforma_clients.py": {
@@ -763,9 +763,9 @@
       "size": 7559
     },
     "tools/corporate_skills.py": {
-      "sha256": "278c8b73c5c8c03057c6d1b2951973eed733a94ed7713327d7c33747c4f07f14",
-      "lf_sha256": "278c8b73c5c8c03057c6d1b2951973eed733a94ed7713327d7c33747c4f07f14",
-      "size": 2744
+      "sha256": "721ee294371eff5b323b86ae0f1de74e77d7dc65493b6d2f2cb7b6f1f65c03b4",
+      "lf_sha256": "721ee294371eff5b323b86ae0f1de74e77d7dc65493b6d2f2cb7b6f1f65c03b4",
+      "size": 3168
     },
     "tools/discovery.py": {
       "sha256": "5c681960342f2d9f408bb6baba4e21fb87fe1137e8f236efbc2205655876c04d",
@@ -783,9 +783,9 @@
       "size": 4376
     },
     "tools/knowledge.py": {
-      "sha256": "6959511ad39c0c165be01c11f80896819b98b53c0c49a8dc54a7caf57707fd9e",
-      "lf_sha256": "6959511ad39c0c165be01c11f80896819b98b53c0c49a8dc54a7caf57707fd9e",
-      "size": 26246
+      "sha256": "edde6e713a0e3da9028317a466d61118e36d6b4e4b11f61c219b688193cb5685",
+      "lf_sha256": "edde6e713a0e3da9028317a466d61118e36d6b4e4b11f61c219b688193cb5685",
+      "size": 26359
     },
     "tools/memory.py": {
       "sha256": "a8357a2296be24f90c24d43150e828340a1e58c63d4939243b73991614925d8c",
@@ -1046,6 +1046,11 @@
       "sha256": "dfa8626ca976b750aa96192e369adf825472ee074ec9d7e699e22fb080d52748",
       "lf_sha256": "dfa8626ca976b750aa96192e369adf825472ee074ec9d7e699e22fb080d52748",
       "size": 7071
+    },
+    "services/text_search.py": {
+      "sha256": "7967c10dd992cf258b9c6128ec9003fa91c55b583f13edda31a8ec045950983f",
+      "lf_sha256": "7967c10dd992cf258b9c6128ec9003fa91c55b583f13edda31a8ec045950983f",
+      "size": 4707
     }
   },
   "private_mounts_excluded": [

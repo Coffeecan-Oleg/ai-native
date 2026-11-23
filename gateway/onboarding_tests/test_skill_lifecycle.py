@@ -39,6 +39,27 @@ class LifecycleFixture(SkillLibraryFixture):
 
 
 class LifecycleStorageTests(LifecycleFixture):
+    def test_task_search_shows_only_the_current_publication(self):
+        sid = self.draft(title='Протокол совещания')['name']
+        def results(query):
+            return [s['name'] for s in corporate_skills.search_skills(self.other, query, 5)['skills']]
+        self.assertNotIn(sid, results('Найди протокол совещания'))
+        self.publish(sid)
+        self.assertIn(sid, results('Найди протокол совещания'))
+        hit = next(r for r in corporate_skills.search_skills(self.other, sid, 1)['skills'] if r['name'] == sid)
+        self.assertTrue(hit['reviewed'])
+        self.assertEqual(hit['review_notice'], self.find(self.other, sid)['review_notice'])
+        service.update_draft(self.reader, skill_id=sid, expected_revision=self.row(sid)['revision'],
+                             title='Закрытая альпака', version='1.1.0', filename='SKILL.md',
+                             content=CONTENT, bundled=self.bundled)
+        self.action(sid, 'submit', self.reader)
+        self.assertNotIn(sid, results('Найди закрытую альпаку'))
+        self.assertIn(sid, results('Найди протокол совещания'))
+        self.action(sid, 'publish')
+        self.assertIn(sid, results('Найди закрытую альпаку'))
+        self.action(sid, 'archive')
+        self.assertNotIn(sid, results('Найди закрытую альпаку'))
+
     def test_draft_is_private_and_absent_from_shared_tables_and_mcp(self):
         row=self.draft();sid=row['name']
         self.assertNotIn(sid,self.names())

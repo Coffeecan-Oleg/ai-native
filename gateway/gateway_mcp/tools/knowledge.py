@@ -469,7 +469,8 @@ def register_knowledge_tools(mcp):
         """Search accessible markdown knowledge spaces and return citations.
 
         Corporate entry requires knowledge:read and searches approved shared
-        files only, before ranking/limit. Set space explicitly to
+        files only, before ranking/limit. A Russian question or keywords are supported.
+        Use gateway_knowledge_document_get to read a cited result. Set space explicitly to
         space:organizational-awareness; empty and other spaces are denied.
         Legacy entry keeps memory:read and its existing profile restrictions.
         Read the response from content or structuredContent.result; the latter
