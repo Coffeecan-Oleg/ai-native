@@ -418,9 +418,9 @@
       "size": 12541
     },
     "services/auth.py": {
-      "sha256": "9a9dcdd2496f8c7cb91210d338b5b36c2b47505a349605394c8ce5e35d1a6f14",
-      "lf_sha256": "9a9dcdd2496f8c7cb91210d338b5b36c2b47505a349605394c8ce5e35d1a6f14",
-      "size": 42439
+      "sha256": "3ff190948313e0caf2cc5b6c35ecc32dcc5f664d0c2e823a859f9ee255a0bfcb",
+      "lf_sha256": "3ff190948313e0caf2cc5b6c35ecc32dcc5f664d0c2e823a859f9ee255a0bfcb",
+      "size": 42632
     },
     "services/branding.py": {
       "sha256": "9a9d2ea26712ecf6ae081c582682675298cc63a72b1c443b6b7fe21e061adc9e",

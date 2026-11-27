@@ -93,6 +93,20 @@ class CorporateKnowledgeProtocolTests(unittest.TestCase):
         text = next(item['text'] for item in result['content'] if item['type']=='text')
         return result,json.loads(text)
 
+    def test_oauth_discovery_issuer_matches_exactly(self):
+        origin = 'https://gateway.example.invalid'
+        challenge = self.http.get('/mcp', headers={'Accept': 'application/json, text/event-stream'})
+        self.assertEqual(challenge.status_code, 401)
+        metadata_path = '/.well-known/oauth-protected-resource/mcp'
+        self.assertIn(f'resource_metadata="{origin}{metadata_path}"', challenge.headers['www-authenticate'])
+        resource = self.http.get(metadata_path)
+        server = self.http.get('/.well-known/oauth-authorization-server')
+        self.assertEqual(resource.status_code, 200)
+        self.assertEqual(server.status_code, 200)
+        self.assertEqual(resource.json()['resource'], f'{origin}/mcp')
+        self.assertEqual(server.json()['issuer'], origin)
+        self.assertEqual(resource.json()['authorization_servers'], [server.json()['issuer']])
+
     def test_shared_read_works_without_personal_memory_scope(self):
         self.assertIn('knowledge:read',self.actor.scopes)
         self.assertNotIn('memory:read',self.actor.scopes)

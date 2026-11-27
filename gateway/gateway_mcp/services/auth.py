@@ -170,10 +170,15 @@ def refresh_token_ttl_seconds() -> int:
     return int(os.getenv("GATEWAY_REFRESH_TOKEN_TTL_SECONDS", "31536000"))
 
 
+class GatewayAuthSettings(AuthSettings):
+    # RFC 8414 requires an exact issuer match, including the absence of a trailing slash.
+    model_config = {"url_preserve_empty_path": True}
+
+
 def mcp_auth_settings() -> AuthSettings | None:
     if not auth_enabled():
         return None
-    return AuthSettings(
+    return GatewayAuthSettings(
         issuer_url=issuer_url(),
         resource_server_url=resource_url(),
         required_scopes=supported_scopes(),
