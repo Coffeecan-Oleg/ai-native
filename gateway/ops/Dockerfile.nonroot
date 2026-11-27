@@ -1,0 +1,12 @@
+FROM sha256:a2407a981ed0778c33d7fecef8a1b477e07b678ba7564edfab1ae53b508df818
+COPY fix-image-permissions.py /tmp/akme-fix-image-permissions.py
+COPY gateway-entrypoint.sh /usr/local/bin/gateway-private-entrypoint
+RUN groupadd --gid 10001 gateway \
+    && useradd --uid 10001 --gid 10001 --no-create-home --home-dir /home/gateway --shell /usr/sbin/nologin gateway \
+    && install -d -o 0 -g 10001 -m 0750 /home/gateway \
+    && chown 0:10001 /usr/local/bin/gateway-private-entrypoint \
+    && chmod 0750 /usr/local/bin/gateway-private-entrypoint \
+    && python /tmp/akme-fix-image-permissions.py \
+    && rm /tmp/akme-fix-image-permissions.py
+USER 10001:10001
+ENTRYPOINT ["/usr/local/bin/gateway-private-entrypoint"]

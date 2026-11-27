@@ -1,0 +1,116 @@
+{
+  "schema": 1,
+  "skills": {
+    "shared-5e1b408fa3e94f828c7019b3c5e753f3": {
+      "manifest_sha256": "e06ef2350ac05100252c62577f99a348339fa9e42aff19b3d369e2068d2f7654",
+      "operations": [
+        {
+          "id": "draft",
+          "title": "Подготовить текст и передать человеку на согласование",
+          "kind": "assistant"
+        },
+        {
+          "id": "lists",
+          "title": "Прочитать названия списков UniSender",
+          "kind": "route",
+          "route": "unisender.getLists"
+        },
+        {
+          "id": "count",
+          "title": "Прочитать количество контактов списка",
+          "kind": "route",
+          "route": "unisender.getContactCount"
+        },
+        {
+          "id": "campaign-stats",
+          "title": "Получить рабочую статистику кампании",
+          "kind": "unavailable"
+        },
+        {
+          "id": "send",
+          "title": "Создать кампанию, изменить данные или отправить письмо",
+          "kind": "unavailable"
+        },
+        {
+          "id": "crm",
+          "title": "Автоматически получить данные CRM или адресатов",
+          "kind": "unavailable"
+        }
+      ]
+    },
+    "shared-76047e88fd704a7386c3e76cf827c078": {
+      "manifest_sha256": "d5c25bd9777598861b778a5647d7f9218e59de2099f518842f9515b64ab0ba45",
+      "operations": [
+        {
+          "id": "draft",
+          "title": "Подготовить текст и передать человеку на согласование",
+          "kind": "assistant"
+        },
+        {
+          "id": "lists",
+          "title": "Прочитать названия списков UniSender",
+          "kind": "route",
+          "route": "unisender.getLists"
+        },
+        {
+          "id": "count",
+          "title": "Прочитать количество контактов списка",
+          "kind": "route",
+          "route": "unisender.getContactCount"
+        },
+        {
+          "id": "campaign-stats",
+          "title": "Получить рабочую статистику кампании",
+          "kind": "unavailable"
+        },
+        {
+          "id": "send",
+          "title": "Создать кампанию, изменить данные или отправить письмо",
+          "kind": "unavailable"
+        },
+        {
+          "id": "crm",
+          "title": "Автоматически получить данные CRM или адресатов",
+          "kind": "unavailable"
+        }
+      ]
+    },
+    "shared-107e0516177c43508a646615ea02a335": {
+      "manifest_sha256": "bf2608b5d4814f19595328cf16d0d59cb698964c36812a6d3a4ff3d99de55dd0",
+      "operations": [
+        {
+          "id": "draft",
+          "title": "Подготовить текст и передать человеку на согласование",
+          "kind": "assistant"
+        },
+        {
+          "id": "lists",
+          "title": "Прочитать названия списков UniSender",
+          "kind": "route",
+          "route": "unisender.getLists"
+        },
+        {
+          "id": "count",
+          "title": "Прочитать количество контактов списка",
+          "kind": "route",
+          "route": "unisender.getContactCount"
+        },
+        {
+          "id": "campaign-stats",
+          "title": "Получить рабочую статистику кампании",
+          "kind": "unavailable"
+        },
+        {
+          "id": "send",
+          "title": "Создать кампанию, изменить данные или отправить письмо",
+          "kind": "unavailable"
+        },
+        {
+          "id": "crm",
+          "title": "Автоматически получить данные CRM или адресатов",
+          "kind": "unavailable"
+        }
+      ]
+    }
+  }
+}

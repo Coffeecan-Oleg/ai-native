@@ -34,7 +34,15 @@ def register_discovery_tools(mcp):
         try:
             run.require_scope()
             registry = read_json(tools_file(), {"tools": []})
-            tools = match_route_declarations(registry.get("tools", []), query)
+            declarations = registry.get("tools", [])
+            from gateway_mcp.services import corporate_access
+            if corporate_access.enabled():
+                actor = run.require_scope()
+                allowed = corporate_access.allowed_tools(set(actor.scopes))
+                if actor.tool_allowlist is not None:
+                    allowed.intersection_update(actor.tool_allowlist)
+                declarations = [row for row in declarations if row.get('name') in allowed]
+            tools = match_route_declarations(declarations, query)
             run.finish()
             return json.dumps({"ok": True, "count": len(tools), "tools": tools}, ensure_ascii=False, indent=2)
         except PermissionError as exc:

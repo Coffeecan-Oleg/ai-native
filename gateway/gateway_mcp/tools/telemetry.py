@@ -270,7 +270,12 @@ def register_telemetry_tools(mcp):
             },
         )
         try:
-            run.require_scope()
+            actor = run.require_scope()
+            from gateway_mcp.services.policy import has_scope
+            if not has_scope(actor, "access:admin"):
+                if actor_subject and actor_subject != actor.subject:
+                    raise PermissionError("Only own skill telemetry is available")
+                actor_subject = actor.subject
             result = skill_stats(
                 days=days,
                 limit=limit,

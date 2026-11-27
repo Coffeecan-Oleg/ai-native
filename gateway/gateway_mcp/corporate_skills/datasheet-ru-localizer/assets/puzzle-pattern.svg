@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480" fill="none">
+  
+  <defs>
+    <pattern id="puz" width="80" height="80" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#4B9FD5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 0 H30 C30 8 24 16 40 16 C56 16 50 8 50 0 H80"></path>
+        <path d="M0 0 V30 C8 30 16 24 16 40 C16 56 8 50 0 50 V80"></path>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="480" height="480" fill="url(#puz)"></rect>
+</svg>

@@ -13,20 +13,48 @@ except ImportError:
     MCP_SDK_V2 = False
 
 
+def _frame_app(app):
+    from gateway_mcp.services.activity_delivery import ActivityLifespan, configured
+    from gateway_mcp.services.bitrix_embed import BitrixFrameMiddleware, enabled
+    if configured():
+        app = ActivityLifespan(app)
+    return BitrixFrameMiddleware(app) if enabled() else app
+
+
+class BrowserMCPServer(MCPServer):
+    def streamable_http_app(self,*args,**kwargs):
+        return _frame_app(super().streamable_http_app(*args,**kwargs))
+
+    def sse_app(self,*args,**kwargs):
+        return _frame_app(super().sse_app(*args,**kwargs))
+
+
 def create_server(*, name: str, token_verifier: Any, auth: Any) -> Any:
     """Create an MCP server with the constructor expected by the installed SDK."""
+    from gateway_mcp.services.bitrix_embed import enabled as frame_enabled
+    from gateway_mcp.services.bitrix_identity import enabled as corporate_login
+    if MCP_SDK_V2 and frame_enabled():
+        raise RuntimeError('Bitrix embedded HTTP adapter requires verification before an SDK v2 upgrade')
     common = {
         "token_verifier": token_verifier,
         "auth": auth,
     }
+    if corporate_login():
+        common["instructions"] = (
+            "При вопросах о компании проверь свои разрешения через gateway_access_profile. "
+            "Если доступно чтение общих знаний, найди паспорт через gateway_knowledge_search. "
+            "Передай идентификатор общего пространства из описания этого инструмента. "
+            "Прочитай найденный документ через gateway_knowledge_document_get и укажи источник ответа. "
+            "Если документ недоступен или в нём нет нужных сведений, сообщи об этом."
+        )
     if MCP_SDK_V2:
-        return MCPServer(
+        return BrowserMCPServer(
             name,
             version=os.getenv("GATEWAY_SERVER_VERSION", "0.1.0"),
             cache_hints=_cache_hints(),
             **common,
         )
-    return MCPServer(
+    return BrowserMCPServer(
         name,
         host=_host(),
         port=_port(),

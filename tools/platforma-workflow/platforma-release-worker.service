@@ -1,0 +1,22 @@
+[Unit]
+Description=Platforma approved release worker
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+WorkingDirectory=/usr/local/libexec/platforma-release
+ExecStart=/usr/bin/python3 -I /usr/local/libexec/platforma-release/main.py _worker
+TimeoutStartSec=900
+TimeoutStopSec=30
+Restart=no
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+StandardOutput=journal
+StandardError=journal

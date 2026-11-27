@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "gateway-mcp",
+  "version": "0.1.11",
+  "description": "Личное MCP-подключение к корпоративной Платформе: каталог опубликованных навыков, разрешённые инструменты и собственный журнал.",
+  "author": {
+    "name": "Coffeecan-Oleg",
+    "url": "https://github.com/Coffeecan-Oleg"
+  },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Платформа Акметрон",
+        "shortDescription": "Навыки и личное подключение",
+        "longDescription": "Личное MCP-подключение к корпоративной Платформе: каталог опубликованных навыков, разрешённые инструменты и собственный журнал.",
+        "developerName": "Coffeecan-Oleg",
+        "category": "Productivity",
+        "capabilities": [
+          "MCP"
+        ],
+        "defaultPrompt": "Проверь моё подключение: вызови gateway_access_profile и gateway_corporate_skill_list. Покажи фактический результат; ничего не изменяй."
+      }
+    }
+  }
+}

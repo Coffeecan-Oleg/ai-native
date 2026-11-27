@@ -1,0 +1,25 @@
+{
+  "verified": true,
+  "source_commit": "ec0bcbc3bf92483093f32a0dfea0969e0ea6a88b",
+  "fingerprints_verified_against_git": 199,
+  "sdk_pin_and_fetcher_unchanged": true,
+  "changed_entries": [
+    "routes/admin_telemetry.py",
+    "routes/skill_activity.py",
+    "routes/skill_labels.py",
+    "routes/skill_lifecycle.py",
+    "services/skill_library.py"
+  ],
+  "all_other_baseline_fields_unchanged": true,
+  "guards_unchanged": [
+    "gateway/release/verify-image.py",
+    "gateway/release/ci-check.py",
+    "gateway/Dockerfile",
+    "gateway/release/build-image.py",
+    "gateway/release/fetch-sdk.py",
+    "gateway/docs/bitrix-sdk-provenance.json"
+  ],
+  "reason": "Published application source changed; old baseline retained old hashes. No checksum validation disabled.",
+  "deployment": false
+}
+

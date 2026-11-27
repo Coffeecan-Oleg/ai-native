@@ -87,6 +87,7 @@ class AdminTelemetryRouteTests(unittest.TestCase):
                 "gateway_mcp.routes.admin_telemetry.skill_stats",
                 return_value={"skills": rows},
             ) as stats,
+            patch("gateway_mcp.routes.admin_telemetry.visible_titles", return_value={}),
         ):
             response = asyncio.run(
                 fake.routes["/admin/telemetry/skills"]["func"](request)

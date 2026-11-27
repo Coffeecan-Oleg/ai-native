@@ -75,6 +75,8 @@ def build_cursor_distribution(
             continue
 
         manifest = read_json(manifest_path)
+        if manifest.get("metadata", {}).get("distribution") in {"historical", "reference"}:
+            continue
         name = str(manifest.get("name") or "").strip()
         version = str(manifest.get("version") or "").strip()
         if name != plugin_root.name or not version:

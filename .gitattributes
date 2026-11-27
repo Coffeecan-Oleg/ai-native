@@ -1,0 +1,4 @@
+gateway/gateway_mcp/backends/platforma_training_data.json text eol=lf
+gateway/** text=auto eol=lf
+.github/workflows/*.yml text eol=lf
+tools/platforma-workflow/** text=auto eol=lf

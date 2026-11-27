@@ -1,5 +1,7 @@
 # ai-native: agent skill platform + gateway
 
+> **Akmetron corporate fork:** start with the [1.0 candidate](gateway/docs/release-1.0.md) and [current documentation](gateway/docs/corporate-documentation-index.md). Upstream examples below describe the generic framework, not enabled corporate integrations. Do not bootstrap an already deployed server.
+
 [![CI](https://github.com/comindspace/ai-native/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 

@@ -16,6 +16,7 @@ from gateway_mcp.services import storage_showcase as storage
 from gateway_mcp.services.admin_roles import require_current_admin
 from gateway_mcp.services.observability import audit_event
 from gateway_mcp.services.storage_admin_console import admin_user_get
+from gateway_mcp.services.storage_audit import list_audit_events
 from gateway_mcp.web import login_redirect, web_actor
 
 
@@ -260,7 +261,11 @@ def register_admin_showcase_routes(mcp):
         )
         if profile is None:
             return PlainTextResponse("Агент не найден.", status_code=404)
-        if profile["actor_subject"]:
+        if profile["actor_subject"] and profile["agent"] == storage.GUIDE_SOURCE:
+            reads = await to_thread(list_audit_events, days=days, actor_subject=profile["actor_subject"],
+                                    event="knowledge_guide_read", include_payload=False, limit=50)
+            body = ui.guide_detail(profile, reads, days)
+        elif profile["actor_subject"]:
             snapshot, usage = await gather(
                 _snapshot(
                     days, subject=profile["actor_subject"], agent=profile["agent"]
@@ -341,7 +346,8 @@ def register_admin_showcase_routes(mcp):
             actor=actor,
             system="telemetry",
             status="ok",
-            arguments={"agent_key": key, "binding_present": bool(pair[0])},
+            arguments={"agent_key": key, "binding_present": bool(pair[0]),
+                       "operation": "create" if revision == 0 else "update"},
         )
         return RedirectResponse(
             ui.url("/admin/agents/detail", key=key), status_code=303

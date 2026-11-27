@@ -1,4 +1,5 @@
 import json
+from asyncio import to_thread
 
 from mcp.types import ToolAnnotations
 
@@ -21,6 +22,11 @@ from gateway_mcp.services.knowledge import (
     space_info,
 )
 from gateway_mcp.tools.runtime import ToolRun
+
+
+def _shared_read():
+    from gateway_mcp.services import corporate_access, corporate_knowledge
+    return corporate_access.enabled(), corporate_knowledge
 
 
 def register_knowledge_tools(mcp):
@@ -58,17 +64,24 @@ def register_knowledge_tools(mcp):
         )
     )
     async def gateway_knowledge_space_list(include_personal: bool = True) -> str:
-        """Compatibility alias for gateway_knowledge_spaces."""
+        """List visible knowledge spaces; read the result from content or structuredContent.result.
+
+        For later knowledge calls, copy the exact returned space identifier.
+        Corporate entry requires knowledge:read and lists only the approved
+        shared catalogue; it never opens personal memory. Legacy entry keeps
+        memory:read. Copy an exact space identifier for subsequent calls.
+        """
+        corporate, shared = _shared_read()
         tool = "gateway_knowledge_space_list"
         run = ToolRun.start(
             tool=tool,
             system="knowledge",
-            scope="memory:read",
+            scope="knowledge:read" if corporate else "memory:read",
             arguments={"include_personal": include_personal},
         )
         try:
             actor = run.require_scope()
-            spaces = list_spaces(actor=actor, include_personal=include_personal)
+            spaces = (shared.list_spaces if corporate else list_spaces)(actor=actor, include_personal=include_personal)
             run.finish()
             return json.dumps(
                 {"ok": True, "count": len(spaces), "spaces": spaces},
@@ -88,17 +101,21 @@ def register_knowledge_tools(mcp):
         )
     )
     async def gateway_knowledge_space_get(space: str = "") -> str:
-        """Get metadata, members, and document count for a personal or group knowledge space."""
+        """Get space metadata. Corporate entry uses knowledge:read for the approved
+        shared space only and does not disclose its member list. Legacy entry
+        retains memory:read and the original personal/group contract.
+        """
+        corporate, shared = _shared_read()
         tool = "gateway_knowledge_space_get"
         run = ToolRun.start(
             tool=tool,
             system="knowledge",
-            scope="memory:read",
+            scope="knowledge:read" if corporate else "memory:read",
             arguments={"space": space},
         )
         try:
             actor = run.require_scope()
-            result = space_info(actor=actor, space=space)
+            result = (shared.space_info if corporate else space_info)(actor=actor, space=space)
             run.finish()
             return json.dumps(
                 {"ok": True, "space": result}, ensure_ascii=False, indent=2
@@ -414,17 +431,24 @@ def register_knowledge_tools(mcp):
         )
     )
     async def gateway_knowledge_document_get(document: str, space: str = "") -> str:
-        """Read a markdown document from a personal or group knowledge space."""
+        """Read a markdown document. Corporate entry requires knowledge:read,
+        space:organizational-awareness and an exact approved document path.
+        It does not grant personal-memory access. Legacy entry keeps memory:read.
+        """
+        corporate, shared = _shared_read()
         tool = "gateway_knowledge_document_get"
         run = ToolRun.start(
             tool=tool,
             system="knowledge",
-            scope="memory:read",
+            scope="knowledge:read" if corporate else "memory:read",
             arguments={"document": document, "space": space},
         )
         try:
             actor = run.require_scope()
-            result = get_document(actor=actor, space=space, document=document)
+            if corporate:
+                result = await to_thread(shared.get_document, actor=actor, space=space, document=document)
+            else:
+                result = get_document(actor=actor, space=space, document=document)
             run.finish()
             return json.dumps(
                 {"ok": True, "document": result}, ensure_ascii=False, indent=2
@@ -446,12 +470,23 @@ def register_knowledge_tools(mcp):
         include_personal: bool = True,
         include_groups: bool = True,
     ) -> str:
-        """Search accessible markdown knowledge spaces and return citations."""
+        """Search accessible markdown knowledge spaces and return citations.
+
+        Corporate entry requires knowledge:read and searches approved shared
+        files only, before ranking/limit. A Russian question or keywords are supported.
+        Use gateway_knowledge_document_get to read a cited result. For Bitrix24 results cite
+        source_url. A partial result means an upstream source could not be checked. Set space explicitly to
+        space:organizational-awareness; empty and other spaces are denied.
+        Legacy entry keeps memory:read and its existing profile restrictions.
+        Read the response from content or structuredContent.result; the latter
+        is a JSON string matching the filtered text, not a separate document set.
+        """
+        corporate, shared = _shared_read()
         tool = "gateway_knowledge_search"
         run = ToolRun.start(
             tool=tool,
             system="knowledge",
-            scope="memory:read",
+            scope="knowledge:read" if corporate else "memory:read",
             arguments={
                 "query": query,
                 "space": space,
@@ -462,17 +497,16 @@ def register_knowledge_tools(mcp):
         )
         try:
             actor = run.require_scope()
-            results = search_documents(
-                actor=actor,
-                query=query,
-                space=space,
-                limit=limit,
-                include_personal=include_personal,
-                include_groups=include_groups,
-            )
+            args = dict(actor=actor, query=query, space=space, limit=limit,
+                        include_personal=include_personal, include_groups=include_groups)
+            if corporate:
+                payload = await to_thread(shared.search_documents, **args)
+            else:
+                results = search_documents(**args)
+                payload = {"ok": True, "count": len(results), "documents": results}
             run.finish()
             return json.dumps(
-                {"ok": True, "count": len(results), "documents": results},
+                payload,
                 ensure_ascii=False,
                 indent=2,
             )

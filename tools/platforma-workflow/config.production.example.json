@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "mode": "production",
+  "state_dir": "/var/lib/platforma-release",
+  "project_dir": "/REPLACE_WITH_ROOT_OWNED_PROJECT_DIRECTORY",
+  "compose_file": "/REPLACE_WITH_ROOT_OWNED_PROJECT_DIRECTORY/compose.yaml",
+  "env_file": "/REPLACE_WITH_ROOT_OWNED_PROJECT_DIRECTORY/.env",
+  "project": "platforma",
+  "gateway_service": "gateway",
+  "postgres_service": "postgres",
+  "database": "gateway_mcp",
+  "db_user": "REPLACE_WITH_DATABASE_ROLE",
+  "sole_application_writer": "REQUIRES_OPERATOR_VERIFICATION",
+  "minimum_disk_bytes": 2147483648,
+  "maximum_volume_bytes": 536870912,
+  "health_timeout_seconds": 180,
+  "worker_service": "platforma-release-worker.service",
+  "gateway_health_url": "http://127.0.0.1:8000/healthz",
+  "expected_public_url": "https://platforma.akmetron.ru",
+  "volume_names": ["platforma_knowledge", "platforma_requests", "platforma_audit"],
+  "caddy": {
+    "binary": "/usr/bin/caddy",
+    "container": null,
+    "main_config": "/REPLACE_WITH_CADDY_MAIN_CONFIG",
+    "container_config": "/etc/caddy/Caddyfile",
+    "vhost_file": "/REPLACE_WITH_PLATFORMA_VHOST_FILE",
+    "maintenance_text": "platforma.akmetron.ru {\n respond \"Платформа обновляется\" 503\n}\n",
+    "probe": {
+      "url": "https://platforma.akmetron.ru/healthz",
+      "resolve": "platforma.akmetron.ru:443:127.0.0.1"
+    },
+    "neighbours": [
+      {
+        "url": "https://REPLACE_WITH_NEIGHBOUR/STATIC_HEALTH_RESOURCE",
+        "resolve": "REPLACE_WITH_NEIGHBOUR:443:127.0.0.1"
+      }
+    ]
+  }
+}

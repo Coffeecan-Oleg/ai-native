@@ -44,6 +44,8 @@ from gateway_mcp.web import (
 
 
 def register_auth_routes(mcp):
+    from gateway_mcp.routes.bitrix_auth import register_bitrix_auth_routes
+    register_bitrix_auth_routes(mcp)
     @mcp.custom_route("/.well-known/oauth-authorization-server", methods=["GET"], include_in_schema=False)
     async def oauth_authorization_server(_: Request) -> Response:
         return JSONResponse(oauth_authorization_server_metadata())
@@ -69,7 +71,9 @@ def register_auth_routes(mcp):
                 params = dict(parse_qsl((await request.body()).decode("utf-8"), keep_blank_values=True))
             else:
                 params = {key: value for key, value in request.query_params.items()}
-            return RedirectResponse(await build_oauth_authorization_redirect(params))
+            from gateway_mcp.routes.bitrix_auth import bind_browser
+            target = await build_oauth_authorization_redirect(params)
+            return bind_browser(RedirectResponse(target),target)
         except Exception as exc:
             return JSONResponse({"error": "invalid_request", "error_description": str(exc)}, status_code=400)
 
@@ -114,6 +118,9 @@ def register_auth_routes(mcp):
 
     @mcp.custom_route("/auth/yandex/login", methods=["GET"], include_in_schema=False)
     async def yandex_login(request: Request) -> Response:
+        from gateway_mcp.services.bitrix_identity import enabled as bitrix_enabled
+        if bitrix_enabled():
+            return login_redirect(request.query_params.get('next','/admin'))
         next_url = request.query_params.get("next", "/credentials")
         state = create_oauth_state(next_url)
         try:
@@ -123,6 +130,12 @@ def register_auth_routes(mcp):
 
     @mcp.custom_route("/auth/logout", methods=["GET", "POST"], include_in_schema=False)
     async def logout(request: Request) -> Response:
+        from gateway_mcp.services import bitrix_embed
+        frame_token=request.cookies.get(bitrix_embed.COOKIE,'') if bitrix_embed.enabled() else ''
+        if frame_token:
+            revoke_mcp_oauth_token(frame_token)
+            return clear_gateway_cookie(bitrix_embed.problem(
+                'Вы вышли из Платформы. Чтобы войти снова, закройте приложение в Битрикс24 и откройте его из меню.',200))
         token = getattr(request, "cookies", {}).get("gateway_token", "")
         if token:
             revoke_mcp_oauth_token(token)
@@ -188,6 +201,9 @@ def register_auth_routes(mcp):
 
     @mcp.custom_route("/auth/yandex/service-login", methods=["GET"], include_in_schema=False)
     async def yandex_service_login(request: Request) -> Response:
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled():
+            return JSONResponse({"error":"corporate_bitrix_login_required"},status_code=410)
         admin_actor = web_actor(request)
         next_url = request.query_params.get("next", "/credentials")
         if admin_actor is None:
@@ -243,6 +259,9 @@ def register_auth_routes(mcp):
 
     @mcp.custom_route("/auth/yandex/disk-login", methods=["GET"], include_in_schema=False)
     async def yandex_disk_login(request: Request) -> Response:
+        from gateway_mcp.services import corporate_access
+        if corporate_access.enabled():
+            return JSONResponse({"error":"corporate_bitrix_login_required"},status_code=410)
         actor = web_actor(request)
         next_url = request.query_params.get("next", "/credentials")
         if actor is None:
@@ -371,6 +390,9 @@ def register_auth_routes(mcp):
 
     @mcp.custom_route("/auth/yandex/callback", methods=["GET"], include_in_schema=False)
     async def yandex_callback(request: Request) -> Response:
+        from gateway_mcp.services.bitrix_identity import enabled as bitrix_enabled
+        if bitrix_enabled():
+            return JSONResponse({'ok':False,'error':'corporate_bitrix_login_required'},status_code=403)
         error = request.query_params.get("error")
         if error:
             return JSONResponse({"ok": False, "error": error}, status_code=400)

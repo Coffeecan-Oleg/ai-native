@@ -15,6 +15,9 @@ from gateway_mcp.services.storage import list_active_resource_grants
 
 
 def subjects_for_actor(actor: GatewayActor) -> list[tuple[str, str]]:
+    from gateway_mcp.services.bitrix_identity import is_subject
+    if is_subject(actor.subject):
+        return [('user',normalize_key(actor.subject))]
     subjects = {("user", normalize_key(actor.subject))}
     for value in (actor.email, actor.login, actor.yandex_id):
         if value:
@@ -80,6 +83,9 @@ def require_resource_access(
     route: dict[str, Any],
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
+    from gateway_mcp.services import corporate_access, bitrix_identity
+    if corporate_access.enabled() and bitrix_identity.is_subject(actor.subject):
+        return corporate_access.require_route_access(actor,route,arguments)
     inferred = infer_route_access(route, arguments)
     system = inferred["system"]
     action = inferred["action"]
